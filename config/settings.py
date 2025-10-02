@@ -17,7 +17,7 @@ class AppSettings:
     SUPPORTED_AUDIO_FORMATS = ['.mp3', '.wav']
 
     # Размеры элементов UI
-    CHORD_IMAGE_SIZE = (200, 300)
+    CHORD_IMAGE_SIZE = (400, 600)
     LARGE_CHORD_IMAGE_SIZE = (300, 300)
     SCROLL_AREA_HEIGHT = 60
 
