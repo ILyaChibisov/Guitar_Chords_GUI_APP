@@ -5,7 +5,7 @@ from .buttons import (
     ChordVariantButton,
     SoundButtonLarge
 )
-from .labels import ClickableLabel, ChordImageLabel
+from .labels import ClickableLabel, ChordImageLabel, AdaptiveChordLabel  # ⬅️ ДОБАВЛЯЕМ
 from .media import ScrollChordButtonsWidget
 
 __all__ = [
@@ -16,5 +16,6 @@ __all__ = [
     'SoundButtonLarge',
     'ClickableLabel',
     'ChordImageLabel',
+    'AdaptiveChordLabel',  # ⬅️ ДОБАВЛЯЕМ
     'ScrollChordButtonsWidget'
 ]

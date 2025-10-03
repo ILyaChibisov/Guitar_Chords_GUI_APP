@@ -1,6 +1,5 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication
 from core.app import GuitarApp
 
 
@@ -9,12 +8,9 @@ def main():
     project_root = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, project_root)
 
-    app = QApplication(sys.argv)
-    app.setStyle("Fusion")
-
     # Создаем и запускаем приложение
-    window = GuitarApp()
-    window.show()
+    app = GuitarApp()
+    app.show()
 
     sys.exit(app.exec_())
 

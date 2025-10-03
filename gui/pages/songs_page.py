@@ -15,6 +15,23 @@ from gui.widgets.media import ScrollChordButtonsWidget
 from database.queries import SongQueries
 from database.chord_repository import ChordRepository
 import database.db_scripts as db
+from config.styles import DarkTheme
+
+# Импортируем данные аккордов из const
+try:
+    from const import CHORDS_TYPE_LIST, CHORDS_TYPE_NAME_LIST_DSR
+
+    # Создаем общий словарь аккордов и их описаний
+    CHORDS_DATA = {}
+    for chords_list, desc_list in zip(CHORDS_TYPE_LIST, CHORDS_TYPE_NAME_LIST_DSR):
+        for chord, description in zip(chords_list, desc_list):
+            CHORDS_DATA[chord] = description
+
+    print(f"✅ Загружено {len(CHORDS_DATA)} аккордов с описаниями")
+
+except ImportError as e:
+    print(f"⚠️ Не удалось загрузить данные аккордов из const: {e}")
+    CHORDS_DATA = {}
 
 
 class SongsPage(BasePage):
@@ -30,7 +47,7 @@ class SongsPage(BasePage):
         self.last_variant_mp3_path = ""
         self.current_chord_name = ""
         self.current_song_title = ""
-        self.current_chord_variants = []  # ✅ ДОБАВЛЕНО: храним текущие варианты
+        self.current_chord_variants = []
 
         # Репозиторий для работы с встроенными аккордами
         self.chord_repository = ChordRepository()
@@ -39,6 +56,23 @@ class SongsPage(BasePage):
         self.player.error.connect(self.handle_error)
 
         self.initialize_page()
+
+    def get_chord_description(self, chord_name):
+        """Получает описание аккорда из данных const"""
+        # Пробуем разные варианты написания
+        names_to_try = [
+            chord_name,
+            chord_name.upper(),
+            chord_name.upper().replace('M', 'm'),
+            chord_name.upper().replace('М', 'm'),
+        ]
+
+        for name in names_to_try:
+            if name in CHORDS_DATA:
+                return CHORDS_DATA[name]
+
+        # Если не нашли, возвращаем описание по умолчанию
+        return f"Гитарный аккорд {chord_name}"
 
     def setup_ui(self):
         """Настройка UI с адаптивным отображением аккордов"""
@@ -68,34 +102,34 @@ class SongsPage(BasePage):
 
         main_layout.addWidget(menu_widget)
 
-        # Основной контент
+        # ОСНОВНОЙ КОНТЕНТ - ГОРИЗОНТАЛЬНОЕ РАСПОЛОЖЕНИЕ
         content_layout = QHBoxLayout()
         content_layout.setSpacing(15)
 
-        # Левая часть: текст песни (60% ширины)
+        # ЛЕВАЯ ЧАСТЬ: название песни и текст (60% ширины)
         left_widget = QFrame()
         left_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         left_layout = QVBoxLayout(left_widget)
         left_layout.setSpacing(10)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Заголовок текста песни
+        # ЗАГОЛОВОК ПЕСНИ - ПРОСТО ТЕКСТ БЕЗ РАМКИ
         self.song_title_label = QLabel("🎵 Текст песни с аккордами")
         self.song_title_label.setStyleSheet("""
             QLabel {
-                color: #3498db;
+                color: white;
                 font-size: 18px;
                 font-weight: bold;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                margin-bottom: 8px;
+                padding: 5px 0px;
                 text-align: center;
+                background: transparent;
+                border: none;
             }
         """)
         self.song_title_label.setAlignment(Qt.AlignCenter)
         left_layout.addWidget(self.song_title_label)
 
+        # ТЕКСТ ПЕСНИ - ТАКОЙ ЖЕ ФОН КАК У РЕЗУЛЬТАТОВ ПОИСКА
         self.song_text = QTextBrowser()
         self.song_text.setReadOnly(True)
         self.song_text.setOpenLinks(False)
@@ -104,8 +138,9 @@ class SongsPage(BasePage):
         self.song_text.setWordWrapMode(True)
         left_layout.addWidget(self.song_text, 1)
 
-        # Контейнер для кнопок аккордов песни
+        # Контейнер для кнопок аккордов песни - ПРОЗРАЧНЫЙ ФОН
         chords_container = QWidget()
+        chords_container.setStyleSheet("background: transparent; border: none;")
         chords_layout = QHBoxLayout(chords_container)
         chords_layout.setContentsMargins(0, 0, 0, 0)
         chords_layout.setSpacing(5)
@@ -141,8 +176,17 @@ class SongsPage(BasePage):
         self.scroll_left_btn.hide()
         chords_layout.addWidget(self.scroll_left_btn)
 
-        # Область с кнопками аккордов
+        # Область с кнопками аккордов - ПРОЗРАЧНЫЙ ФОН
         self.scroll_chords_widget = ScrollChordButtonsWidget()
+        self.scroll_chords_widget.setStyleSheet("""
+            QScrollArea {
+                background: transparent;
+                border: none;
+            }
+            QWidget {
+                background: transparent;
+            }
+        """)
         chords_layout.addWidget(self.scroll_chords_widget, 1)
 
         # Кнопка прокрутки вправо
@@ -160,22 +204,28 @@ class SongsPage(BasePage):
 
         content_layout.addWidget(left_widget, 3)  # 60% ширины
 
-        # Правая часть: аккорды (40% ширины)
+        # ПРАВАЯ ЧАСТЬ: поиск и аккорды (40% ширины)
         right_widget = QFrame()
         right_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         right_layout = QVBoxLayout(right_widget)
         right_layout.setSpacing(15)
 
-        # Область поиска
+        # ОБЛАСТЬ ПОИСКА - НА ОДНОМ УРОВНЕ С НАЗВАНИЕМ ПЕСНИ (БЕЗ ЗАГОЛОВКА)
         search_frame = QFrame()
         search_layout = QVBoxLayout(search_frame)
 
+        # ПОЛЕ ПОИСКА И КНОПКА НА ОДНОЙ ЛИНИИ (БЕЗ ЗАГОЛОВКА "ПОИСК ПЕСЕН")
         search_input_layout = QHBoxLayout()
+        search_input_layout.setSpacing(10)
+
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("🔍 Введите название песни...")
         self.search_input.returnPressed.connect(self.search_songs)
 
-        self.search_button = ModernButton("Найти")
+        # КНОПКА "НАЙТИ" С СИНИМ СТИЛЕМ
+        self.search_button = QPushButton("Найти")
+        self.search_button.setCursor(Qt.PointingHandCursor)
+        self.search_button.setFixedHeight(40)
         self.search_button.clicked.connect(self.search_songs)
 
         search_input_layout.addWidget(self.search_input, 3)
@@ -195,26 +245,48 @@ class SongsPage(BasePage):
         chords_frame = QFrame()
         chords_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         chords_layout_right = QVBoxLayout(chords_frame)
-        chords_layout_right.setSpacing(10)
+        chords_layout_right.setSpacing(5)
 
-        # Заголовок аккорда
-        self.chord_title_label = QLabel("")
-        self.chord_title_label.setStyleSheet("""
+        # ИНФОРМАЦИЯ ОБ АККОРДЕ - ПРОСТО ТЕКСТ БЕЗ КНОПКИ
+        chord_info_widget = QWidget()
+        chord_info_widget.setStyleSheet("background: transparent; border: none;")
+        chord_info_layout = QVBoxLayout(chord_info_widget)
+        chord_info_layout.setSpacing(2)
+        chord_info_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Название аккорда - белый шрифт, по центру
+        self.chord_name_label = QLabel("")
+        self.chord_name_label.setStyleSheet("""
             QLabel {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 #4CAF50, stop: 1 #45a049);
                 color: white;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: bold;
                 text-align: center;
-                padding: 8px 15px;
-                border-radius: 20px;
-                margin: 5px;
+                padding: 2px;
+                background: transparent;
+                border: none;
             }
         """)
-        self.chord_title_label.setAlignment(Qt.AlignCenter)
-        self.chord_title_label.setMinimumHeight(40)
-        chords_layout_right.addWidget(self.chord_title_label)
+        self.chord_name_label.setAlignment(Qt.AlignCenter)
+        chord_info_layout.addWidget(self.chord_name_label)
+
+        # Описание аккорда - шрифт чуть меньше, выравнивание по центру
+        self.chord_description_label = QLabel("")
+        self.chord_description_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 14px;
+                text-align: center;
+                padding: 2px;
+                background: transparent;
+                border: none;
+            }
+        """)
+        self.chord_description_label.setAlignment(Qt.AlignCenter)
+        self.chord_description_label.setWordWrap(True)
+        chord_info_layout.addWidget(self.chord_description_label)
+
+        chords_layout_right.addWidget(chord_info_widget)
 
         # АДАПТИВНАЯ область для картинки аккорда
         self.chord_image_label = AdaptiveChordLabel()
@@ -223,10 +295,11 @@ class SongsPage(BasePage):
         # Устанавливаем политику размера для растягивания
         self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        chords_layout_right.addWidget(self.chord_image_label, 1)  # Занимает всё доступное пространство
+        chords_layout_right.addWidget(self.chord_image_label, 1)
 
-        # Контейнер для кнопок вариантов
+        # Контейнер для кнопок вариантов - ПРОЗРАЧНЫЙ ФОН
         self.variants_container = QWidget()
+        self.variants_container.setStyleSheet("background: transparent; border: none;")
         self.variants_layout = QHBoxLayout(self.variants_container)
         self.variants_layout.setAlignment(Qt.AlignCenter)
         self.variants_layout.setSpacing(8)
@@ -242,9 +315,108 @@ class SongsPage(BasePage):
 
         right_layout.addWidget(chords_frame, 1)
 
-        content_layout.addWidget(right_widget, 2)  # 40% ширины
+        content_layout.addWidget(right_widget, 2)
 
         main_layout.addLayout(content_layout, 1)
+
+    def apply_styles(self):
+        """Применяет стили ко всем элементам страницы"""
+        # Обновляем стили кнопок меню
+        self.songs_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+        self.chords_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+        self.tuner_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+        self.learning_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+        self.theory_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+
+        # Обновляем стиль заголовка песни
+        self.song_title_label.setStyleSheet(DarkTheme.SONG_TITLE_STYLE)
+
+        # Обновляем стиль названия аккорда
+        self.chord_name_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                text-align: center;
+                padding: 2px;
+                background: transparent;
+                border: none;
+            }
+        """)
+
+        # Обновляем стиль описания аккорда
+        self.chord_description_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 14px;
+                text-align: center;
+                padding: 2px;
+                background: transparent;
+                border: none;
+            }
+        """)
+
+        # Обновляем стиль поля поиска
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                background: rgba(255, 255, 255, 0.1);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                padding: 12px 20px;
+                color: white;
+                font-size: 14px;
+                selection-background-color: #3498db;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+                background: rgba(255, 255, 255, 0.15);
+            }
+        """)
+
+        # Стиль для кнопки "Найти"
+        self.search_button.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+
+        # Стиль для текста песни
+        self.song_text.setStyleSheet("""
+            QTextBrowser {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 15px;
+                color: white;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+        """)
+
+        # Прозрачный фон для контейнеров с кнопками
+        self.chords_container.setStyleSheet("background: transparent; border: none;")
+        self.scroll_chords_widget.setStyleSheet("""
+            QScrollArea {
+                background: transparent;
+                border: none;
+            }
+            QWidget {
+                background: transparent;
+            }
+        """)
+        self.variants_container.setStyleSheet("background: transparent; border: none;")
+
+        # Убираем фон у всех фреймов
+        self.setStyleSheet("""
+            QFrame {
+                background: transparent;
+                border: none;
+            }
+        """)
+
+    def initialize_page(self):
+        """Инициализация страницы"""
+        if not self.is_initialized:
+            self.setup_ui()
+            self.connect_signals()
+            self.apply_styles()
+            self.is_initialized = True
 
     def load_chord_variant(self, image_path, mp3_path):
         """Загрузка конкретного варианта аккорда с адаптивным отображением"""
@@ -276,13 +448,11 @@ class SongsPage(BasePage):
     def resizeEvent(self, event):
         """Обработчик изменения размера окна"""
         super().resizeEvent(event)
-        # При изменении размера окна обновляем отображение аккорда
         if hasattr(self, 'chord_image_label') and self.chord_image_label:
             self.chord_image_label.updatePixmap()
 
     def connect_signals(self):
         """Подключение сигналов"""
-        # Сигналы уже подключены в setup_ui через clicked.connect
         pass
 
     def search_songs(self):
@@ -318,7 +488,6 @@ class SongsPage(BasePage):
             self.results_list.setFixedHeight(0)
             self.results_list.hide()
         else:
-            # Высота основывается на количестве элементов (макс 6 элементов)
             item_height = 50
             max_height = min(item_count, 6) * item_height + 20
             self.results_list.setFixedHeight(max_height)
@@ -354,7 +523,6 @@ class SongsPage(BasePage):
             chords_layout = scroll_area.chords_layout
             if chords_layout.count() > 0:
                 scrollbar = scroll_area.horizontalScrollBar()
-                # Смещаем на ширину одной кнопки + отступ
                 if chords_layout.itemAt(0).widget():
                     button_width = chords_layout.itemAt(0).widget().width() + 5
                     scrollbar.setValue(scrollbar.value() - button_width)
@@ -367,7 +535,6 @@ class SongsPage(BasePage):
             chords_layout = scroll_area.chords_layout
             if chords_layout.count() > 0:
                 scrollbar = scroll_area.horizontalScrollBar()
-                # Смещаем на ширину одной кнопки + отступ
                 if chords_layout.itemAt(0).widget():
                     button_width = chords_layout.itemAt(0).widget().width() + 5
                     scrollbar.setValue(scrollbar.value() + button_width)
@@ -378,7 +545,6 @@ class SongsPage(BasePage):
         scroll_area = self.scroll_chords_widget
         if scroll_area:
             scrollbar = scroll_area.horizontalScrollBar()
-            # Проверяем, нужно ли вообще показывать кнопки прокрутки
             needs_scrolling = scrollbar.maximum() > 0
 
             if needs_scrolling:
@@ -402,7 +568,10 @@ class SongsPage(BasePage):
             return
 
         self.sound_button.hide()
-        self.chord_title_label.setText("")
+        # Очищаем информацию об аккорде
+        self.chord_name_label.setText("")
+        self.chord_description_label.setText("")
+
         try:
             # Очистка предыдущих элементов
             for i in reversed(range(self.variants_layout.count())):
@@ -443,17 +612,15 @@ class SongsPage(BasePage):
 
             # Убираем первые три строки: название, пустую строку и строку с аккордами
             if len(lines) >= 3:
-                # Пропускаем первые три строки
                 lines = lines[3:]
 
             # Убираем только полностью пустые строки, но сохраняем пробелы
             processed_lines = []
             for line in lines:
-                # Сохраняем строку, даже если в ней есть только пробелы
                 if line.strip() != '' or line.rstrip('\n') != '':
                     processed_lines.append(line.rstrip('\n'))
 
-            # Формируем HTML-ссылки для аккордов (синий цвет)
+            # Формируем HTML-ссылки для аккордов
             chord_links_dict = {}
             for chord in set(self.chords_list):
                 safe_chord = html.escape(chord)
@@ -494,20 +661,24 @@ class SongsPage(BasePage):
             traceback.print_exc()
 
     def chord_clicked(self, url):
-        """Обработчик клика по аккорду в тексте песни - ИСПРАВЛЕННАЯ ВЕРСИЯ"""
+        """Обработчик клика по аккорду в тексте песни"""
         try:
             chord_name = url.toString()
             print(f"🔍 Загружаем аккорд: {chord_name}")
             self.current_chord_name = chord_name
 
-            # Обновляем заголовок с названием аккорда
-            self.chord_title_label.setText(f"Аппликатура: {chord_name}")
-
-            # Используем репозиторий вместо прямого вызова БД
+            # Получаем информацию об аккорде из базы данных
             chord_info = self.chord_repository.get_chord_info(chord_name)
             if not chord_info:
                 print(f"❌ Аккорд {chord_name} не найден в базе данных")
                 return
+
+            # Обновляем информацию об аккорде
+            self.chord_name_label.setText(f"Аккорд {chord_name}")
+
+            # Получаем описание аккорда из данных const
+            chord_description = self.get_chord_description(chord_name)
+            self.chord_description_label.setText(chord_description)
 
             self.current_chord_folder = chord_info[2]
 
@@ -523,13 +694,12 @@ class SongsPage(BasePage):
                 print(f"❌ Варианты аккорда {chord_name} не найдены")
                 return
 
-            # ✅ СОХРАНЯЕМ ВАРИАНТЫ ДЛЯ АВТОМАТИЧЕСКОЙ АКТИВАЦИИ
             self.current_chord_variants = variants
 
             # Создаем кнопки для вариантов
             for idx, variant in enumerate(variants):
                 btn = ChordVariantButton(str(idx + 1))
-                btn.setProperty('variant_data', (variant[2], variant[3]))  # image_path, sound_path
+                btn.setProperty('variant_data', (variant[2], variant[3]))
 
                 def make_handler(variant_img_path, variant_mp3_path, button):
                     def handler():
@@ -549,7 +719,7 @@ class SongsPage(BasePage):
                 btn.clicked.connect(handler)
                 self.variants_layout.addWidget(btn)
 
-            # ✅ ВАЖНО: АВТОМАТИЧЕСКИ АКТИВИРУЕМ ПЕРВЫЙ ВАРИАНТ
+            # Активируем первый вариант
             self.activate_first_variant(variants)
 
         except Exception as e:
@@ -606,13 +776,13 @@ class SongsPage(BasePage):
             from gui.windows.chord_viewer import ChordViewerWindow
             viewer = ChordViewerWindow(
                 self.current_chord_name,
-                first_variant[2],  # image_path
-                first_variant[3],  # sound_path
+                first_variant[2],
+                first_variant[3],
                 self
             )
 
             # Добавляем кнопки вариантов
-            variants_data = [(v[2], v[3]) for v in variants]  # image_path, sound_path
+            variants_data = [(v[2], v[3]) for v in variants]
             viewer.add_variant_buttons(variants_data)
 
             viewer.exec_()

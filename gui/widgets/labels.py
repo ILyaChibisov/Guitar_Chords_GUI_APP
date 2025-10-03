@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtCore import Qt, pyqtSignal, QSize
 from PyQt5.QtGui import QPixmap
+from config.styles import DarkTheme
 
 
 class ClickableLabel(QLabel):
@@ -14,25 +15,13 @@ class ClickableLabel(QLabel):
 
 
 class ChordImageLabel(ClickableLabel):
-    """Метка для изображения аккорда (старая версия)"""
+    """Метка для изображения аккорда"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAlignment(Qt.AlignCenter)
         self.setCursor(Qt.PointingHandCursor)
-        self.setStyleSheet("""
-            ChordImageLabel {
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px dashed rgba(255, 255, 255, 0.2);
-                border-radius: 15px;
-                padding: 15px;
-                min-width: 200px;
-                min-height: 300px;
-            }
-            ChordImageLabel:hover {
-                border: 2px dashed rgba(255, 255, 255, 0.4);
-            }
-        """)
+        self.setStyleSheet(DarkTheme.CHORD_IMAGE_LABEL_STYLE)
 
 
 class AdaptiveChordLabel(ClickableLabel):
@@ -44,17 +33,7 @@ class AdaptiveChordLabel(ClickableLabel):
         self.setCursor(Qt.PointingHandCursor)
         self.setMinimumSize(150, 200)  # Минимальный размер
         self._original_pixmap = None
-        self.setStyleSheet("""
-            AdaptiveChordLabel {
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px dashed rgba(255, 255, 255, 0.2);
-                border-radius: 15px;
-                padding: 10px;
-            }
-            AdaptiveChordLabel:hover {
-                border: 2px dashed rgba(255, 255, 255, 0.4);
-            }
-        """)
+        self.setStyleSheet(DarkTheme.CHORD_IMAGE_LABEL_STYLE)
 
     def setChordPixmap(self, pixmap):
         """Устанавливает изображение аккорда и сохраняет оригинал"""
