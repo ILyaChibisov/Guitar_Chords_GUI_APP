@@ -810,3 +810,87 @@ class SongsPage(BasePage):
         """Очистка ресурсов при закрытии приложения"""
         if hasattr(self, 'chord_repository'):
             self.chord_repository.chord_manager.cleanup()
+
+    def activate_first_variant(self, variants):
+        """Автоматически активирует первый вариант аккорда"""
+        if not variants:
+            print("❌ Нет вариантов для активации")
+            return
+
+        try:
+            first_variant = variants[0]
+
+            # Загружаем изображение и звук первого варианта
+            self.load_chord_variant(first_variant[2], first_variant[3])
+
+            # Находим и активируем первую кнопку
+            if self.variants_layout.count() > 0:
+                first_btn = self.variants_layout.itemAt(0).widget()
+                if first_btn:
+                    first_btn.setChecked(True)
+                    first_btn.update_style()
+                    print(f"✅ Автоматически активирован вариант 1 для аккорда {self.current_chord_name}")
+
+        except Exception as e:
+            print(f"❌ Ошибка активации первого варианта: {e}")
+
+    def play_last_variant_sound(self):
+        """Воспроизведение звука текущего варианта аккорда"""
+        if self.last_variant_mp3_path and os.path.exists(self.last_variant_mp3_path):
+            url = QUrl.fromLocalFile(self.last_variant_mp3_path)
+            self.player.setMedia(QMediaContent(url))
+            self.player.play()
+            print(f"🔊 Воспроизведение звука: {os.path.basename(self.last_variant_mp3_path)}")
+        else:
+            print(f"❌ Файл не найден: {self.last_variant_mp3_path}")
+
+    def show_chord_large(self):
+        """Показ увеличенного окна с аккордом"""
+        if not self.current_chord_name or not self.current_chord_folder:
+            return
+
+        try:
+            # Получаем все варианты аккорда через репозиторий
+            variants = self.chord_repository.get_chord_variants_by_name(self.current_chord_name)
+            if not variants:
+                return
+
+            # Создаем окно просмотра
+            first_variant = variants[0]
+            from gui.windows.chord_viewer import ChordViewerWindow
+            viewer = ChordViewerWindow(
+                self.current_chord_name,
+                first_variant[2],  # image_path
+                first_variant[3],  # sound_path
+                self
+            )
+
+            # Добавляем кнопки вариантов
+            variants_data = [(v[2], v[3]) for v in variants]  # image_path, sound_path
+            viewer.add_variant_buttons(variants_data)
+
+            viewer.exec_()
+
+        except Exception as e:
+            print(f"Ошибка открытия окна аккорда: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def handle_error(self, error):
+        """Обработчик ошибок медиаплеера"""
+        print(f"Ошибка медиаплеера: {error}")
+
+    def on_page_show(self):
+        """Вызывается при показе страницы"""
+        print("Страница песен показана")
+
+    def on_page_hide(self):
+        """Вызывается при скрытии страницы"""
+        print("Страница песен скрыта")
+        # Очищаем временные файлы при скрытии страницы
+        self.chord_repository.chord_manager.cleanup()
+
+    def cleanup(self):
+        """Очистка ресурсов при закрытии приложения"""
+        if hasattr(self, 'chord_repository'):
+            self.chord_repository.chord_manager.cleanup()
