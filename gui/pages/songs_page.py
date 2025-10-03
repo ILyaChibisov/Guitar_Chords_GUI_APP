@@ -213,10 +213,15 @@ class SongsPage(BasePage):
         # ОБЛАСТЬ ПОИСКА - НА ОДНОМ УРОВНЕ С НАЗВАНИЕМ ПЕСНИ (БЕЗ ЗАГОЛОВКА)
         search_frame = QFrame()
         search_layout = QVBoxLayout(search_frame)
+        search_layout.setSpacing(10)
+        search_layout.setContentsMargins(0, 0, 0, 0)
 
-        # ПОЛЕ ПОИСКА И КНОПКА НА ОДНОЙ ЛИНИИ (БЕЗ ЗАГОЛОВКА "ПОИСК ПЕСЕН")
-        search_input_layout = QHBoxLayout()
+        # КОНТЕЙНЕР ДЛЯ ПОЛЯ ПОИСКА И КНОПКИ
+        search_input_container = QWidget()
+        search_input_container.setStyleSheet("background: transparent; border: none;")
+        search_input_layout = QHBoxLayout(search_input_container)
         search_input_layout.setSpacing(10)
+        search_input_layout.setContentsMargins(0, 0, 0, 0)
 
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("🔍 Введите название песни...")
@@ -230,9 +235,10 @@ class SongsPage(BasePage):
 
         search_input_layout.addWidget(self.search_input, 3)
         search_input_layout.addWidget(self.search_button, 1)
-        search_layout.addLayout(search_input_layout)
 
-        # Список результатов поиска
+        search_layout.addWidget(search_input_container)
+
+        # Список результатов поиска - ТЕПЕРЬ НА ОДНОМ УРОВНЕ С ПОИСКОМ
         self.results_list = QListWidget()
         self.results_list.itemClicked.connect(self.load_song)
         self.results_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -389,6 +395,32 @@ class SongsPage(BasePage):
             }
         """)
 
+        # Стиль для списка результатов
+        self.results_list.setStyleSheet("""
+            QListWidget {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 5px;
+                color: white;
+                font-size: 14px;
+                outline: none;
+            }
+            QListWidget::item {
+                background: transparent;
+                border-radius: 10px;
+                padding: 10px;
+                margin: 2px;
+            }
+            QListWidget::item:selected {
+                background: rgba(52, 152, 219, 0.3);
+                border: 1px solid rgba(52, 152, 219, 0.5);
+            }
+            QListWidget::item:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        """)
+
         # Прозрачный фон для контейнеров с кнопками
         self.chords_container.setStyleSheet("background: transparent; border: none;")
         self.scroll_chords_widget.setStyleSheet("""
@@ -430,7 +462,7 @@ class SongsPage(BasePage):
                 print(f"❌ Не удалось загрузить изображение: {image_path}")
                 self.chord_image_label.clear()
 
-            # Сохраняем путь к MP3 для воспроизведения
+            # Сохраняем пути к MP3 для воспроизведения
             self.last_variant_mp3_path = mp3_path
 
             # Показываем/скрываем кнопку звука в зависимости от наличия звука
@@ -492,6 +524,8 @@ class SongsPage(BasePage):
             max_height = min(item_count, 6) * item_height + 20
             self.results_list.setFixedHeight(max_height)
             self.results_list.show()
+            # Убедимся, что список занимает всю ширину контейнера
+            self.results_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def create_chord_buttons(self):
         """Создает кнопки аккордов для текущей песни в одну строку с прокруткой"""
@@ -783,90 +817,6 @@ class SongsPage(BasePage):
 
             # Добавляем кнопки вариантов
             variants_data = [(v[2], v[3]) for v in variants]
-            viewer.add_variant_buttons(variants_data)
-
-            viewer.exec_()
-
-        except Exception as e:
-            print(f"Ошибка открытия окна аккорда: {e}")
-            import traceback
-            traceback.print_exc()
-
-    def handle_error(self, error):
-        """Обработчик ошибок медиаплеера"""
-        print(f"Ошибка медиаплеера: {error}")
-
-    def on_page_show(self):
-        """Вызывается при показе страницы"""
-        print("Страница песен показана")
-
-    def on_page_hide(self):
-        """Вызывается при скрытии страницы"""
-        print("Страница песен скрыта")
-        # Очищаем временные файлы при скрытии страницы
-        self.chord_repository.chord_manager.cleanup()
-
-    def cleanup(self):
-        """Очистка ресурсов при закрытии приложения"""
-        if hasattr(self, 'chord_repository'):
-            self.chord_repository.chord_manager.cleanup()
-
-    def activate_first_variant(self, variants):
-        """Автоматически активирует первый вариант аккорда"""
-        if not variants:
-            print("❌ Нет вариантов для активации")
-            return
-
-        try:
-            first_variant = variants[0]
-
-            # Загружаем изображение и звук первого варианта
-            self.load_chord_variant(first_variant[2], first_variant[3])
-
-            # Находим и активируем первую кнопку
-            if self.variants_layout.count() > 0:
-                first_btn = self.variants_layout.itemAt(0).widget()
-                if first_btn:
-                    first_btn.setChecked(True)
-                    first_btn.update_style()
-                    print(f"✅ Автоматически активирован вариант 1 для аккорда {self.current_chord_name}")
-
-        except Exception as e:
-            print(f"❌ Ошибка активации первого варианта: {e}")
-
-    def play_last_variant_sound(self):
-        """Воспроизведение звука текущего варианта аккорда"""
-        if self.last_variant_mp3_path and os.path.exists(self.last_variant_mp3_path):
-            url = QUrl.fromLocalFile(self.last_variant_mp3_path)
-            self.player.setMedia(QMediaContent(url))
-            self.player.play()
-            print(f"🔊 Воспроизведение звука: {os.path.basename(self.last_variant_mp3_path)}")
-        else:
-            print(f"❌ Файл не найден: {self.last_variant_mp3_path}")
-
-    def show_chord_large(self):
-        """Показ увеличенного окна с аккордом"""
-        if not self.current_chord_name or not self.current_chord_folder:
-            return
-
-        try:
-            # Получаем все варианты аккорда через репозиторий
-            variants = self.chord_repository.get_chord_variants_by_name(self.current_chord_name)
-            if not variants:
-                return
-
-            # Создаем окно просмотра
-            first_variant = variants[0]
-            from gui.windows.chord_viewer import ChordViewerWindow
-            viewer = ChordViewerWindow(
-                self.current_chord_name,
-                first_variant[2],  # image_path
-                first_variant[3],  # sound_path
-                self
-            )
-
-            # Добавляем кнопки вариантов
-            variants_data = [(v[2], v[3]) for v in variants]  # image_path, sound_path
             viewer.add_variant_buttons(variants_data)
 
             viewer.exec_()
