@@ -213,17 +213,14 @@ class DarkTheme:
         }
     """
 
+    # Обновленный стиль для меток аккордов с прозрачным фоном
     CHORD_IMAGE_LABEL_STYLE = """
         QLabel {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 15px;
-            min-width: 200px;
-            min-height: 300px;
-        }
-        QLabel:hover {
-            border: 2px dashed rgba(255, 255, 255, 0.4);
+            background: transparent;
+            border: none;
+            padding: 10px;
+            min-width: 150px;
+            min-height: 200px;
         }
     """
 
@@ -250,5 +247,25 @@ class DarkTheme:
             padding: 8px 15px;
             border-radius: 20px;
             margin: 5px;
+        }
+    """
+
+    # Новые стили для прозрачных контейнеров
+    TRANSPARENT_CONTAINER_STYLE = """
+        QFrame {
+            background: transparent;
+            border: none;
+        }
+        QWidget {
+            background: transparent;
+        }
+    """
+
+    CHORD_CONTAINER_STYLE = """
+        QFrame {
+            background: transparent;
+            border: none;
+            margin: 0px;
+            padding: 0px;
         }
     """

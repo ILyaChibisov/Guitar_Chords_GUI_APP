@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                              QLineEdit, QListWidget, QTextBrowser, QLabel,
                              QFrame, QScrollArea, QSizePolicy)
 from PyQt5.QtCore import QUrl, Qt, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QImage
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 from .base_page import BasePage
@@ -151,13 +151,7 @@ class SongsPage(BasePage):
         chords_pagination_layout.setSpacing(15)
 
         # Кнопка пагинации влево
-        # ВАРИАНТЫ ДИЗАЙНА (замените PaginationButton на нужный вариант):
-        # - PaginationButton: Синие стрелки (стандарт)
-        # - PaginationButtonVariant2: Фиолетовые
-        # - PaginationButtonVariant3: Оранжевые
-        # - PaginationButtonVariant4: Зеленые
-        # - PaginationButtonVariant5: Красные
-        self.scroll_left_btn = PaginationButton("◀")  # ← ИЗМЕНИТЕ ЗДЕСЬ ДЛЯ СМЕНЫ СТИЛЯ
+        self.scroll_left_btn = PaginationButton("◀")
         self.scroll_left_btn.clicked.connect(self.previous_page)
         self.scroll_left_btn.hide()
 
@@ -175,7 +169,7 @@ class SongsPage(BasePage):
         """)
 
         # Кнопка пагинации вправо
-        self.scroll_right_btn = PaginationButton("▶")  # ← ИЗМЕНИТЕ ЗДЕСЬ ДЛЯ СМЕНЫ СТИЛЯ
+        self.scroll_right_btn = PaginationButton("▶")
         self.scroll_right_btn.clicked.connect(self.next_page)
         self.scroll_right_btn.hide()
 
@@ -235,9 +229,10 @@ class SongsPage(BasePage):
 
         right_layout.addWidget(search_frame)
 
-        # Область аккордов - АДАПТИВНАЯ
+        # Область аккордов - АДАПТИВНАЯ С ПРОЗРАЧНЫМ ФОНОМ
         chords_frame = QFrame()
         chords_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        chords_frame.setStyleSheet("background: transparent; border: none;")
         chords_layout_right = QVBoxLayout(chords_frame)
         chords_layout_right.setSpacing(5)
 
@@ -282,7 +277,7 @@ class SongsPage(BasePage):
 
         chords_layout_right.addWidget(chord_info_widget)
 
-        # АДАПТИВНАЯ область для картинки аккорда
+        # АДАПТИВНАЯ область для картинки аккорда С ПРОЗРАЧНЫМ ФОНОМ
         self.chord_image_label = AdaptiveChordLabel()
         self.chord_image_label.clicked.connect(self.show_chord_large)
         self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -372,6 +367,7 @@ class SongsPage(BasePage):
             }
         """)
 
+        # Прозрачные стили для области аккордов
         self.setStyleSheet("""
             QFrame {
                 background: transparent;
@@ -379,6 +375,41 @@ class SongsPage(BasePage):
             }
         """)
 
+    def load_chord_variant(self, image_path, mp3_path):
+        """Загрузка конкретного варианта аккорда с прозрачным фоном"""
+        try:
+            pixmap = QPixmap(image_path)
+            if not pixmap.isNull():
+                # Создаем QImage для работы с форматом
+                image = pixmap.toImage()
+
+                # Если изображение имеет прозрачность, конвертируем в ARGB32
+                if image.hasAlphaChannel():
+                    image = image.convertToFormat(QImage.Format_ARGB32)
+                    pixmap = QPixmap.fromImage(image)
+                    print(f"✅ Изображение загружено с прозрачностью: {os.path.basename(image_path)}")
+                else:
+                    print(f"✅ Изображение загружено без прозрачности: {os.path.basename(image_path)}")
+
+                self.chord_image_label.setChordPixmap(pixmap)
+            else:
+                print(f"❌ Не удалось загрузить изображение: {image_path}")
+                self.chord_image_label.clear()
+
+            self.last_variant_mp3_path = mp3_path
+
+            if mp3_path and os.path.exists(mp3_path):
+                self.sound_button.show()
+                print(f"✅ Звуковой файл доступен: {os.path.basename(mp3_path)}")
+            else:
+                self.sound_button.hide()
+                print(f"⚠️ Звуковой файл отсутствует")
+
+        except Exception as e:
+            print(f"❌ Ошибка загрузки варианта аккорда: {e}")
+            self.chord_image_label.clear()
+
+    # Остальные методы остаются без изменений...
     def initialize_page(self):
         """Инициализация страницы"""
         if not self.is_initialized:
@@ -514,30 +545,6 @@ class SongsPage(BasePage):
             self.results_list.setFixedHeight(max_height)
             self.results_list.show()
             self.results_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-
-    def load_chord_variant(self, image_path, mp3_path):
-        """Загрузка конкретного варианта аккорда с адаптивным отображением"""
-        try:
-            pixmap = QPixmap(image_path)
-            if not pixmap.isNull():
-                self.chord_image_label.setChordPixmap(pixmap)
-                print(f"✅ Изображение загружено: {os.path.basename(image_path)}")
-            else:
-                print(f"❌ Не удалось загрузить изображение: {image_path}")
-                self.chord_image_label.clear()
-
-            self.last_variant_mp3_path = mp3_path
-
-            if mp3_path and os.path.exists(mp3_path):
-                self.sound_button.show()
-                print(f"✅ Звуковой файл доступен: {os.path.basename(mp3_path)}")
-            else:
-                self.sound_button.hide()
-                print(f"⚠️ Звуковой файл отсутствует")
-
-        except Exception as e:
-            print(f"❌ Ошибка загрузки варианта аккорда: {e}")
-            self.chord_image_label.clear()
 
     def resizeEvent(self, event):
         """Обработчик изменения размера окна"""

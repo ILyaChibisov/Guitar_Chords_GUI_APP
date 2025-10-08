@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Оптимизированный конвертер аккордов со сжатием
+Оптимизированный конвертер аккордов с сохранением прозрачности PNG
 """
 
 import os
@@ -20,7 +20,7 @@ except ImportError:
 
 
 class ChordStructureConverter:
-    """Оптимизированный конвертер со сжатием изображений"""
+    """Оптимизированный конвертер с сохранением прозрачности"""
 
     def __init__(self, chords_base_dir):
         self.chords_base_dir = Path(chords_base_dir)
@@ -31,22 +31,48 @@ class ChordStructureConverter:
             'images_optimized': 0,
             'sounds_optimized': 0,
             'chords_with_sound': 0,
-            'chords_without_sound': 0
+            'chords_without_sound': 0,
+            'png_with_transparency': 0,
+            'png_converted_to_jpeg': 0
         }
 
     def optimize_image(self, image_path, max_size=(400, 200), quality=85):
-        """Оптимизирует изображение: уменьшает размер и качество"""
+        """Оптимизирует изображение с сохранением прозрачности PNG"""
         try:
             with Image.open(image_path) as img:
-                if img.mode in ('RGBA', 'P'):
-                    img = img.convert('RGB')
+                original_format = img.format
+                has_alpha = img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info)
 
-                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                # Сохраняем прозрачность для PNG
+                if image_path.suffix.lower() == '.png' and has_alpha:
+                    # Для PNG с прозрачностью сохраняем как PNG
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
 
-                buffer = io.BytesIO()
-                img.save(buffer, format='JPEG', quality=quality, optimize=True)
+                    # Сохраняем в режиме RGBA для прозрачности
+                    if img.mode != 'RGBA':
+                        img = img.convert('RGBA')
 
-                optimized_data = buffer.getvalue()
+                    buffer = io.BytesIO()
+                    img.save(buffer, format='PNG', optimize=True)
+                    optimized_data = buffer.getvalue()
+
+                    self.compression_stats['png_with_transparency'] += 1
+                    print(f"    🎨 PNG с прозрачностью сохранен как PNG")
+
+                else:
+                    # Для JPG и PNG без прозрачности конвертируем в JPG
+                    if img.mode in ('RGBA', 'LA', 'P'):
+                        img = img.convert('RGB')
+
+                    img.thumbnail(max_size, Image.Resampling.LANCZOS)
+
+                    buffer = io.BytesIO()
+                    img.save(buffer, format='JPEG', quality=quality, optimize=True)
+                    optimized_data = buffer.getvalue()
+
+                    if image_path.suffix.lower() == '.png':
+                        self.compression_stats['png_converted_to_jpeg'] += 1
+                        print(f"    🔄 PNG без прозрачности конвертирован в JPEG")
 
                 original_size = os.path.getsize(image_path)
                 self.compression_stats['original_size'] += original_size
@@ -281,6 +307,8 @@ class ChordStructureConverter:
         print("\n📊 Статистика оптимизации:")
         print(f"   🖼️ Оптимизировано изображений: {self.compression_stats['images_optimized']}")
         print(f"   🔊 Оптимизировано звуковых файлов: {self.compression_stats['sounds_optimized']}")
+        print(f"   🎨 PNG с прозрачностью: {self.compression_stats['png_with_transparency']}")
+        print(f"   🔄 PNG конвертировано в JPEG: {self.compression_stats['png_converted_to_jpeg']}")
         print(f"   📦 Исходный размер: {self.compression_stats['original_size'] / 1024 / 1024:.2f} MB")
         print(f"   🗜️ Сжатый размер: {self.compression_stats['compressed_size'] / 1024 / 1024:.2f} MB")
 
@@ -295,7 +323,7 @@ class ChordStructureConverter:
 
 def main():
     """Основная функция конвертера"""
-    print("🎸 Оптимизированный конвертер аккордов")
+    print("🎸 Оптимизированный конвертер аккордов с сохранением прозрачности")
     print("=" * 50)
 
     if not HAS_PILLOW:
@@ -342,6 +370,8 @@ def main():
         converter.print_compression_stats()
 
         print(f"\n✅ Конвертация завершена! Файл: {data_file}")
+        print("🎨 PNG с прозрачностью сохранены в формате PNG")
+        print("🖼️ Остальные изображения конвертированы в JPEG")
 
     except Exception as e:
         print(f"❌ Ошибка при конвертации: {e}")

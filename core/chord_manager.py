@@ -1,7 +1,7 @@
 import base64
 import tempfile
 import os
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import QBuffer, QIODevice
 
 try:
@@ -77,7 +77,7 @@ class ChordData:
 
 
 class ChordManager:
-    """Управляет оптимизированными данными аккордов"""
+    """Управляет оптимизированными данными аккордов с поддержкой прозрачности"""
 
     def __init__(self):
         self.temp_files = []
@@ -111,7 +111,7 @@ class ChordManager:
         return ChordData.get_chord_description(chord_name)
 
     def base64_to_pixmap(self, base64_data):
-        """Конвертирует base64 в QPixmap"""
+        """Конвертирует base64 в QPixmap с поддержкой прозрачности"""
         try:
             if not base64_data:
                 return QPixmap()
@@ -119,14 +119,34 @@ class ChordManager:
             # Убираем возможные разрывы строк в base64 данных
             clean_base64 = base64_data.replace('\n', '').replace('\\', '')
             image_data = base64.b64decode(clean_base64)
-            pixmap = QPixmap()
-            pixmap.loadFromData(image_data)
+
+            # Создаем QImage из данных
+            image = QImage()
+            image.loadFromData(image_data)
+
+            if image.isNull():
+                print("❌ Не удалось создать QImage из base64 данных")
+                return QPixmap()
+
+            # Конвертируем в правильный формат для прозрачности
+            if image.hasAlphaChannel():
+                # Для изображений с прозрачностью используем Format_ARGB32
+                image = image.convertToFormat(QImage.Format_ARGB32)
+                print("🎨 Загружено изображение с прозрачностью")
+            else:
+                # Для изображений без прозрачности используем Format_RGB32
+                image = image.convertToFormat(QImage.Format_RGB32)
+                print("🖼️ Загружено изображение без прозрачности")
+
+            # Конвертируем QImage в QPixmap
+            pixmap = QPixmap.fromImage(image)
 
             if pixmap.isNull():
-                print("❌ Не удалось создать QPixmap из base64 данных")
+                print("❌ Не удалось создать QPixmap из QImage")
                 return QPixmap()
 
             return pixmap
+
         except Exception as e:
             print(f"❌ Ошибка создания pixmap: {e}")
             return QPixmap()
@@ -166,7 +186,18 @@ class ChordManager:
             print(f"❌ Нет данных изображения для варианта {variant_index} аккорда {chord_name}")
             return QPixmap()
 
-        return self.base64_to_pixmap(image_data)
+        pixmap = self.base64_to_pixmap(image_data)
+
+        # Проверяем прозрачность
+        if not pixmap.isNull():
+            # Создаем временный QImage для проверки прозрачности
+            temp_image = pixmap.toImage()
+            if temp_image.hasAlphaChannel():
+                print(f"✅ Изображение аккорда '{chord_name}' имеет прозрачный фон")
+            else:
+                print(f"✅ Изображение аккорда '{chord_name}' без прозрачности")
+
+        return pixmap
 
     def get_chord_sound_path(self, chord_name, variant_index=0):
         """Возвращает путь к временному звуковому файлу"""
@@ -207,6 +238,51 @@ class ChordManager:
         }
 
         print(f"✅ Данные варианта {variant_index}: image={bool(image_path)}, sound={bool(sound_path)}")
+
+        # Проверяем прозрачность созданного файла
+        if image_path and os.path.exists(image_path):
+            pixmap = QPixmap(image_path)
+            if not pixmap.isNull():
+                temp_image = pixmap.toImage()
+                if temp_image.hasAlphaChannel():
+                    print(f"🎨 Временный файл имеет прозрачный фон: {os.path.basename(image_path)}")
+                else:
+                    print(f"🖼️ Временный файл без прозрачности: {os.path.basename(image_path)}")
+
+        return result
+
+    def get_chord_variant_data_with_pixmap(self, chord_name, variant_index=0):
+        """Возвращает данные варианта аккорда с готовым QPixmap"""
+        variants = self.get_chord_variants(chord_name)
+        if not variants or variant_index >= len(variants):
+            return None
+
+        variant = variants[variant_index]
+
+        # Создаем QPixmap напрямую из base64
+        pixmap = self.base64_to_pixmap(variant.get('image_data'))
+
+        if pixmap.isNull():
+            return None
+
+        # Создаем временный файл для звука
+        sound_path = self.base64_to_temp_file(variant.get('sound_data'), '.mp3')
+
+        # Проверяем прозрачность через QImage
+        temp_image = pixmap.toImage()
+        has_transparency = temp_image.hasAlphaChannel()
+
+        result = {
+            'pixmap': pixmap,
+            'sound_path': sound_path,
+            'description': variant.get('description', ''),
+            'position': variant.get('position', 0),
+            'has_transparency': has_transparency
+        }
+
+        transparency_status = "с прозрачностью" if has_transparency else "без прозрачности"
+        print(f"✅ Вариант {variant_index} загружен: {transparency_status}")
+
         return result
 
     def cleanup(self):
@@ -231,3 +307,40 @@ class ChordManager:
     def is_data_loaded(self):
         """Проверяет, загружены ли данные аккордов"""
         return ChordData.is_data_available()
+
+    def check_chord_transparency(self, chord_name, variant_index=0):
+        """Проверяет наличие прозрачности у изображения аккорда"""
+        variants = self.get_chord_variants(chord_name)
+        if not variants or variant_index >= len(variants):
+            return False
+
+        variant = variants[variant_index]
+        image_data = variant.get('image_data')
+        if not image_data:
+            return False
+
+        pixmap = self.base64_to_pixmap(image_data)
+        if pixmap.isNull():
+            return False
+
+        # Проверяем прозрачность через QImage
+        temp_image = pixmap.toImage()
+        has_transparency = temp_image.hasAlphaChannel()
+
+        status = "имеет прозрачность" if has_transparency else "без прозрачности"
+        print(f"🔍 Аккорд '{chord_name}' вариант {variant_index}: {status}")
+
+        return has_transparency
+
+    def get_chord_image_direct(self, chord_name, variant_index=0):
+        """Возвращает QPixmap напрямую без создания временных файлов"""
+        variants = self.get_chord_variants(chord_name)
+        if not variants or variant_index >= len(variants):
+            return QPixmap()
+
+        variant = variants[variant_index]
+        image_data = variant.get('image_data')
+        if not image_data:
+            return QPixmap()
+
+        return self.base64_to_pixmap(image_data)

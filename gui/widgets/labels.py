@@ -21,11 +21,17 @@ class ChordImageLabel(ClickableLabel):
         super().__init__(parent)
         self.setAlignment(Qt.AlignCenter)
         self.setCursor(Qt.PointingHandCursor)
-        self.setStyleSheet(DarkTheme.CHORD_IMAGE_LABEL_STYLE)
+        self.setStyleSheet("""
+            QLabel {
+                background: transparent;
+                border: none;
+                margin: 5px;
+            }
+        """)
 
 
 class AdaptiveChordLabel(ClickableLabel):
-    """Адаптивная метка для изображения аккорда, подстраивающаяся под размеры"""
+    """Адаптивная метка для изображения аккорда с прозрачным фоном"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -33,7 +39,14 @@ class AdaptiveChordLabel(ClickableLabel):
         self.setCursor(Qt.PointingHandCursor)
         self.setMinimumSize(150, 200)  # Минимальный размер
         self._original_pixmap = None
-        self.setStyleSheet(DarkTheme.CHORD_IMAGE_LABEL_STYLE)
+        # Прозрачный стиль
+        self.setStyleSheet("""
+            AdaptiveChordLabel {
+                background: transparent;
+                border: none;
+                margin: 10px;
+            }
+        """)
 
     def setChordPixmap(self, pixmap):
         """Устанавливает изображение аккорда и сохраняет оригинал"""
@@ -41,15 +54,19 @@ class AdaptiveChordLabel(ClickableLabel):
         self.updatePixmap()
 
     def updatePixmap(self):
-        """Обновляет изображение с учетом текущего размера"""
+        """Обновляет изображение с учетом текущего размера и прозрачности"""
         if self._original_pixmap and not self._original_pixmap.isNull():
             # Вычисляем доступный размер с учетом отступов
             available_size = self.size() - QSize(20, 20)  # Учитываем padding
+
+            # Масштабируем с сохранением пропорций
             scaled_pixmap = self._original_pixmap.scaled(
                 available_size,
                 Qt.KeepAspectRatio,
                 Qt.SmoothTransformation
             )
+
+            # Устанавливаем прозрачное изображение
             self.setPixmap(scaled_pixmap)
         else:
             self.clear()
