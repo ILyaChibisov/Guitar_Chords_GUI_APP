@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtCore import Qt
 from config.styles import DarkTheme
 
-
 class ModernButton(QPushButton):
     """Современная кнопка с градиентом"""
 
@@ -10,7 +9,6 @@ class ModernButton(QPushButton):
         super().__init__(text, parent)
         self.setCursor(Qt.PointingHandCursor)
         self.setStyleSheet(DarkTheme.MODERN_BUTTON_STYLE)
-
 
 class MenuButton(QPushButton):
     """Кнопка для главного меню"""
@@ -21,7 +19,6 @@ class MenuButton(QPushButton):
         self.setFixedHeight(40)
         self.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
 
-
 class ChordButton(QPushButton):
     """Кнопка аккорда"""
 
@@ -29,7 +26,6 @@ class ChordButton(QPushButton):
         super().__init__(text, parent)
         self.setCursor(Qt.PointingHandCursor)
         self.setStyleSheet(DarkTheme.CHORD_BUTTON_STYLE)
-
 
 class ChordVariantButton(QPushButton):
     """Кнопка варианта аккорда"""
@@ -73,7 +69,6 @@ class ChordVariantButton(QPushButton):
                     background: #2E7D32;
                 }
             """)
-
 
 class SoundButtonLarge(QPushButton):
     """Большая кнопка воспроизведения звука"""

@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import QScrollArea, QWidget, QHBoxLayout
 from PyQt5.QtCore import Qt
 
-
 class ScrollChordButtonsWidget(QScrollArea):
-    """Прокручиваемая область для кнопок аккордов"""
+    """Прокручиваемая область для кнопок аккордов с пагинацией"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -11,8 +10,8 @@ class ScrollChordButtonsWidget(QScrollArea):
         # Создаем внутренний виджет для кнопок
         self.scroll_widget = QWidget()
         self.chords_layout = QHBoxLayout(self.scroll_widget)
-        self.chords_layout.setSpacing(5)
-        self.chords_layout.setContentsMargins(5, 5, 5, 5)
+        self.chords_layout.setSpacing(8)
+        self.chords_layout.setContentsMargins(10, 5, 10, 5)
         self.chords_layout.setAlignment(Qt.AlignCenter)
 
         # Настраиваем ScrollArea
@@ -24,6 +23,9 @@ class ScrollChordButtonsWidget(QScrollArea):
         self.setStyleSheet("""
             QScrollArea {
                 border: none;
+                background: transparent;
+            }
+            QWidget {
                 background: transparent;
             }
         """)

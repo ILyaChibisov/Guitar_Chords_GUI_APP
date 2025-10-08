@@ -187,6 +187,32 @@ class DarkTheme:
         }
     """
 
+    PAGINATION_BUTTON_STYLE = """
+        QPushButton {
+            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #5a6fd8, stop: 1 #6a4190);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            min-width: 35px;
+            min-height: 40px;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #667eea, stop: 1 #764ba2);
+        }
+        QPushButton:pressed {
+            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                stop: 0 #4c5bc6, stop: 1 #58357e);
+        }
+        QPushButton:disabled {
+            background: #34495e;
+            color: #7f8c8d;
+        }
+    """
+
     CHORD_IMAGE_LABEL_STYLE = """
         QLabel {
             background: rgba(255, 255, 255, 0.05);

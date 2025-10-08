@@ -1,6 +1,5 @@
 import os
 
-
 class AppSettings:
     # Основные настройки приложения
     APP_NAME = "🎸 GuitarChords Pro"
@@ -20,7 +19,6 @@ class AppSettings:
     CHORD_IMAGE_SIZE = (400, 600)
     LARGE_CHORD_IMAGE_SIZE = (300, 300)
     SCROLL_AREA_HEIGHT = 60
-
 
 class DatabaseConfig:
     # Конфигурация базы данных
