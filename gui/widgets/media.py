@@ -12,7 +12,7 @@ class ScrollChordButtonsWidget(QScrollArea):
         self.chords_layout = QHBoxLayout(self.scroll_widget)
         self.chords_layout.setSpacing(8)
         self.chords_layout.setContentsMargins(10, 5, 10, 5)
-        self.chords_layout.setAlignment(Qt.AlignCenter)
+        self.chords_layout.setAlignment(Qt.AlignCenter)  # Центрируем кнопки
 
         # Настраиваем ScrollArea
         self.setWidget(self.scroll_widget)

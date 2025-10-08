@@ -35,15 +35,14 @@ except ImportError as e:
 
 
 class SongsPage(BasePage):
-    """Страница песен и аккордов с пагинацией"""
+    """Страница песен и аккордов с пагинацией по 1 аккорду"""
 
     def __init__(self, parent=None):
         super().__init__("songs", parent)
 
         # Переменные для пагинации аккордов
         self.chords_per_page = 8  # Максимум аккордов на странице
-        self.current_page = 0
-        self.total_pages = 0
+        self.current_start_index = 0  # Индекс первого отображаемого аккорда
         self.unique_chords = []
 
         # Остальные переменные
@@ -133,19 +132,32 @@ class SongsPage(BasePage):
         self.song_text.setWordWrapMode(True)
         left_layout.addWidget(self.song_text, 1)
 
-        # Контейнер для кнопок аккордов и пагинации - ПРОЗРАЧНЫЙ ФОН
+        # Контейнер для кнопок аккордов и пагинации - ЦЕНТРИРОВАННЫЙ ОТНОСИТЕЛЬНО ОКНА ПЕСНИ
         chords_container = QWidget()
         chords_container.setStyleSheet("background: transparent; border: none;")
-        chords_layout = QHBoxLayout(chords_container)
-        chords_layout.setContentsMargins(0, 0, 0, 0)
-        chords_layout.setSpacing(10)
+        chords_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        # ГЛАВНЫЙ КОНТЕЙНЕР ДЛЯ ЦЕНТРИРОВАНИЯ
+        chords_main_layout = QHBoxLayout(chords_container)
+        chords_main_layout.setContentsMargins(0, 0, 0, 0)
+        chords_main_layout.setSpacing(0)
+
+        # ЛЕВЫЙ РАСТЯГИВАЕМЫЙ ПРОБЕЛ
+        chords_main_layout.addStretch(1)
+
+        # ЦЕНТРАЛЬНЫЙ КОНТЕЙНЕР С КНОПКАМИ И ПАГИНАЦИЕЙ
+        chords_center_widget = QWidget()
+        chords_center_widget.setStyleSheet("background: transparent; border: none;")
+        chords_center_layout = QHBoxLayout(chords_center_widget)
+        chords_center_layout.setContentsMargins(0, 0, 0, 0)
+        chords_center_layout.setSpacing(10)
 
         # Кнопка пагинации влево
         self.scroll_left_btn = QPushButton("◀")
         self.scroll_left_btn.setFixedSize(35, 40)
         self.scroll_left_btn.setCursor(Qt.PointingHandCursor)
         self.scroll_left_btn.setStyleSheet(DarkTheme.PAGINATION_BUTTON_STYLE)
-        self.scroll_left_btn.clicked.connect(self.previous_chords_page)
+        self.scroll_left_btn.clicked.connect(self.previous_chords)
         self.scroll_left_btn.hide()
 
         # Область с кнопками аккордов
@@ -165,13 +177,19 @@ class SongsPage(BasePage):
         self.scroll_right_btn.setFixedSize(35, 40)
         self.scroll_right_btn.setCursor(Qt.PointingHandCursor)
         self.scroll_right_btn.setStyleSheet(DarkTheme.PAGINATION_BUTTON_STYLE)
-        self.scroll_right_btn.clicked.connect(self.next_chords_page)
+        self.scroll_right_btn.clicked.connect(self.next_chords)
         self.scroll_right_btn.hide()
 
-        # Добавляем элементы в layout: левая кнопка → аккорды → правая кнопка
-        chords_layout.addWidget(self.scroll_left_btn)
-        chords_layout.addWidget(self.scroll_chords_widget, 1)
-        chords_layout.addWidget(self.scroll_right_btn)
+        # Добавляем элементы в центральный layout
+        chords_center_layout.addWidget(self.scroll_left_btn)
+        chords_center_layout.addWidget(self.scroll_chords_widget)
+        chords_center_layout.addWidget(self.scroll_right_btn)
+
+        # Добавляем центральный контейнер в главный layout
+        chords_main_layout.addWidget(chords_center_widget)
+
+        # ПРАВЫЙ РАСТЯГИВАЕМЫЙ ПРОБЕЛ
+        chords_main_layout.addStretch(1)
 
         self.chords_container = chords_container
         self.chords_container.hide()
@@ -400,20 +418,16 @@ class SongsPage(BasePage):
 
         # Получаем уникальные аккорды
         self.unique_chords = sorted(set(self.chords_list))
-
-        # Рассчитываем пагинацию
-        total_chords = len(self.unique_chords)
-        self.total_pages = (total_chords + self.chords_per_page - 1) // self.chords_per_page
-        self.current_page = 0
+        self.current_start_index = 0  # Начинаем с первого аккорда
 
         # Показываем/скрываем кнопки пагинации
         self.update_pagination_buttons()
 
-        # Создаем кнопки для текущей страницы
-        self.show_current_page_chords()
+        # Создаем кнопки для текущего диапазона
+        self.show_current_chords()
 
-    def show_current_page_chords(self):
-        """Показывает кнопки аккордов для текущей страницы"""
+    def show_current_chords(self):
+        """Показывает кнопки аккордов для текущего диапазона"""
         chords_layout = self.scroll_chords_widget.chords_layout
 
         # Очищаем текущие кнопки
@@ -422,12 +436,11 @@ class SongsPage(BasePage):
             if widget:
                 widget.deleteLater()
 
-        # Рассчитываем диапазон аккордов для текущей страницы
-        start_index = self.current_page * self.chords_per_page
-        end_index = min(start_index + self.chords_per_page, len(self.unique_chords))
+        # Рассчитываем диапазон аккордов для отображения
+        end_index = min(self.current_start_index + self.chords_per_page, len(self.unique_chords))
 
-        # Создаем кнопки для текущей страницы
-        for i in range(start_index, end_index):
+        # Создаем кнопки для текущего диапазона
+        for i in range(self.current_start_index, end_index):
             chord = self.unique_chords[i]
             btn = ChordButton(chord)
             btn.clicked.connect(lambda checked, c=chord: self.on_chord_button_clicked(c))
@@ -452,21 +465,21 @@ class SongsPage(BasePage):
             self.scroll_right_btn.show()
 
             # Обновляем доступность кнопок
-            self.scroll_left_btn.setEnabled(self.current_page > 0)
-            self.scroll_right_btn.setEnabled(self.current_page < self.total_pages - 1)
+            self.scroll_left_btn.setEnabled(self.current_start_index > 0)
+            self.scroll_right_btn.setEnabled(self.current_start_index < total_chords - self.chords_per_page)
 
-    def next_chords_page(self):
-        """Переход к следующей странице аккордов"""
-        if self.current_page < self.total_pages - 1:
-            self.current_page += 1
-            self.show_current_page_chords()
+    def next_chords(self):
+        """Сдвиг аккордов вправо на 1 позицию"""
+        if self.current_start_index < len(self.unique_chords) - self.chords_per_page:
+            self.current_start_index += 1
+            self.show_current_chords()
             self.update_pagination_buttons()
 
-    def previous_chords_page(self):
-        """Переход к предыдущей странице аккордов"""
-        if self.current_page > 0:
-            self.current_page -= 1
-            self.show_current_page_chords()
+    def previous_chords(self):
+        """Сдвиг аккордов влево на 1 позицию"""
+        if self.current_start_index > 0:
+            self.current_start_index -= 1
+            self.show_current_chords()
             self.update_pagination_buttons()
 
     def on_chord_button_clicked(self, chord_name):
