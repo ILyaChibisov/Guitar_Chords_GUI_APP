@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                              QLineEdit, QListWidget, QTextBrowser, QLabel,
                              QFrame, QScrollArea, QSizePolicy)
 from PyQt5.QtCore import QUrl, Qt, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QPixmap,QImage
+from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
 from .base_page import BasePage
@@ -141,7 +141,7 @@ class SongsPage(BasePage):
 
         chords_main_layout = QVBoxLayout(self.chords_main_container)
         chords_main_layout.setContentsMargins(0, 0, 0, 0)
-        chords_main_layout.setSpacing(0)  # Убрали отступ для индикатора
+        chords_main_layout.setSpacing(0)
 
         # КОНТЕЙНЕР С КНОПКАМИ АККОРДОВ И ПАГИНАЦИЕЙ В ОДНОЙ СТРОКЕ
         chords_pagination_container = QWidget()
@@ -173,14 +173,11 @@ class SongsPage(BasePage):
         self.scroll_right_btn.clicked.connect(self.next_page)
         self.scroll_right_btn.hide()
 
-        # Добавляем все в одну строку
         chords_pagination_layout.addWidget(self.scroll_left_btn)
-        chords_pagination_layout.addWidget(self.scroll_chords_widget, 1)  # Растягиваем область с аккордами
+        chords_pagination_layout.addWidget(self.scroll_chords_widget, 1)
         chords_pagination_layout.addWidget(self.scroll_right_btn)
 
-        # Добавляем в основной layout (БЕЗ ИНДИКАТОРА СТРАНИЦ)
         chords_main_layout.addWidget(chords_pagination_container)
-
         self.chords_main_container.hide()
         left_layout.addWidget(self.chords_main_container)
 
@@ -198,7 +195,6 @@ class SongsPage(BasePage):
         search_layout.setSpacing(10)
         search_layout.setContentsMargins(0, 0, 0, 0)
 
-        # КОНТЕЙНЕР ДЛЯ ПОЛЯ ПОИСКА И КНОПКИ
         search_input_container = QWidget()
         search_input_container.setStyleSheet("background: transparent; border: none;")
         search_input_layout = QHBoxLayout(search_input_container)
@@ -209,7 +205,6 @@ class SongsPage(BasePage):
         self.search_input.setPlaceholderText("🔍 Введите название песни...")
         self.search_input.returnPressed.connect(self.search_songs)
 
-        # КНОПКА "НАЙТИ" С СИНИМ СТИЛЕМ
         self.search_button = QPushButton("Найти")
         self.search_button.setCursor(Qt.PointingHandCursor)
         self.search_button.setFixedHeight(40)
@@ -217,10 +212,8 @@ class SongsPage(BasePage):
 
         search_input_layout.addWidget(self.search_input, 3)
         search_input_layout.addWidget(self.search_button, 1)
-
         search_layout.addWidget(search_input_container)
 
-        # Список результатов поиска
         self.results_list = QListWidget()
         self.results_list.itemClicked.connect(self.load_song)
         self.results_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -229,21 +222,19 @@ class SongsPage(BasePage):
 
         right_layout.addWidget(search_frame)
 
-        # Область аккордов - АДАПТИВНАЯ С ПРОЗРАЧНЫМ ФОНОМ
+        # Область аккордов
         chords_frame = QFrame()
         chords_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         chords_frame.setStyleSheet("background: transparent; border: none;")
         chords_layout_right = QVBoxLayout(chords_frame)
         chords_layout_right.setSpacing(5)
 
-        # ИНФОРМАЦИЯ ОБ АККОРДЕ - ПРОСТО ТЕКСТ БЕЗ РАМКИ
         chord_info_widget = QWidget()
         chord_info_widget.setStyleSheet("background: transparent; border: none;")
         chord_info_layout = QVBoxLayout(chord_info_widget)
         chord_info_layout.setSpacing(2)
         chord_info_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Название аккорда - белый шрифт, по центру
         self.chord_name_label = QLabel("")
         self.chord_name_label.setStyleSheet("""
             QLabel {
@@ -259,7 +250,6 @@ class SongsPage(BasePage):
         self.chord_name_label.setAlignment(Qt.AlignCenter)
         chord_info_layout.addWidget(self.chord_name_label)
 
-        # Описание аккорда - шрифт чуть меньше, выравнивание по центру
         self.chord_description_label = QLabel("")
         self.chord_description_label.setStyleSheet("""
             QLabel {
@@ -277,13 +267,11 @@ class SongsPage(BasePage):
 
         chords_layout_right.addWidget(chord_info_widget)
 
-        # АДАПТИВНАЯ область для картинки аккорда С ПРОЗРАЧНЫМ ФОНОМ
         self.chord_image_label = AdaptiveChordLabel()
         self.chord_image_label.clicked.connect(self.show_chord_large)
         self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         chords_layout_right.addWidget(self.chord_image_label, 1)
 
-        # Контейнер для кнопок вариантов - ПРОЗРАЧНЫЙ ФОН
         self.variants_container = QWidget()
         self.variants_container.setStyleSheet("background: transparent; border: none;")
         self.variants_layout = QHBoxLayout(self.variants_container)
@@ -291,7 +279,6 @@ class SongsPage(BasePage):
         self.variants_layout.setSpacing(8)
         chords_layout_right.addWidget(self.variants_container)
 
-        # Кнопка звука
         self.sound_button = SoundButtonLarge()
         self.sound_button.setText("🔈 Слушать")
         self.sound_button.clicked.connect(self.play_last_variant_sound)
@@ -367,7 +354,6 @@ class SongsPage(BasePage):
             }
         """)
 
-        # Прозрачные стили для области аккордов
         self.setStyleSheet("""
             QFrame {
                 background: transparent;
@@ -380,36 +366,25 @@ class SongsPage(BasePage):
         try:
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
-                # Создаем QImage для работы с форматом
                 image = pixmap.toImage()
-
-                # Если изображение имеет прозрачность, конвертируем в ARGB32
                 if image.hasAlphaChannel():
                     image = image.convertToFormat(QImage.Format_ARGB32)
                     pixmap = QPixmap.fromImage(image)
-                    print(f"✅ Изображение загружено с прозрачностью: {os.path.basename(image_path)}")
-                else:
-                    print(f"✅ Изображение загружено без прозрачности: {os.path.basename(image_path)}")
-
                 self.chord_image_label.setChordPixmap(pixmap)
             else:
-                print(f"❌ Не удалось загрузить изображение: {image_path}")
                 self.chord_image_label.clear()
 
             self.last_variant_mp3_path = mp3_path
 
             if mp3_path and os.path.exists(mp3_path):
                 self.sound_button.show()
-                print(f"✅ Звуковой файл доступен: {os.path.basename(mp3_path)}")
             else:
                 self.sound_button.hide()
-                print(f"⚠️ Звуковой файл отсутствует")
 
         except Exception as e:
             print(f"❌ Ошибка загрузки варианта аккорда: {e}")
             self.chord_image_label.clear()
 
-    # Остальные методы остаются без изменений...
     def initialize_page(self):
         """Инициализация страницы"""
         if not self.is_initialized:
@@ -430,59 +405,43 @@ class SongsPage(BasePage):
             self.chords_main_container.hide()
             return
 
-        # Получаем уникальные аккорды
         self.unique_chords = sorted(set(self.chords_list))
-        self.current_page = 0  # Сбрасываем на первую страницу
-
-        # Показываем/скрываем кнопки пагинации
+        self.current_page = 0
         self.update_pagination_buttons()
-
-        # Создаем кнопки для текущей страницы
         self.show_current_page()
 
     def show_current_page(self):
         """Показывает кнопки аккордов для текущей страницы"""
         chords_layout = self.scroll_chords_widget.chords_layout
 
-        # Очищаем текущие кнопки
         for i in reversed(range(chords_layout.count())):
             widget = chords_layout.itemAt(i).widget()
             if widget:
                 widget.deleteLater()
 
-        # Рассчитываем диапазон аккордов для текущей страницы
         start_index = self.current_page * self.chords_per_page
         end_index = min(start_index + self.chords_per_page, len(self.unique_chords))
 
-        print(f"📄 Страница {self.current_page + 1}: аккорды {start_index + 1}-{end_index} из {len(self.unique_chords)}")
-
-        # Создаем кнопки для текущей страницы
         for i in range(start_index, end_index):
             chord = self.unique_chords[i]
             btn = ChordButton(chord)
             btn.clicked.connect(lambda checked, c=chord: self.on_chord_button_clicked(c))
             chords_layout.addWidget(btn)
 
-        # Центрируем кнопки с анимацией
         self.scroll_chords_widget.scroll_to_center()
-
         self.chords_main_container.show()
 
     def update_pagination_buttons(self):
-        """Обновляет состояние кнопок пагинации"""
+        """Обновляет состояние кнопки пагинации"""
         total_chords = len(self.unique_chords)
         total_pages = (total_chords + self.chords_per_page - 1) // self.chords_per_page
 
         if total_pages <= 1:
-            # Скрываем кнопки если страница всего одна
             self.scroll_left_btn.hide()
             self.scroll_right_btn.hide()
         else:
-            # Показываем кнопки и обновляем их состояние
             self.scroll_left_btn.show()
             self.scroll_right_btn.show()
-
-            # Обновляем доступность кнопок
             self.scroll_left_btn.setEnabled(self.current_page > 0)
             self.scroll_right_btn.setEnabled(self.current_page < total_pages - 1)
 
@@ -493,7 +452,6 @@ class SongsPage(BasePage):
             self.current_page += 1
             self.show_current_page()
             self.update_pagination_buttons()
-            print(f"➡️ Переход на страницу {self.current_page + 1}")
 
     def previous_page(self):
         """Переход на предыдущую страницу"""
@@ -501,11 +459,9 @@ class SongsPage(BasePage):
             self.current_page -= 1
             self.show_current_page()
             self.update_pagination_buttons()
-            print(f"⬅️ Переход на страницу {self.current_page + 1}")
 
     def on_chord_button_clicked(self, chord_name):
         """Обработчик клика по кнопке аккорда"""
-        print(f"🎸 Клик по кнопке аккорда: {chord_name}")
         chord_url = QUrl(chord_name)
         self.chord_clicked(chord_url)
 
@@ -544,14 +500,12 @@ class SongsPage(BasePage):
             max_height = min(item_count, 6) * item_height + 20
             self.results_list.setFixedHeight(max_height)
             self.results_list.show()
-            self.results_list.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def resizeEvent(self, event):
         """Обработчик изменения размера окна"""
         super().resizeEvent(event)
         if hasattr(self, 'chord_image_label') and self.chord_image_label:
             self.chord_image_label.updatePixmap()
-        # При изменении размера перецентрируем кнопки
         if hasattr(self, 'scroll_chords_widget') and self.scroll_chords_widget:
             self.scroll_chords_widget.scroll_to_center()
 
@@ -571,7 +525,6 @@ class SongsPage(BasePage):
                 if widget:
                     widget.deleteLater()
 
-            # Очищаем кнопки аккордов
             chords_layout = self.scroll_chords_widget.chords_layout
             for i in reversed(range(chords_layout.count())):
                 widget = chords_layout.itemAt(i).widget()
@@ -602,38 +555,28 @@ class SongsPage(BasePage):
             if len(lines) >= 3:
                 lines = lines[3:]
 
-            processed_lines = []
-            for line in lines:
-                if line.strip() != '' or line.rstrip('\n') != '':
-                    processed_lines.append(line.rstrip('\n'))
+            # Подготавливаем текст
+            raw_text = ''.join(lines)
 
-            chord_links_dict = {}
-            for chord in set(self.chords_list):
-                safe_chord = html.escape(chord)
-                link_html = f'<a href="{safe_chord}" style="color: #3498db; font-weight: bold; text-decoration: none; background: rgba(52, 152, 219, 0.1); padding: 2px 6px; border-radius: 4px;">{safe_chord}</a>'
-                chord_links_dict[chord] = link_html
-
-            full_text_raw = '<br>'.join(processed_lines)
+            from utils.chord_parser import ChordParser
 
             if self.chords_list:
-                for chord in sorted(set(self.chords_list), key=len, reverse=True):
-                    if not chord:
-                        continue
-                    safe_chord = html.escape(chord)
-                    link_html = chord_links_dict[chord]
-                    pattern = r'(?<![a-zA-Z0-9#\-/])' + re.escape(chord) + r'(?![a-zA-Z0-9#\-/])'
-                    full_text_raw = re.sub(pattern, link_html, full_text_raw)
+                # Используем метод, который гарантированно избегает дублирования HTML
+                processed_text = ChordParser.word_by_word_processing(raw_text, self.chords_list)
+            else:
+                # Просто удаляем пустые строки и соединяем
+                lines_clean = [line for line in raw_text.split('\n') if line.strip()]
+                processed_text = '<br>'.join(html.escape(line) for line in lines_clean)
 
             styled_text = f"""
-            <div style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #ecf0f1;">
-                {full_text_raw}
+            <div style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #ecf0f1; white-space: pre-wrap;">
+                {processed_text}
             </div>
             """
             self.song_text.setHtml(styled_text)
 
             if self.chords_list:
                 first_chord = self.chords_list[0]
-                print(f"🎵 Автозагрузка первого аккорда: {first_chord}")
                 chord_url = QUrl(first_chord)
                 self.chord_clicked(chord_url)
 
@@ -646,12 +589,10 @@ class SongsPage(BasePage):
         """Обработчик клика по аккорду в тексте песни"""
         try:
             chord_name = url.toString()
-            print(f"🔍 Загружаем аккорд: {chord_name}")
             self.current_chord_name = chord_name
 
             chord_info = self.chord_repository.get_chord_info(chord_name)
             if not chord_info:
-                print(f"❌ Аккорд {chord_name} не найден в базе данных")
                 return
 
             self.chord_name_label.setText(f"Аккорд {chord_name}")
@@ -667,7 +608,6 @@ class SongsPage(BasePage):
 
             variants = self.chord_repository.get_chord_variants_by_name(chord_name)
             if not variants:
-                print(f"❌ Варианты аккорда {chord_name} не найдены")
                 return
 
             self.current_chord_variants = variants
@@ -697,13 +637,10 @@ class SongsPage(BasePage):
 
         except Exception as e:
             print(f"❌ Ошибка загрузки аккорда: {e}")
-            import traceback
-            traceback.print_exc()
 
     def activate_first_variant(self, variants):
         """Автоматически активирует первый вариант аккорда"""
         if not variants:
-            print("❌ Нет вариантов для активации")
             return
 
         try:
@@ -715,7 +652,6 @@ class SongsPage(BasePage):
                 if first_btn:
                     first_btn.setChecked(True)
                     first_btn.update_style()
-                    print(f"✅ Автоматически активирован вариант 1 для аккорда {self.current_chord_name}")
 
         except Exception as e:
             print(f"❌ Ошибка активации первого варианта: {e}")
@@ -726,9 +662,6 @@ class SongsPage(BasePage):
             url = QUrl.fromLocalFile(self.last_variant_mp3_path)
             self.player.setMedia(QMediaContent(url))
             self.player.play()
-            print(f"🔊 Воспроизведение звука: {os.path.basename(self.last_variant_mp3_path)}")
-        else:
-            print(f"❌ Файл не найден: {self.last_variant_mp3_path}")
 
     def show_chord_large(self):
         """Показ увеличенного окна с аккордом"""
@@ -751,13 +684,10 @@ class SongsPage(BasePage):
 
             variants_data = [(v[2], v[3]) for v in variants]
             viewer.add_variant_buttons(variants_data)
-
             viewer.exec_()
 
         except Exception as e:
             print(f"Ошибка открытия окна аккорда: {e}")
-            import traceback
-            traceback.print_exc()
 
     def handle_error(self, error):
         """Обработчик ошибок медиаплеера"""
@@ -776,3 +706,4 @@ class SongsPage(BasePage):
         """Очистка ресурсов при закрытии приложения"""
         if hasattr(self, 'chord_repository'):
             self.chord_repository.chord_manager.cleanup()
+
