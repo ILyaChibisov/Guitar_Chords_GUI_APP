@@ -1,3 +1,4 @@
+# gui/pages/base_page.py
 from PyQt5.QtWidgets import QWidget
 
 
@@ -10,19 +11,14 @@ class BasePage(QWidget):
         self.is_initialized = False
 
     def initialize_page(self):
-        """Инициализация страницы (вызывается один раз)"""
+        """Инициализация страницы - должен быть переопределен в дочерних классах"""
         if not self.is_initialized:
             self.setup_ui()
-            self.connect_signals()
             self.is_initialized = True
 
     def setup_ui(self):
-        """Настройка UI страницы (должен быть реализован в дочерних классах)"""
-        raise NotImplementedError
-
-    def connect_signals(self):
-        """Подключение сигналов (может быть переопределен)"""
-        pass
+        """Настройка UI - должен быть переопределен в дочерних классах"""
+        raise NotImplementedError("Метод setup_ui должен быть реализован в дочернем классе")
 
     def on_page_show(self):
         """Вызывается при показе страницы"""
