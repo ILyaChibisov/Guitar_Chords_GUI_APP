@@ -1,0 +1,5500 @@
+{
+  "metadata": {
+    "image_file": "img.png",
+    "total_chords": 11,
+    "outline_settings": {
+      "barre_outline": "none",
+      "note_outline": "none",
+      "scale_type": "original"
+    },
+    "created_date": "2025-10-30 20:58:22"
+  },
+  "chords": {
+    "A1": {
+      "group": "A",
+      "base_info": {
+        "base_chord": "A",
+        "variant": 1,
+        "caption": "Ля мажор",
+        "type": "Major",
+        "ram": "RAM2",
+        "bar": NaN,
+        "fnl": 21.25,
+        "fn": "22,23,24",
+        "fpol": 21.25,
+        "fpxl": 26.0,
+        "fp1": 24,
+        "fp2": 23.0,
+        "fp3": 22.0,
+        "fp4": NaN
+      },
+      "crop_rect": [
+        600,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 874,
+            "y": 384,
+            "size": 60,
+            "symbol": "II",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1212,
+            "y": 384,
+            "size": 60,
+            "symbol": "III",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              255,
+              255,
+              255
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              255,
+              255,
+              255
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 874,
+            "y": 384,
+            "size": 60,
+            "symbol": "II",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1212,
+            "y": 384,
+            "size": 60,
+            "symbol": "III",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 482,
+            "radius": 52,
+            "style": "ice",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "symbol": "",
+            "note_name": "E",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 938,
+            "radius": 52,
+            "style": "purple_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "symbol": "",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 598,
+            "radius": 52,
+            "style": "honey",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "C#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 714,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 828,
+            "radius": 52,
+            "style": "ice",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "E",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "A2": {
+      "group": "A",
+      "base_info": {
+        "base_chord": "A",
+        "variant": 2,
+        "caption": "Ля мажор",
+        "type": "Major",
+        "ram": "RAM2",
+        "bar": "2BAR2-4",
+        "fnl": NaN,
+        "fn": "51,22,23,24",
+        "fpol": NaN,
+        "fpxl": 25.26,
+        "fp1": "22,23,24",
+        "fp2": NaN,
+        "fp3": NaN,
+        "fp4": 51.0
+      },
+      "crop_rect": [
+        600,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 874,
+            "y": 384,
+            "size": 60,
+            "symbol": "II",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1212,
+            "y": 384,
+            "size": 60,
+            "symbol": "III",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 876,
+            "y": 710,
+            "width": 100,
+            "height": 320,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 874,
+            "y": 384,
+            "size": 60,
+            "symbol": "II",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1212,
+            "y": 384,
+            "size": 60,
+            "symbol": "III",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 482,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 598,
+            "radius": 52,
+            "style": "honey",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "C#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 714,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 828,
+            "radius": 52,
+            "style": "ice",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "E",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "A3": {
+      "group": "A",
+      "base_info": {
+        "base_chord": "A",
+        "variant": 3,
+        "caption": "Ля мажор",
+        "type": "Major",
+        "ram": "RAM5",
+        "bar": "5BAR1-6",
+        "fnl": NaN,
+        "fn": "51,52,56,63,74,75",
+        "fpol": NaN,
+        "fpxl": NaN,
+        "fp1": "51,52,56",
+        "fp2": 63.0,
+        "fp3": 75.0,
+        "fp4": 74.0
+      },
+      "crop_rect": [
+        1580,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 1814,
+            "y": 770,
+            "width": 100,
+            "height": 640,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2098,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 482,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 598,
+            "radius": 52,
+            "style": "cream",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1814,
+            "y": 1052,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2098,
+            "y": 714,
+            "radius": 52,
+            "style": "blue_gradient",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "C",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 828,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 938,
+            "radius": 52,
+            "style": "ice",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "E",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "A4": {
+      "group": "A",
+      "base_info": {
+        "base_chord": "A",
+        "variant": 4,
+        "caption": "Ля мажор",
+        "type": "Major",
+        "ram": "RAM7",
+        "bar": NaN,
+        "fnl": NaN,
+        "fn": "74,93,91,102",
+        "fpol": NaN,
+        "fpxl": 75.76,
+        "fp1": 74,
+        "fp2": 93.0,
+        "fp3": 91.0,
+        "fp4": 102.0
+      },
+      "crop_rect": [
+        2140,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2236,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2236,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3062,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 828,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 714,
+            "radius": 52,
+            "style": "cream",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 482,
+            "radius": 52,
+            "style": "honey",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "C#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3062,
+            "y": 598,
+            "radius": 52,
+            "style": "metal",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "G#",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "A5": {
+      "group": "A",
+      "base_info": {
+        "base_chord": "A",
+        "variant": 5,
+        "caption": "Ля мажор",
+        "type": "Major",
+        "ram": "RAM9",
+        "bar": "9BAR1-3",
+        "fnl": NaN,
+        "fn": "91,102,93,114,125",
+        "fpol": NaN,
+        "fpxl": 96.0,
+        "fp1": 91.93,
+        "fp2": 102.0,
+        "fp3": 114.0,
+        "fp4": 125.0
+      },
+      "crop_rect": [
+        2640,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 2844,
+            "y": 600,
+            "width": 100,
+            "height": 320,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2730,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3062,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 482,
+            "radius": 52,
+            "style": "honey",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "C#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3062,
+            "y": 598,
+            "radius": 52,
+            "style": "metal",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "G#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 714,
+            "radius": 52,
+            "style": "cream",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 828,
+            "radius": 52,
+            "style": "honey",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "C#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 938,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "A6": {
+      "group": "A",
+      "base_info": {
+        "base_chord": "A",
+        "variant": 6,
+        "caption": "Ля мажор",
+        "type": "Major",
+        "ram": "RAM9",
+        "bar": "12BAR1-5",
+        "fnl": NaN,
+        "fn": "121,125,142,143,144",
+        "fpol": NaN,
+        "fpxl": 96.0,
+        "fp1": 121.125,
+        "fp2": 144.0,
+        "fp3": 143.0,
+        "fp4": 142.0
+      },
+      "crop_rect": [
+        2640,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 3464,
+            "y": 720,
+            "width": 100,
+            "height": 540,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2730,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 482,
+            "radius": 52,
+            "style": "ice",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "E",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 938,
+            "radius": 52,
+            "style": "plum",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 598,
+            "radius": 52,
+            "style": "blue_gradient",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "C",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 714,
+            "radius": 52,
+            "style": "metal",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "G#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 828,
+            "radius": 52,
+            "style": "ice",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "E",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "B1": {
+      "group": "B",
+      "base_info": {
+        "base_chord": "B",
+        "variant": 1,
+        "caption": "Си мажор",
+        "type": "Major",
+        "ram": "RAM2",
+        "bar": "2BAR1-5",
+        "fnl": NaN,
+        "fn": "21,42,43,44,25",
+        "fpol": NaN,
+        "fpxl": 26.0,
+        "fp1": 21.25,
+        "fp2": 44.0,
+        "fp3": 43.0,
+        "fp4": 42.0
+      },
+      "crop_rect": [
+        600,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 874,
+            "y": 384,
+            "size": 60,
+            "symbol": "II",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1212,
+            "y": 384,
+            "size": 60,
+            "symbol": "III",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 876,
+            "y": 720,
+            "width": 100,
+            "height": 540,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 700,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 874,
+            "y": 384,
+            "size": 60,
+            "symbol": "II",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1212,
+            "y": 384,
+            "size": 60,
+            "symbol": "III",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 482,
+            "radius": 52,
+            "style": "periwinkle",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "F#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 598,
+            "radius": 52,
+            "style": "coral",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 714,
+            "radius": 52,
+            "style": "seafoam",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 828,
+            "radius": 52,
+            "style": "periwinkle",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "F#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 876,
+            "y": 938,
+            "radius": 52,
+            "style": "green_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "B",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "B2": {
+      "group": "B",
+      "base_info": {
+        "base_chord": "B",
+        "variant": 2,
+        "caption": "Си мажор",
+        "type": "Major",
+        "ram": "RAM4",
+        "bar": "4BAR2-4",
+        "fnl": NaN,
+        "fn": "42,43,44,71",
+        "fpol": NaN,
+        "fpxl": 45.46,
+        "fp1": "42,43,44",
+        "fp2": NaN,
+        "fp3": NaN,
+        "fp4": 71.0
+      },
+      "crop_rect": [
+        1280,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 1520,
+            "y": 710,
+            "width": 100,
+            "height": 320,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1368,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1368,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 1524,
+            "y": 384,
+            "size": 60,
+            "symbol": "IV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 1812,
+            "y": 384,
+            "size": 60,
+            "symbol": "V",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2100,
+            "y": 384,
+            "size": 60,
+            "symbol": "VI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 598,
+            "radius": 52,
+            "style": "coral",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 714,
+            "radius": 52,
+            "style": "seafoam",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 1520,
+            "y": 828,
+            "radius": 52,
+            "style": "periwinkle",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "F#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 482,
+            "radius": 52,
+            "style": "green_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "B",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "B3": {
+      "group": "B",
+      "base_info": {
+        "base_chord": "B",
+        "variant": 3,
+        "caption": "Си мажор",
+        "type": "Major",
+        "ram": "RAM7",
+        "bar": "7BAR1-6",
+        "fnl": NaN,
+        "fn": "71,72,83,94,95,76",
+        "fpol": NaN,
+        "fpxl": NaN,
+        "fp1": "71,72,76",
+        "fp2": 83.0,
+        "fp3": 95.0,
+        "fp4": 94.0
+      },
+      "crop_rect": [
+        2140,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 2364,
+            "y": 770,
+            "width": 100,
+            "height": 640,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2610,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2354,
+            "y": 384,
+            "size": 60,
+            "symbol": "VII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2598,
+            "y": 384,
+            "size": 60,
+            "symbol": "VIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 482,
+            "radius": 52,
+            "style": "green_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "B",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 598,
+            "radius": 52,
+            "style": "soft_pink",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "F",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2610,
+            "y": 714,
+            "radius": 52,
+            "style": "coral",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 828,
+            "radius": 52,
+            "style": "green_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "B",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 938,
+            "radius": 52,
+            "style": "periwinkle",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "F#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2364,
+            "y": 1052,
+            "radius": 52,
+            "style": "green_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "B",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "B4": {
+      "group": "B",
+      "base_info": {
+        "base_chord": "B",
+        "variant": 4,
+        "caption": "Си мажор",
+        "type": "Major",
+        "ram": "RAM9",
+        "bar": NaN,
+        "fnl": NaN,
+        "fn": "94,111,113,122",
+        "fpol": NaN,
+        "fpxl": 95.96,
+        "fp1": 94,
+        "fp2": 113.0,
+        "fp3": 111.0,
+        "fp4": 122.0
+      },
+      "crop_rect": [
+        2640,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2730,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2730,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2844,
+            "y": 828,
+            "radius": 52,
+            "style": "green_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "B",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 482,
+            "radius": 52,
+            "style": "cream",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 714,
+            "radius": 52,
+            "style": "soft_pink",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "F",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 598,
+            "radius": 52,
+            "style": "seafoam",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A#",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    },
+    "B5": {
+      "group": "B",
+      "base_info": {
+        "base_chord": "B",
+        "variant": 5,
+        "caption": "Си мажор",
+        "type": "Major",
+        "ram": "RAM9",
+        "bar": "11BAR1-3",
+        "fnl": NaN,
+        "fn": "111,113,122,134,145",
+        "fpol": NaN,
+        "fpxl": 96.0,
+        "fp1": 111.113,
+        "fp2": 122.0,
+        "fp3": 134.0,
+        "fp4": 145.0
+      },
+      "crop_rect": [
+        2640,
+        240,
+        1750,
+        1120
+      ],
+      "elements_fingers": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "barre",
+          "data": {
+            "x": 3270,
+            "y": 600,
+            "width": 100,
+            "height": 320,
+            "radius": 50,
+            "style": "metal",
+            "decoration": "shadow",
+            "color": [
+              189,
+              183,
+              107
+            ],
+            "type": "barre"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 2730,
+            "y": 1052,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "symbol",
+            "symbol": "X",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 482,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 714,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "1",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 598,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "2",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3648,
+            "y": 828,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "3",
+            "note_name": "",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 938,
+            "radius": 52,
+            "style": "gold_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "finger",
+            "finger": "4",
+            "note_name": "",
+            "type": "note"
+          }
+        }
+      ],
+      "elements_notes": [
+        {
+          "type": "fret",
+          "data": {
+            "x": 2840,
+            "y": 384,
+            "size": 60,
+            "symbol": "IX",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3060,
+            "y": 384,
+            "size": 60,
+            "symbol": "X",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3264,
+            "y": 384,
+            "size": 60,
+            "symbol": "XI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3464,
+            "y": 384,
+            "size": 60,
+            "symbol": "XII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3650,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIII",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 3824,
+            "y": 384,
+            "size": 60,
+            "symbol": "XIV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4000,
+            "y": 384,
+            "size": 60,
+            "symbol": "XV",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "fret",
+          "data": {
+            "x": 4150,
+            "y": 384,
+            "size": 60,
+            "symbol": "XVI",
+            "font_family": "Times New Roman",
+            "style": "neon",
+            "color": [
+              0,
+              0,
+              0
+            ],
+            "type": "fret"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 482,
+            "radius": 52,
+            "style": "cream",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3270,
+            "y": 714,
+            "radius": 52,
+            "style": "soft_pink",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "F",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3464,
+            "y": 598,
+            "radius": 52,
+            "style": "seafoam",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "A#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3648,
+            "y": 828,
+            "radius": 52,
+            "style": "cream",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "D#",
+            "type": "note"
+          }
+        },
+        {
+          "type": "note",
+          "data": {
+            "x": 3824,
+            "y": 938,
+            "radius": 52,
+            "style": "green_3d",
+            "decoration": "none",
+            "text_color": [
+              0,
+              0,
+              0
+            ],
+            "font_style": "bold",
+            "display_text": "note_name",
+            "finger": "1",
+            "note_name": "B",
+            "type": "note"
+          }
+        }
+      ],
+      "display_settings": {
+        "fret_type": "roman",
+        "barre_outline": "none",
+        "note_outline": "none"
+      }
+    }
+  },
+  "groups": [
+    "A",
+    "B"
+  ]
+}

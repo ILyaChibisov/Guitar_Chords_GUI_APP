@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Исправленный конвертер аккордов для работы с JSON-конфигурацией
-"""
-
 import os
 import sys
 import base64
@@ -10,198 +5,269 @@ import json
 from pathlib import Path
 
 try:
-    from PIL import Image, ImageDraw
-    import io
+    from pydub import AudioSegment
+    from pydub.effects import compress_dynamic_range, high_pass_filter
 
-    HAS_PILLOW = True
+    HAS_PYDUB = True
 except ImportError:
-    print("❌ Pillow не установлен! Установите: pip install Pillow")
-    HAS_PILLOW = False
-    sys.exit(1)
-
-try:
-    from drawing_elements import draw_chord_elements
-
-    HAS_DRAWING = True
-except ImportError as e:
-    print(f"❌ Модуль drawing_elements не найден: {e}")
-    HAS_DRAWING = False
+    HAS_PYDUB = False
+    print("⚠️ pydub не установлен. Установите: pip install pydub")
+    print("⚠️ Звуки будут сохраняться без оптимизации")
 
 
-class FixedChordConverter:
-    """Исправленный конвертер для правильной структуры JSON"""
+class SimpleChordConverter:
+    """Упрощенный конвертер с оптимизацией MP3"""
 
     def __init__(self, config_path, sounds_base_dir):
         self.config_path = Path(config_path)
         self.sounds_base_dir = Path(sounds_base_dir)
-        self.converted_data = {}
+        self.converted_data = {
+            'metadata': {},
+            'template_image': None,
+            'original_json_config': None,
+            'chords': {}
+        }
         self.compression_stats = {
-            'images_generated': 0,
+            'chords_processed': 0,
             'sounds_optimized': 0,
             'chords_with_sound': 0,
             'chords_without_sound': 0,
-            'chords_processed': 0
+            'original_size': 0,
+            'compressed_size': 0
         }
 
         self.config = self.load_configuration()
-        self.base_image = self.load_base_image()
+        if self.config:
+            self.load_template_image()
 
     def load_configuration(self):
-        """Загружает JSON-конфигурацию"""
+        """Загружает JSON-конфигурацию и сохраняет её в данных"""
         try:
+            if not self.config_path.exists():
+                print(f"❌ Файл конфигурации не существует: {self.config_path}")
+                return {}
+
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
 
             chords_count = len(config.get('chords', {}))
             print(f"✅ Загружена конфигурация: {chords_count} аккордов")
+
+            # Заменяем NaN на None во всей конфигурации
+            config = self.replace_nan_with_none(config)
+
+            # Сохраняем всю JSON конфигурацию
+            self.converted_data['original_json_config'] = config
+            self.converted_data['metadata']['original_config_path'] = str(self.config_path).replace('\\', '/')
+
             return config
         except Exception as e:
             print(f"❌ Ошибка загрузки конфигурации: {e}")
             return {}
 
-    def load_base_image(self):
-        """Загружает основное изображение грифа"""
-        try:
-            possible_paths = [
-                self.config_path.parent / 'img.png',
-                Path('chords_config/img.png'),
-                Path('templates2/img.png'),
-                Path('img.png'),
-                self.config_path.with_name('img.png')
-            ]
-
-            for image_path in possible_paths:
-                if image_path.exists():
-                    image = Image.open(image_path)
-                    print(f"✅ Загружено изображение грифа: {image_path}")
-                    return image
-
-            print("❌ Изображение грифа не найдено")
+    def replace_nan_with_none(self, obj):
+        """Рекурсивно заменяет NaN на None в JSON объекте"""
+        if isinstance(obj, dict):
+            return {k: self.replace_nan_with_none(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self.replace_nan_with_none(item) for item in obj]
+        elif isinstance(obj, float) and obj != obj:  # Проверка на NaN
             return None
-
-        except Exception as e:
-            print(f"❌ Ошибка загрузки изображения грифа: {e}")
-            return None
-
-    def process_crop_rect(self, crop_rect):
-        """Обрабатывает crop_rect (может быть списком или словарем)"""
-        if isinstance(crop_rect, list) and len(crop_rect) == 4:
-            # Формат: [x, y, width, height]
-            return {
-                'x': crop_rect[0],
-                'y': crop_rect[1],
-                'width': crop_rect[2],
-                'height': crop_rect[3]
-            }
-        elif isinstance(crop_rect, dict):
-            # Формат: {'x': ..., 'y': ..., 'width': ..., 'height': ...}
-            return crop_rect
         else:
-            print(f"    ⚠️ Неизвестный формат crop_rect: {crop_rect}")
-            return {'x': 0, 'y': 0, 'width': 400, 'height': 200}
+            return obj
 
-    def generate_chord_image(self, chord_data, display_type="fingers"):
-        """Генерирует изображение аккорда"""
-        if not self.base_image or not HAS_DRAWING:
-            return None
+    def load_template_image(self):
+        """Загружает и сохраняет основной шаблон изображения в base64"""
+        possible_paths = [
+            self.config_path.parent / 'img.png',
+            self.config_path.parent / 'img.jpg',
+            self.config_path.parent / 'template.png',
+            Path('chords_config/img.png'),
+            Path('chords_config/img.jpg'),
+            Path('templates2/img.png'),
+            Path('templates2/img.jpg'),
+            Path('img.png'),
+            Path('img.jpg'),
+            Path('template.png'),
+            self.config_path.with_name('img.png'),
+            self.config_path.with_name('img.jpg'),
+        ]
+
+        template_path = None
+        for image_path in possible_paths:
+            if image_path.exists():
+                template_path = image_path
+                print(f"🔍 Найден шаблон: {image_path}")
+                break
+
+        if not template_path:
+            print("❌ Шаблон изображения не найден. Проверенные пути:")
+            for path in possible_paths:
+                print(f"   - {path}")
+            return
 
         try:
-            # Обрабатываем crop_rect
-            crop_rect_data = self.process_crop_rect(chord_data.get('crop_rect', []))
-            x = crop_rect_data.get('x', 0)
-            y = crop_rect_data.get('y', 0)
-            width = crop_rect_data.get('width', 400)
-            height = crop_rect_data.get('height', 200)
+            with open(template_path, 'rb') as f:
+                template_data = f.read()
 
-            # Проверяем границы обрезки
-            img_width, img_height = self.base_image.size
-            x = max(0, min(x, img_width - 1))
-            y = max(0, min(y, img_height - 1))
-            width = max(1, min(width, img_width - x))
-            height = max(1, min(height, img_height - y))
-
-            # Обрезаем изображение
-            cropped_image = self.base_image.crop((x, y, x + width, y + height))
-            chord_image = cropped_image.copy()
-            draw = ImageDraw.Draw(chord_image)
-
-            # Подготавливаем данные для отрисовки
-            drawing_data = self.prepare_drawing_data(chord_data, display_type)
-            if drawing_data and drawing_data.get('elements'):
-                draw_chord_elements(draw, drawing_data, display_type, chord_image.size)
-
-            # Сохраняем в buffer
-            buffer = io.BytesIO()
-            chord_image.save(buffer, format='PNG', optimize=True)
-            optimized_data = buffer.getvalue()
-
-            self.compression_stats['images_generated'] += 1
-            return optimized_data
+            template_b64 = base64.b64encode(template_data).decode('utf-8')
+            self.converted_data['template_image'] = template_b64
+            self.converted_data['metadata']['template_size'] = len(template_data)
+            self.converted_data['metadata']['template_path'] = str(template_path).replace('\\', '/')
+            print(f"✅ Шаблон изображения сохранен в данных: {len(template_data)} bytes")
 
         except Exception as e:
-            print(f"    ❌ Ошибка генерации изображения: {e}")
-            return None
+            print(f"❌ Ошибка загрузки шаблона: {e}")
 
-    def prepare_drawing_data(self, chord_data, display_type):
-        """Подготавливает данные для отрисовки"""
-        if display_type == "fingers":
-            elements = chord_data.get('elements_fingers', [])
-        else:
-            elements = chord_data.get('elements_notes', [])
+    def optimize_sound(self, sound_path):
+        """Оптимизирует звуковой файл с реальным сжатием"""
+        try:
+            original_size = os.path.getsize(sound_path)
 
-        if not elements:
-            return None
-
-        # Применяем настройки отображения
-        display_settings = chord_data.get('display_settings', {})
-        if display_settings:
-            elements = self.apply_display_settings(elements, display_settings)
-
-        return {'elements': elements}
-
-    def apply_display_settings(self, elements, display_settings):
-        """Применяет настройки отображения"""
-        barre_outline = display_settings.get('barre_outline', 'none')
-        note_outline = display_settings.get('note_outline', 'none')
-
-        outline_widths = {
-            "none": 0, "thin": 2, "medium": 4, "thick": 6
-        }
-
-        barre_width = outline_widths.get(barre_outline, 0)
-        note_width = outline_widths.get(note_outline, 0)
-
-        modified_elements = []
-        for element in elements:
-            if not isinstance(element, dict):
-                continue
-
-            element_type = element.get('type')
-            element_data = element.get('data', {})
-
-            if element_type == 'barre' and barre_width > 0:
-                modified_element = element.copy()
-                modified_element['data'] = element_data.copy()
-                modified_element['data']['outline_width'] = barre_width
-                modified_elements.append(modified_element)
-            elif element_type == 'note' and note_width > 0:
-                modified_element = element.copy()
-                modified_element['data'] = element_data.copy()
-                modified_element['data']['outline_width'] = note_width
-                modified_elements.append(modified_element)
+            if not HAS_PYDUB:
+                # Если pydub не установлен, просто читаем файл
+                with open(sound_path, 'rb') as file:
+                    sound_data = file.read()
+                compressed_size = len(sound_data)
             else:
-                modified_elements.append(element)
+                # Реальная оптимизация с pydub
+                sound_data = self._optimize_with_pydub(sound_path)
+                compressed_size = len(sound_data) if sound_data else 0
 
-        return modified_elements
+            if not sound_data:
+                return None
+
+            self.compression_stats['original_size'] += original_size
+            self.compression_stats['compressed_size'] += compressed_size
+            self.compression_stats['sounds_optimized'] += 1
+
+            compression_ratio = (original_size - compressed_size) / original_size * 100
+            print(
+                f"    🔊 {sound_path.name}: {original_size / 1024:.1f}KB → {compressed_size / 1024:.1f}KB ({compression_ratio:+.1f}%)")
+
+            return sound_data
+
+        except Exception as e:
+            print(f"    ❌ Ошибка оптимизации звука {sound_path}: {e}")
+            return None
+
+    def _optimize_with_pydub(self, sound_path):
+        """Оптимизирует звук с помощью pydub"""
+        try:
+            # Загружаем аудио файл
+            if sound_path.suffix.lower() == '.mp3':
+                audio = AudioSegment.from_mp3(sound_path)
+            elif sound_path.suffix.lower() == '.wav':
+                audio = AudioSegment.from_wav(sound_path)
+            elif sound_path.suffix.lower() == '.ogg':
+                audio = AudioSegment.from_ogg(sound_path)
+            else:
+                # Для неизвестных форматов просто читаем файл
+                with open(sound_path, 'rb') as f:
+                    return f.read()
+
+            # Оптимизации для гитарных аккордов:
+
+            # 1. Обрезаем тишину в начале и конце
+            audio = self._remove_silence(audio)
+
+            # 2. Нормализуем громкость
+            audio = self._normalize_volume(audio)
+
+            # 3. Компрессия динамического диапазона
+            audio = compress_dynamic_range(audio, threshold=-20.0, ratio=2.0)
+
+            # 4. Легкий high-pass фильтр для удаления низкочастотного шума
+            audio = high_pass_filter(audio, cutoff=80)
+
+            # 5. Экспортируем с оптимизированными настройками MP3
+            buffer = self._export_optimized_mp3(audio)
+
+            return buffer.getvalue()
+
+        except Exception as e:
+            print(f"    ⚠️ Ошибка pydub оптимизации {sound_path}: {e}")
+            # В случае ошибки возвращаем оригинальный файл
+            with open(sound_path, 'rb') as f:
+                return f.read()
+
+    def _remove_silence(self, audio, silence_thresh=-40.0, chunk_size=10):
+        """Обрезает тишину в начале и конце"""
+        try:
+            # Находим не-тихие сегменты
+            non_silent = audio.detect_silence(
+                silence_thresh=silence_thresh,
+                min_silence_len=100,
+                seek_step=chunk_size
+            )
+
+            if not non_silent:
+                return audio
+
+            # Получаем начало и конец не-тихих сегментов
+            start_of_audio = non_silent[0][0] if non_silent[0][0] > 0 else 0
+            end_of_audio = non_silent[-1][1] if non_silent[-1][1] < len(audio) else len(audio)
+
+            # Добавляем небольшие отступы
+            start_of_audio = max(0, start_of_audio - 50)  # 50ms до начала
+            end_of_audio = min(len(audio), end_of_audio + 100)  # 100ms после конца
+
+            return audio[start_of_audio:end_of_audio]
+
+        except Exception as e:
+            print(f"    ⚠️ Ошибка обрезки тишины: {e}")
+            return audio
+
+    def _normalize_volume(self, audio, target_dBFS=-16.0):
+        """Нормализует громкость до целевого уровня"""
+        try:
+            change_in_dBFS = target_dBFS - audio.dBFS
+            return audio.apply_gain(change_in_dBFS)
+        except:
+            return audio
+
+    def _export_optimized_mp3(self, audio):
+        """Экспортирует аудио с оптимизированными настройками MP3"""
+        import io
+
+        buffer = io.BytesIO()
+
+        # Оптимизированные настройки для гитарных аккордов:
+        # - bitrate=64kbps - достаточно для коротких аккордов
+        # - VBR (переменный битрейт) для лучшего качества/размера
+        audio.export(
+            buffer,
+            format="mp3",
+            bitrate="64k",  # Низкий битрейт для экономии места
+            parameters=[
+                "-ac", "1",  # Моно для экономии места
+                "-ar", "22050",  # Пониженная частота дискретизации
+                "-compression_level", "9",  # Максимальное сжатие
+            ]
+        )
+
+        return buffer
+
+    def get_safe_chord_name(self, chord_name):
+        """Создает безопасное имя папки"""
+        safe_name = chord_name.replace('/', '_slash_')
+        safe_name = safe_name.replace('#', '_sharp_')
+        safe_name = safe_name.replace('\\', '_')
+        safe_name = safe_name.replace(' ', '_')
+        return safe_name
+
+    def get_base_chord_name(self, chord_name):
+        """Извлекает базовое имя аккорда (A, B, C и т.д.)"""
+        import re
+        base_name = re.sub(r'\d+$', '', chord_name)
+        return self.get_safe_chord_name(base_name)
 
     def find_sound_files(self, chord_name):
         """Находит звуковые файлы для аккорда"""
-        # Используем base_chord из base_info для поиска звуков
         safe_chord_name = self.get_safe_chord_name(chord_name)
         chord_sound_dir = self.sounds_base_dir / safe_chord_name
 
         if not chord_sound_dir.exists():
-            # Пробуем найти по базовому имени аккорда (A, B, C и т.д.)
             base_chord = self.get_base_chord_name(chord_name)
             if base_chord != safe_chord_name:
                 chord_sound_dir = self.sounds_base_dir / base_chord
@@ -211,28 +277,12 @@ class FixedChordConverter:
             return []
 
         sound_files = []
-        for ext in ['.mp3', '.wav', '.ogg']:
+        for ext in ['.mp3', '.wav', '.ogg', '.m4a']:
             sound_files.extend(list(chord_sound_dir.glob(f'*{ext}')))
 
-        # Сортируем по вариантам
         sorted_files = self.sort_sound_files_by_variant(sound_files, chord_name)
         print(f"    🔊 Найдено звуковых файлов: {len(sorted_files)}")
         return sorted_files
-
-    def get_base_chord_name(self, chord_name):
-        """Извлекает базовое имя аккорда (A, B, C и т.д.)"""
-        # Убираем цифры вариантов (A1 -> A, B2 -> B)
-        import re
-        base_name = re.sub(r'\d+$', '', chord_name)
-        return self.get_safe_chord_name(base_name)
-
-    def get_safe_chord_name(self, chord_name):
-        """Создает безопасное имя папки"""
-        safe_name = chord_name.replace('/', '_slash_')
-        safe_name = safe_name.replace('#', '_sharp_')
-        safe_name = safe_name.replace('\\', '_')
-        safe_name = safe_name.replace(' ', '_')
-        return safe_name
 
     def sort_sound_files_by_variant(self, sound_files, chord_name):
         """Сортирует звуковые файлы по вариантам"""
@@ -268,27 +318,16 @@ class FixedChordConverter:
 
         return 1
 
-    def optimize_sound(self, sound_path):
-        """Оптимизирует звуковой файл"""
-        try:
-            with open(sound_path, 'rb') as file:
-                sound_data = file.read()
-
-            self.compression_stats['sounds_optimized'] += 1
-            file_size_kb = len(sound_data) / 1024
-            print(f"      🔊 {sound_path.name}: {file_size_kb:.1f}KB")
-            return sound_data
-
-        except Exception as e:
-            print(f"      ❌ Ошибка звука {sound_path}: {e}")
-            return None
-
     def process_chords(self):
         """Обрабатывает все аккорды из конфигурации"""
+        if not self.config:
+            print("❌ Конфигурация не загружена, пропускаем обработку аккордов")
+            return
+
         chords_data = self.config.get('chords', {})
 
         if not chords_data:
-            print("❌ В конфигурации нет данных об аккордах")
+            print("❌ В конфигурации нет данных об аккордов")
             return
 
         print(f"🔧 Обработка {len(chords_data)} аккордов...")
@@ -301,20 +340,12 @@ class FixedChordConverter:
             chord_name = base_info.get('base_chord', chord_key)
             group_name = chord_data.get('group', 'unknown')
 
-            # Генерируем изображения
-            image_fingers = self.generate_chord_image(chord_data, "fingers")
-            image_notes = self.generate_chord_image(chord_data, "notes")
-
-            if not image_fingers and not image_notes:
-                print(f"    ⚠️ Не удалось сгенерировать изображения")
-                continue
-
             # Ищем звуки
             sound_files = self.find_sound_files(chord_name)
             variants = []
             has_sound = False
 
-            # Создаем варианты
+            # Создаем варианты с параметрами JSON
             for i, sound_file in enumerate(sound_files, 1):
                 sound_data = self.optimize_sound(sound_file)
                 sound_b64 = base64.b64encode(sound_data).decode() if sound_data else None
@@ -322,22 +353,31 @@ class FixedChordConverter:
                 if sound_b64:
                     has_sound = True
 
+                # Сохраняем параметры JSON для ОБОИХ вариантов отображения
                 variant_data = {
                     'position': i,
                     'description': f"Вариант {i}",
-                    'image_data_fingers': base64.b64encode(image_fingers).decode() if image_fingers else None,
-                    'image_data_notes': base64.b64encode(image_notes).decode() if image_notes else None,
+                    'json_parameters': {
+                        'crop_rect': chord_data.get('crop_rect', []),
+                        'elements_fingers': chord_data.get('elements_fingers', []),
+                        'elements_notes': chord_data.get('elements_notes', []),
+                        'display_settings': chord_data.get('display_settings', {})
+                    },
                     'sound_data': sound_b64
                 }
                 variants.append(variant_data)
 
             # Если нет звуков, создаем базовый вариант
-            if not variants and (image_fingers or image_notes):
+            if not variants:
                 variants.append({
                     'position': 1,
                     'description': "Основной вариант",
-                    'image_data_fingers': base64.b64encode(image_fingers).decode() if image_fingers else None,
-                    'image_data_notes': base64.b64encode(image_notes).decode() if image_notes else None,
+                    'json_parameters': {
+                        'crop_rect': chord_data.get('crop_rect', []),
+                        'elements_fingers': chord_data.get('elements_fingers', []),
+                        'elements_notes': chord_data.get('elements_notes', []),
+                        'display_settings': chord_data.get('display_settings', {})
+                    },
                     'sound_data': None
                 })
 
@@ -346,7 +386,7 @@ class FixedChordConverter:
                 description = base_info.get('caption', f'Аккорд {chord_name}')
                 chord_type = base_info.get('type', 'major').lower()
 
-                self.converted_data[chord_name] = {
+                self.converted_data['chords'][chord_name] = {
                     'name': chord_name,
                     'folder': f'group_{group_name}',
                     'description': description,
@@ -365,104 +405,204 @@ class FixedChordConverter:
                 print(f"    ✅ {len(variants)} вариантов, {sound_status}")
 
     def save_chords_data(self, output_file):
-        """Сохраняет данные аккордов"""
+        """Сохраняет данные аккордов в новом формате"""
         print(f"💾 Сохранение в {output_file}...")
 
+        # Создаем директорию если не существует
+        output_path = Path(output_file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
         with open(output_file, 'w', encoding='utf-8') as f:
-            f.write('"""\nДанные аккордов\nГенерация: FixedChordConverter\n"""\n\n')
+            f.write('"""\nДанные аккордов (с шаблоном и JSON конфигурацией)\nГенерация: SimpleChordConverter\n"""\n\n')
             f.write('CHORDS_DATA = {\n')
 
-            for chord_name, chord_data in sorted(self.converted_data.items()):
-                f.write(f'    "{chord_name}": {{\n')
-                f.write(f'        "name": "{chord_data["name"]}",\n')
-                f.write(f'        "folder": "{chord_data["folder"]}",\n')
-                f.write(f'        "description": "{chord_data["description"]}",\n')
-                f.write(f'        "type": "{chord_data["type"]}",\n')
-                f.write(f'        "variants": [\n')
+            # Сохраняем метаданные
+            f.write('    "metadata": {\n')
+            f.write(f'        "template_size": {self.converted_data["metadata"].get("template_size", 0)},\n')
+            f.write(f'        "total_chords": {len(self.converted_data["chords"])},\n')
+            f.write(f'        "converter_version": "3.1",\n')
+            config_path = self.converted_data["metadata"].get("original_config_path", "").replace('\\', '/')
+            f.write(f'        "original_config_path": "{config_path}"\n')
+            f.write('    },\n')
+
+            # Сохраняем шаблон изображения
+            f.write('    "template_image": """\n')
+            if self.converted_data['template_image']:
+                f.write(self.converted_data['template_image'])
+            f.write('""",\n')
+
+            # Сохраняем всю JSON конфигурацию с заменой null на None
+            f.write('    "original_json_config": ')
+            json_str = json.dumps(self.converted_data['original_json_config'], ensure_ascii=False, indent=4)
+            # Заменяем JSON null на Python None
+            json_str = json_str.replace(': null', ': None').replace(':null', ':None')
+            f.write(json_str)
+            f.write(',\n')
+
+            # Сохраняем аккорды
+            f.write('    "chords": {\n')
+
+            for chord_name, chord_data in sorted(self.converted_data['chords'].items()):
+                f.write(f'        "{chord_name}": {{\n')
+                f.write(f'            "name": "{chord_data["name"]}",\n')
+                f.write(f'            "folder": "{chord_data["folder"]}",\n')
+                f.write(f'            "description": "{chord_data["description"]}",\n')
+                f.write(f'            "type": "{chord_data["type"]}",\n')
+                f.write(f'            "variants": [\n')
 
                 for variant in chord_data['variants']:
-                    f.write('            {\n')
-                    f.write(f'                "position": {variant["position"]},\n')
-                    f.write(f'                "description": "{variant["description"]}",\n')
+                    f.write('                {\n')
+                    f.write(f'                    "position": {variant["position"]},\n')
+                    f.write(f'                    "description": "{variant["description"]}",\n')
 
-                    if variant['image_data_fingers']:
-                        f.write(f'                "image_data_fingers": """{variant["image_data_fingers"]}""",\n')
-                    else:
-                        f.write(f'                "image_data_fingers": None,\n')
+                    # Сохраняем JSON параметры
+                    f.write(f'                    "json_parameters": {{\n')
+                    json_params = variant["json_parameters"]
+                    f.write(f'                        "crop_rect": {json.dumps(json_params["crop_rect"])},\n')
+                    f.write(
+                        f'                        "elements_fingers": {json.dumps(json_params["elements_fingers"], ensure_ascii=False)},\n')
+                    f.write(
+                        f'                        "elements_notes": {json.dumps(json_params["elements_notes"], ensure_ascii=False)},\n')
+                    f.write(
+                        f'                        "display_settings": {json.dumps(json_params["display_settings"])}\n')
+                    f.write(f'                    }},\n')
 
-                    if variant['image_data_notes']:
-                        f.write(f'                "image_data_notes": """{variant["image_data_notes"]}""",\n')
-                    else:
-                        f.write(f'                "image_data_notes": None,\n')
-
+                    # Сохраняем звук
                     if variant['sound_data']:
-                        f.write(f'                "sound_data": """{variant["sound_data"]}"""\n')
+                        f.write(f'                    "sound_data": """{variant["sound_data"]}"""\n')
                     else:
-                        f.write(f'                "sound_data": None\n')
+                        f.write(f'                    "sound_data": None\n')
 
-                    f.write('            },\n')
+                    f.write('                },\n')
 
-                f.write('        ]\n')
-                f.write('    },\n')
+                f.write('            ]\n')
+                f.write('        },\n')
 
+            f.write('    }\n')
             f.write('}\n')
 
     def print_stats(self):
         """Выводит статистику"""
+        template_size = self.converted_data["metadata"].get("template_size", 0)
+        total_savings = self.compression_stats['original_size'] - self.compression_stats['compressed_size']
+        savings_percent = (total_savings / self.compression_stats['original_size'] * 100) if self.compression_stats[
+                                                                                                 'original_size'] > 0 else 0
+
         print(f"\n📊 Статистика:")
         print(f"   🎸 Аккордов: {self.compression_stats['chords_processed']}")
-        print(f"   🖼️ Изображений: {self.compression_stats['images_generated']}")
+        if template_size > 0:
+            print(f"   🖼️  Шаблон: {template_size / 1024:.1f} KB")
+        else:
+            print(f"   🖼️  Шаблон: не загружен")
+        print(f"   📋 JSON конфигурация: {'сохранена' if self.converted_data['original_json_config'] else 'нет'}")
         print(f"   🔊 Звуков: {self.compression_stats['sounds_optimized']}")
         print(f"   🔊 Со звуком: {self.compression_stats['chords_with_sound']}")
         print(f"   🔇 Без звука: {self.compression_stats['chords_without_sound']}")
 
+        if self.compression_stats['sounds_optimized'] > 0:
+            print(f"   💾 Экономия места: {total_savings / 1024 / 1024:.2f} MB ({savings_percent:+.1f}%)")
+            print(f"   📦 Исходный размер: {self.compression_stats['original_size'] / 1024 / 1024:.2f} MB")
+            print(f"   📦 Сжатый размер: {self.compression_stats['compressed_size'] / 1024 / 1024:.2f} MB")
+
+
+def find_config_file():
+    """Находит файл конфигурации автоматически"""
+    possible_paths = [
+        Path("chords_config/chords_configuration.json"),
+        Path("chords_configuration.json"),
+        Path("templates2/chords_configuration.json"),
+        Path("config/chords_configuration.json"),
+        Path("../chords_configuration.json"),
+        Path("./chords_configuration.json"),
+        Path("chords_config.json"),
+        Path("config.json"),
+    ]
+
+    for path in possible_paths:
+        if path.exists():
+            print(f"✅ Найден файл конфигурации: {path}")
+            return path
+
+    print("❌ Файл конфигурации не найден. Проверенные пути:")
+    for path in possible_paths:
+        exists = "✅ СУЩЕСТВУЕТ" if path.exists() else "❌ не существует"
+        print(f"   {exists}: {path}")
+
+    return None
+
+
+def find_sounds_dir():
+    """Находит папку со звуками автоматически"""
+    possible_paths = [
+        Path("sound"),
+        Path("sounds"),
+        Path("chords_config/sound"),
+        Path("chords_config/sounds"),
+        Path("templates2/sound"),
+        Path("templates2/sounds"),
+        Path("../sound"),
+        Path("../sounds"),
+    ]
+
+    for path in possible_paths:
+        if path.exists():
+            print(f"✅ Найдена папка со звуками: {path}")
+            return path
+
+    print("⚠️ Папка со звуками не найдена. Проверенные пути:")
+    for path in possible_paths:
+        exists = "✅ СУЩЕСТВУЕТ" if path.exists() else "❌ не существует"
+        print(f"   {exists}: {path}")
+
+    return None
+
 
 def main():
     """Основная функция"""
-    print("🎸 Исправленный конвертер аккордов")
+    print("🎸 Упрощенный конвертер аккордов с оптимизацией MP3")
     print("=" * 50)
 
-    if not HAS_PILLOW or not HAS_DRAWING:
-        return
+    if HAS_PYDUB:
+        print("✅ pydub доступен - звуки будут оптимизированы")
+    else:
+        print("⚠️ pydub не доступен - звуки будут сохранены как есть")
+        print("💡 Установите: pip install pydub")
 
     # Автопоиск путей
-    config_path = None
-    for path in [
-        Path("chords_config/chords_configuration.json"),
-        Path("chords_configuration.json"),
-        Path("templates2/chords_configuration.json")
-    ]:
-        if path.exists():
-            config_path = path
-            break
-
+    config_path = find_config_file()
     if not config_path:
-        print("❌ Конфигурация не найдена")
+        print("\n💡 Решение: поместите chords_configuration.json в одну из папок:")
+        print("   - chords_config/")
+        print("   - templates2/")
+        print("   - корневая папка проекта")
         return
 
-    sounds_dir = None
-    for path in [Path("sound"), Path("sounds")]:
-        if path.exists():
-            sounds_dir = path
-            break
-
+    sounds_dir = find_sounds_dir()
     if not sounds_dir:
-        print("❌ Папка со звуками не найдена")
-        return
+        print("\n⚠️ Продолжаем без звуков...")
 
     print(f"✅ Конфигурация: {config_path}")
-    print(f"✅ Звуки: {sounds_dir}")
+    print(f"✅ Звуки: {sounds_dir if sounds_dir else 'не найдены'}")
 
+    # Создаем директорию data если не существует
     os.makedirs('data', exist_ok=True)
 
     try:
-        converter = FixedChordConverter(config_path, sounds_dir)
+        converter = SimpleChordConverter(config_path, sounds_dir)
         converter.process_chords()
 
-        if converter.converted_data:
+        if converter.converted_data['chords']:
             converter.save_chords_data("data/chords_data.py")
             converter.print_stats()
             print(f"\n✅ Готово! Файл: data/chords_data.py")
+
+            # Проверяем созданный файл
+            output_path = Path("data/chords_data.py")
+            if output_path.exists():
+                file_size = output_path.stat().st_size
+                print(f"📦 Размер файла: {file_size / 1024 / 1024:.2f} MB")
+            else:
+                print("❌ Выходной файл не создан")
         else:
             print("❌ Нет данных для сохранения")
 

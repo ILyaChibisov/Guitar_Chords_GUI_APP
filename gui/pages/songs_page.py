@@ -18,22 +18,6 @@ from database.chord_repository import ChordRepository
 import database.db_scripts as db
 from config.styles import DarkTheme
 
-# Импортируем данные аккордов из const
-try:
-    from const import CHORDS_TYPE_LIST, CHORDS_TYPE_NAME_LIST_DSR
-
-    # Создаем общий словарь аккордов и их описаний
-    CHORDS_DATA = {}
-    for chords_list, desc_list in zip(CHORDS_TYPE_LIST, CHORDS_TYPE_NAME_LIST_DSR):
-        for chord, description in zip(chords_list, desc_list):
-            CHORDS_DATA[chord] = description
-
-    print(f"✅ Загружено {len(CHORDS_DATA)} аккордов с описаниями")
-
-except ImportError as e:
-    print(f"⚠️ Не удалось загрузить данные аккордов из const: {e}")
-    CHORDS_DATA = {}
-
 
 class SongsPage(BasePage):
     """Страница песен и аккордов с правильной пагинацией"""
@@ -53,6 +37,7 @@ class SongsPage(BasePage):
         self.current_chord_name = ""
         self.current_song_title = ""
         self.current_chord_variants = []
+        self.variant_buttons = []  # Хранилище для кнопок вариантов
 
         # Репозиторий для работы с встроенными аккордами
         self.chord_repository = ChordRepository()
@@ -63,21 +48,8 @@ class SongsPage(BasePage):
         self.initialize_page()
 
     def get_chord_description(self, chord_name):
-        """Получает описание аккорда из данных const"""
-        # Пробуем разные варианты написания
-        names_to_try = [
-            chord_name,
-            chord_name.upper(),
-            chord_name.upper().replace('M', 'm'),
-            chord_name.upper().replace('М', 'm'),
-        ]
-
-        for name in names_to_try:
-            if name in CHORDS_DATA:
-                return CHORDS_DATA[name]
-
-        # Если не нашли, возвращаем описание по умолчанию
-        return f"Гитарный аккорд {chord_name}"
+        """Получает описание аккорда из репозитория"""
+        return self.chord_repository.get_chord_description(chord_name)
 
     def setup_ui(self):
         """Настройка UI с правильной пагинацией"""
@@ -272,12 +244,28 @@ class SongsPage(BasePage):
         self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         chords_layout_right.addWidget(self.chord_image_label, 1)
 
+        # Контейнер для кнопок типов отображения
+        self.display_type_container = QWidget()
+        self.display_type_container.setStyleSheet("background: transparent; border: none;")
+        self.display_type_layout = QHBoxLayout(self.display_type_container)
+        self.display_type_layout.setAlignment(Qt.AlignCenter)
+        self.display_type_layout.setSpacing(8)
+        chords_layout_right.addWidget(self.display_type_container)
+
+        # Контейнер для вариантов аккорда
         self.variants_container = QWidget()
         self.variants_container.setStyleSheet("background: transparent; border: none;")
         self.variants_layout = QHBoxLayout(self.variants_container)
         self.variants_layout.setAlignment(Qt.AlignCenter)
         self.variants_layout.setSpacing(8)
         chords_layout_right.addWidget(self.variants_container)
+
+        # 🔧 ТЕСТОВАЯ КНОПКА
+        self.test_button = QPushButton("🔧 ТЕСТ: Следующий вариант")
+        self.test_button.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+        self.test_button.clicked.connect(self.test_next_variant)
+        self.test_button.hide()  # Сначала скрыта
+        chords_layout_right.addWidget(self.test_button)
 
         self.sound_button = SoundButtonLarge()
         self.sound_button.setText("🔈 Слушать")
@@ -361,29 +349,99 @@ class SongsPage(BasePage):
             }
         """)
 
-    def load_chord_variant(self, image_path, mp3_path):
-        """Загрузка конкретного варианта аккорда с прозрачным фоном"""
+    def load_chord_variant(self, variant_data):
+        """Загрузка конкретного варианта аккорда"""
         try:
-            pixmap = QPixmap(image_path)
-            if not pixmap.isNull():
-                image = pixmap.toImage()
-                if image.hasAlphaChannel():
-                    image = image.convertToFormat(QImage.Format_ARGB32)
-                    pixmap = QPixmap.fromImage(image)
-                self.chord_image_label.setChordPixmap(pixmap)
+            print(f"🎯 Загрузка варианта {variant_data.get('position', 'unknown')}")
+
+            if isinstance(variant_data, dict) and 'pixmap' in variant_data:
+                pixmap = variant_data['pixmap']
+                if not pixmap.isNull():
+                    print(f"🔄 Установка нового pixmap: {pixmap.size().width()}x{pixmap.size().height()}")
+
+                    # ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ
+                    self.chord_image_label.clear()  # Сначала очищаем
+                    self.chord_image_label.setChordPixmap(pixmap)  # Затем устанавливаем
+
+                    # Принудительная перерисовка
+                    self.chord_image_label.repaint()
+                    self.chord_image_label.update()
+                    self.repaint()
+                    self.update()
+
+                    print(f"✅ Pixmap установлен и обновлен")
+                else:
+                    self.chord_image_label.clear()
+                    print("❌ Pixmap пустой")
+
+                self.last_variant_mp3_path = variant_data.get('sound_path', '')
+
+            elif isinstance(variant_data, tuple) and len(variant_data) >= 2:
+                image_path, mp3_path = variant_data[0], variant_data[1]
+                pixmap = QPixmap(image_path)
+                if not pixmap.isNull():
+                    image = pixmap.toImage()
+                    if image.hasAlphaChannel():
+                        image = image.convertToFormat(QImage.Format_ARGB32)
+                        pixmap = QPixmap.fromImage(image)
+                    self.chord_image_label.setChordPixmap(pixmap)
+                    print(f"✅ Изображение загружено: {image_path}")
+                else:
+                    self.chord_image_label.clear()
+                    print(f"❌ Не удалось загрузить изображение: {image_path}")
+
+                self.last_variant_mp3_path = mp3_path
             else:
                 self.chord_image_label.clear()
+                self.last_variant_mp3_path = ""
+                print("❌ Неизвестный формат variant_data")
 
-            self.last_variant_mp3_path = mp3_path
-
-            if mp3_path and os.path.exists(mp3_path):
+            # Показываем/скрываем кнопку звука
+            if self.last_variant_mp3_path and os.path.exists(self.last_variant_mp3_path):
                 self.sound_button.show()
+                print(f"🔊 Звук доступен: {self.last_variant_mp3_path}")
             else:
                 self.sound_button.hide()
+                print("🔇 Звук не доступен")
 
         except Exception as e:
             print(f"❌ Ошибка загрузки варианта аккорда: {e}")
             self.chord_image_label.clear()
+            self.sound_button.hide()
+
+    def test_next_variant(self):
+        """Тестовая функция для принудительного переключения варианта"""
+        if not self.current_chord_variants:
+            print("❌ Нет загруженных вариантов")
+            return
+
+        # Находим текущий выбранный вариант
+        current_index = 0
+        for i in range(self.variants_layout.count()):
+            btn = self.variants_layout.itemAt(i).widget()
+            if btn and btn.isChecked():
+                current_index = i
+                break
+
+        # Переключаем на следующий вариант
+        next_index = (current_index + 1) % len(self.current_chord_variants)
+        next_variant = self.current_chord_variants[next_index]
+
+        print(f"🧪 ТЕСТ: Переключение с варианта {current_index + 1} на {next_index + 1}")
+        print(
+            f"🧪 Данные варианта: position={next_variant.get('position')}, variant_index={next_variant.get('variant_index')}")
+        self.load_chord_variant(next_variant)
+
+        # Обновляем кнопку
+        next_btn = self.variants_layout.itemAt(next_index).widget()
+        if next_btn:
+            for i in range(self.variants_layout.count()):
+                btn = self.variants_layout.itemAt(i).widget()
+                if btn:
+                    btn.setChecked(False)
+                    btn.update_style()
+            next_btn.setChecked(True)
+            next_btn.update_style()
 
     def initialize_page(self):
         """Инициализация страницы"""
@@ -405,7 +463,14 @@ class SongsPage(BasePage):
             self.chords_main_container.hide()
             return
 
-        self.unique_chords = sorted(set(self.chords_list))
+        self.unique_chords = sorted([chord for chord in set(self.chords_list)
+                                     if self.chord_repository.check_chord_exists(chord)])
+
+        if not self.unique_chords:
+            self.chords_main_container.hide()
+            print("⚠️ Нет доступных аккордов для отображения")
+            return
+
         self.current_page = 0
         self.update_pagination_buttons()
         self.show_current_page()
@@ -517,11 +582,17 @@ class SongsPage(BasePage):
         self.sound_button.hide()
         self.chord_name_label.setText("")
         self.chord_description_label.setText("")
+        self.test_button.hide()  # Скрываем тестовую кнопку
 
         try:
             # Очистка предыдущих элементов
             for i in reversed(range(self.variants_layout.count())):
                 widget = self.variants_layout.itemAt(i).widget()
+                if widget:
+                    widget.deleteLater()
+
+            for i in reversed(range(self.display_type_layout.count())):
+                widget = self.display_type_layout.itemAt(i).widget()
                 if widget:
                     widget.deleteLater()
 
@@ -561,10 +632,8 @@ class SongsPage(BasePage):
             from utils.chord_parser import ChordParser
 
             if self.chords_list:
-                # Используем метод, который гарантированно избегает дублирования HTML
                 processed_text = ChordParser.word_by_word_processing(raw_text, self.chords_list)
             else:
-                # Просто удаляем пустые строки и соединяем
                 lines_clean = [line for line in raw_text.split('\n') if line.strip()]
                 processed_text = '<br>'.join(html.escape(line) for line in lines_clean)
 
@@ -577,8 +646,9 @@ class SongsPage(BasePage):
 
             if self.chords_list:
                 first_chord = self.chords_list[0]
-                chord_url = QUrl(first_chord)
-                self.chord_clicked(chord_url)
+                if self.chord_repository.check_chord_exists(first_chord):
+                    chord_url = QUrl(first_chord)
+                    self.chord_clicked(chord_url)
 
         except Exception as e:
             print(f"Ошибка загрузки песни: {e}")
@@ -591,6 +661,11 @@ class SongsPage(BasePage):
             chord_name = url.toString()
             self.current_chord_name = chord_name
 
+            # Проверяем существование аккорда
+            if not self.chord_repository.check_chord_exists(chord_name):
+                print(f"❌ Аккорд {chord_name} не найден в данных")
+                return
+
             chord_info = self.chord_repository.get_chord_info(chord_name)
             if not chord_info:
                 return
@@ -599,62 +674,116 @@ class SongsPage(BasePage):
             chord_description = self.get_chord_description(chord_name)
             self.chord_description_label.setText(chord_description)
 
-            self.current_chord_folder = chord_info[2]
+            self.current_chord_folder = chord_info.get('folder', 'unknown')
 
+            # Очищаем предыдущие элементы
             for i in reversed(range(self.variants_layout.count())):
                 widget = self.variants_layout.itemAt(i).widget()
                 if widget:
                     widget.deleteLater()
 
-            variants = self.chord_repository.get_chord_variants_by_name(chord_name)
-            if not variants:
-                return
+            for i in reversed(range(self.display_type_layout.count())):
+                widget = self.display_type_layout.itemAt(i).widget()
+                if widget:
+                    widget.deleteLater()
 
-            self.current_chord_variants = variants
+            # Создаем кнопки типов отображения
+            display_types = self.chord_repository.get_display_types()
+            for display_type in display_types:
+                btn = ChordVariantButton(display_type.capitalize())
+                btn.setProperty('display_type', display_type)
 
-            for idx, variant in enumerate(variants):
-                btn = ChordVariantButton(str(idx + 1))
-                btn.setProperty('variant_data', (variant[2], variant[3]))
-
-                def make_handler(variant_img_path, variant_mp3_path, button):
+                def make_display_handler(disp_type):
                     def handler():
-                        self.load_chord_variant(variant_img_path, variant_mp3_path)
-                        for i in range(self.variants_layout.count()):
-                            other_btn = self.variants_layout.itemAt(i).widget()
-                            if other_btn:
-                                other_btn.setChecked(False)
-                                other_btn.update_style()
-                        button.setChecked(True)
-                        button.update_style()
+                        self.load_chord_with_display_type(chord_name, disp_type)
 
                     return handler
 
-                handler = make_handler(variant[2], variant[3], btn)
-                btn.clicked.connect(handler)
-                self.variants_layout.addWidget(btn)
+                btn.clicked.connect(make_display_handler(display_type))
+                self.display_type_layout.addWidget(btn)
 
-            self.activate_first_variant(variants)
+            # Загружаем аккорд с типом отображения по умолчанию
+            self.load_chord_with_display_type(chord_name, "fingers")
+
+            # ПОКАЗЫВАЕМ ТЕСТОВУЮ КНОПКУ
+            self.test_button.show()
 
         except Exception as e:
             print(f"❌ Ошибка загрузки аккорда: {e}")
 
-    def activate_first_variant(self, variants):
-        """Автоматически активирует первый вариант аккорда"""
-        if not variants:
-            return
-
+    def load_chord_with_display_type(self, chord_name, display_type):
+        """Загружает аккорд с указанным типом отображения и ПЕРВЫМ вариантом"""
         try:
-            first_variant = variants[0]
-            self.load_chord_variant(first_variant[2], first_variant[3])
+            # Очищаем варианты
+            for i in reversed(range(self.variants_layout.count())):
+                widget = self.variants_layout.itemAt(i).widget()
+                if widget:
+                    widget.deleteLater()
 
-            if self.variants_layout.count() > 0:
-                first_btn = self.variants_layout.itemAt(0).widget()
-                if first_btn:
-                    first_btn.setChecked(True)
-                    first_btn.update_style()
+            # Получаем варианты с указанным типом отображения
+            variants = self.chord_repository.get_chord_variants_by_name(chord_name, display_type)
+            if not variants:
+                print(f"❌ Нет вариантов для аккорда {chord_name} с типом {display_type}")
+                return
+
+            self.current_chord_variants = variants
+            print(f"🎯 Загружено вариантов: {len(variants)} для {chord_name}")
+
+            # Храним ссылки на кнопки
+            self.variant_buttons = []
+
+            # Создаем кнопки вариантов
+            for i, variant_data in enumerate(variants):
+                btn = ChordVariantButton(str(variant_data['position']))
+                btn.setProperty('variant_data', variant_data)
+                btn.setProperty('variant_index', variant_data['variant_index'])
+                btn.setProperty('button_index', i)
+
+                # Прямое подключение с использованием индекса
+                btn.clicked.connect(lambda checked, idx=i: self.on_variant_clicked(idx))
+
+                self.variants_layout.addWidget(btn)
+                self.variant_buttons.append(btn)
+
+            # Активируем ПЕРВЫЙ вариант
+            if variants:
+                first_variant = variants[0]
+                print(f"🎯 Активация первого варианта: {first_variant['position']}")
+                self.load_chord_variant(first_variant)
+                if self.variant_buttons:
+                    self.variant_buttons[0].setChecked(True)
+                    self.variant_buttons[0].update_style()
 
         except Exception as e:
-            print(f"❌ Ошибка активации первого варианта: {e}")
+            print(f"❌ Ошибка загрузки аккорда с типом {display_type}: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def on_variant_clicked(self, button_index):
+        """Обработчик клика по варианту аккорда"""
+        try:
+            if (not self.variant_buttons or
+                    button_index >= len(self.variant_buttons) or
+                    button_index >= len(self.current_chord_variants)):
+                return
+
+            variant_data = self.current_chord_variants[button_index]
+            btn = self.variant_buttons[button_index]
+
+            print(f"🎯 Выбран вариант {variant_data['position']} (индекс: {button_index})")
+            self.load_chord_variant(variant_data)
+
+            # Сбрасываем выделение всех кнопок
+            for variant_btn in self.variant_buttons:
+                variant_btn.setChecked(False)
+                variant_btn.update_style()
+
+            # Выделяем текущую кнопку
+            btn.setChecked(True)
+            btn.update_style()
+
+        except Exception as e:
+            print(f"❌ Ошибка при переключении варианта: {e}")
 
     def play_last_variant_sound(self):
         """Воспроизведение звука текущего варианта аккорда"""
@@ -665,29 +794,9 @@ class SongsPage(BasePage):
 
     def show_chord_large(self):
         """Показ увеличенного окна с аккордом"""
-        if not self.current_chord_name or not self.current_chord_folder:
+        if not self.current_chord_name:
             return
-
-        try:
-            variants = self.chord_repository.get_chord_variants_by_name(self.current_chord_name)
-            if not variants:
-                return
-
-            first_variant = variants[0]
-            from gui.windows.chord_viewer import ChordViewerWindow
-            viewer = ChordViewerWindow(
-                self.current_chord_name,
-                first_variant[2],
-                first_variant[3],
-                self
-            )
-
-            variants_data = [(v[2], v[3]) for v in variants]
-            viewer.add_variant_buttons(variants_data)
-            viewer.exec_()
-
-        except Exception as e:
-            print(f"Ошибка открытия окна аккорда: {e}")
+        print("ℹ️ Просмотр аккорда в основном интерфейсе")
 
     def handle_error(self, error):
         """Обработчик ошибок медиаплеера"""
@@ -697,13 +806,14 @@ class SongsPage(BasePage):
         """Вызывается при показе страницы"""
         print("Страница песен показана")
 
+        if not self.chord_repository.is_data_available():
+            print("⚠️ Данные аккордов не загружены")
+
     def on_page_hide(self):
         """Вызывается при скрытии страницы"""
         print("Страница песен скрыта")
-        self.chord_repository.chord_manager.cleanup()
 
     def cleanup(self):
         """Очистка ресурсов при закрытии приложения"""
         if hasattr(self, 'chord_repository'):
             self.chord_repository.chord_manager.cleanup()
-
