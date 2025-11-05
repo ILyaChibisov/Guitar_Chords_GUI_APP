@@ -59,11 +59,6 @@ class ChordSoundPlayer:
             # Пробуем разные варианты имен файлов
             sound_files = [
                 os.path.join(self.sounds_dir, f"{chord_name}/{chord_name}_{variant}.mp3")
-                # os.path.join(self.sounds_dir, f"{chord_name}{variant}.mp3"),
-                # os.path.join(self.sounds_dir, f"{chord_name}.mp3"),
-                # os.path.join(self.sounds_dir, f"{chord_name.upper()}v{variant}.mp3"),
-                # os.path.join(self.sounds_dir, f"{chord_name.upper()}{variant}.mp3"),
-                # os.path.join(self.sounds_dir, f"{chord_name.upper()}.mp3"),
             ]
 
             for sound_file in sound_files:
@@ -1466,6 +1461,7 @@ class SongsPage(BasePage):
 
         try:
             from gui.windows.chord_viewer import ChordViewerWindow
+
             # Создаем временное изображение для просмотра
             pixmap = self.generate_chord_from_config(self.current_chord_name, self.current_variant)
             if not pixmap.isNull():
@@ -1475,19 +1471,51 @@ class SongsPage(BasePage):
                 pixmap.save(temp_path, 'PNG')
                 temp_file.close()
 
+                # Получаем путь к звуку
+                sound_path = self.get_chord_sound_path(self.current_chord_name, self.current_variant)
+
                 viewer = ChordViewerWindow(
                     self.current_chord_name,
                     temp_path,
-                    "",  # Нет звука
-                    self
+                    sound_path or "",
+                    self  # Передаем self как parent, чтобы получить config_manager
                 )
                 viewer.exec_()
 
-                # Удаляем временный файл
-                os.unlink(temp_path)
+                # Удаляем временный файл после закрытия окна
+                try:
+                    if os.path.exists(temp_path):
+                        os.unlink(temp_path)
+                except Exception as e:
+                    print(f"⚠️ Ошибка удаления временного файла: {e}")
 
         except Exception as e:
             print(f"Ошибка открытия окна аккорда: {e}")
+            import traceback
+            traceback.print_exc()
+
+
+    def get_chord_sound_path(self, chord_name, variant_index=0):
+        """Получение пути к звуковому файлу аккорда"""
+        try:
+            # Здесь должна быть логика получения пути к звуковому файлу
+            # Временная заглушка
+            sounds_dir = os.path.join("source", "sounds")
+            sound_file = os.path.join(sounds_dir, f"{chord_name}/{chord_name}_{variant_index}.mp3")
+
+            if os.path.exists(sound_file):
+                return sound_file
+
+            # Пробуем без варианта
+            sound_file = os.path.join(sounds_dir, f"{chord_name}/{chord_name}.mp3")
+            if os.path.exists(sound_file):
+                return sound_file
+
+            return None
+
+        except Exception as e:
+            print(f"❌ Ошибка получения пути к звуку: {e}")
+            return None
 
     def handle_error(self, error):
         """Обработчик ошибок медиаплеера"""
