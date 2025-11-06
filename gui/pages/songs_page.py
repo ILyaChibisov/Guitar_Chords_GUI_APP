@@ -765,7 +765,15 @@ class SongsPage(BasePage):
         self.chord_description_label.setWordWrap(True)
         chord_info_layout.addWidget(self.chord_description_label)
 
-        # ПАНЕЛЬ УПРАВЛЕНИЯ ОТОБРАЖЕНИЕМ АККОРДОВ
+        chords_layout_right.addWidget(chord_info_widget)
+
+        # ИЗОБРАЖЕНИЕ АККОРДА (теперь выше кнопок управления)
+        self.chord_image_label = AdaptiveChordLabel()
+        self.chord_image_label.clicked.connect(self.show_chord_large)
+        self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        chords_layout_right.addWidget(self.chord_image_label, 1)
+
+        # ПАНЕЛЬ УПРАВЛЕНИЯ ОТОБРАЖЕНИЕМ АККОРДОВ (ПЕРЕМЕЩЕНА ПОД ИЗОБРАЖЕНИЕ)
         control_widget = QWidget()
         control_layout = QHBoxLayout(control_widget)
         control_layout.setAlignment(Qt.AlignCenter)
@@ -786,14 +794,9 @@ class SongsPage(BasePage):
         control_layout.addWidget(self.display_toggle_btn)
         control_layout.addWidget(self.sound_btn)
 
-        chord_info_layout.addWidget(control_widget)
-        chords_layout_right.addWidget(chord_info_widget)
+        chords_layout_right.addWidget(control_widget)
 
-        self.chord_image_label = AdaptiveChordLabel()
-        self.chord_image_label.clicked.connect(self.show_chord_large)
-        self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        chords_layout_right.addWidget(self.chord_image_label, 1)
-
+        # ВАРИАНТЫ АККОРДА (остаются внизу)
         self.variants_container = QWidget()
         self.variants_container.setStyleSheet("background: transparent; border: none;")
         self.variants_layout = QHBoxLayout(self.variants_container)
