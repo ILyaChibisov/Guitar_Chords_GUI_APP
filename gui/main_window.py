@@ -1,5 +1,7 @@
-from PyQt5.QtWidgets import QMainWindow
+# gui/main_window.py
+from PyQt5.QtWidgets import QMainWindow, QStackedWidget
 from gui.pages.songs_page import SongsPage
+from gui.pages.chords_page import ChordsPage
 from config.settings import AppSettings
 
 
@@ -11,6 +13,10 @@ class MainWindow(QMainWindow):
         self.setup_window()
         self.setup_ui()
 
+        # Менеджеры конфигураций (будут установлены позже)
+        self.config_manager = None
+        self.sound_player = None
+
     def setup_window(self):
         """Настройка окна"""
         self.setWindowTitle(AppSettings.APP_NAME)
@@ -19,8 +25,104 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         """Настройка UI главного окна"""
-        # Создаем страницу песен
-        self.songs_page = SongsPage(self)
+        # Создаем stacked widget для переключения между страницами
+        self.stacked_widget = QStackedWidget()
+        self.setCentralWidget(self.stacked_widget)
 
-        # Устанавливаем ее как центральный виджет
-        self.setCentralWidget(self.songs_page)
+        # Создаем страницы
+        self.songs_page = SongsPage()
+        self.chords_page = ChordsPage()
+
+        # Добавляем страницы в stacked widget
+        self.stacked_widget.addWidget(self.songs_page)
+        self.stacked_widget.addWidget(self.chords_page)
+
+        # Устанавливаем начальную страницу
+        self.stacked_widget.setCurrentWidget(self.songs_page)
+
+    def set_config_manager(self, config_manager):
+        """Установка менеджера конфигураций для всех страниц"""
+        self.config_manager = config_manager
+        # Для songs_page
+        if hasattr(self.songs_page, 'config_manager'):
+            self.songs_page.config_manager = config_manager
+            print("✅ Config manager установлен для страницы песен")
+        # Для chords_page
+        if hasattr(self.chords_page, 'set_config_manager'):
+            self.chords_page.set_config_manager(config_manager)
+            print("✅ Config manager установлен для страницы аккордов")
+
+    def set_sound_player(self, sound_player):
+        """Установка проигрывателя звуков для всех страниц"""
+        self.sound_player = sound_player
+        # Для songs_page
+        if hasattr(self.songs_page, 'sound_player'):
+            self.songs_page.sound_player = sound_player
+            print("✅ Sound player установлен для страницы песен")
+        # Для chords_page
+        if hasattr(self.chords_page, 'set_sound_player'):
+            self.chords_page.set_sound_player(sound_player)
+            print("✅ Sound player установлен для страницы аккордов")
+
+    def show_songs_page(self):
+        """Показать страницу песен"""
+        print("🎵 Переключение на страницу песен")
+        self.stacked_widget.setCurrentWidget(self.songs_page)
+        if hasattr(self.songs_page, 'on_page_show'):
+            self.songs_page.on_page_show()
+
+    def show_chords_page(self):
+        """Показать страницу аккордов"""
+        print("🎸 Переключение на страницу аккордов")
+        self.stacked_widget.setCurrentWidget(self.chords_page)
+        if hasattr(self.chords_page, 'on_page_show'):
+            self.chords_page.on_page_show()
+
+    def on_app_start(self):
+        """Вызывается при запуске приложения"""
+        print("🚀 Инициализация навигации приложения")
+        # Подключаем сигналы кнопок меню
+        self.connect_menu_signals()
+
+        # Убеждаемся, что начальная страница инициализирована
+        self.show_songs_page()
+
+    def connect_menu_signals(self):
+        """Подключение сигналов кнопок меню на страницах"""
+        try:
+            print("🔗 Подключение сигналов меню...")
+
+            # Подключаем сигналы со страницы песен
+            if hasattr(self.songs_page, 'songs_btn'):
+                self.songs_page.songs_btn.clicked.connect(self.show_songs_page)
+                print("✅ Кнопка ПЕСНИ подключена")
+            if hasattr(self.songs_page, 'chords_btn'):
+                self.songs_page.chords_btn.clicked.connect(self.show_chords_page)
+                print("✅ Кнопка АККОРДЫ подключена")
+
+            # Подключаем сигналы со страницы аккордов
+            if hasattr(self.chords_page, 'songs_btn'):
+                self.chords_page.songs_btn.clicked.connect(self.show_songs_page)
+                print("✅ Кнопка ПЕСНИ (аккорды) подключена")
+            if hasattr(self.chords_page, 'chords_btn'):
+                self.chords_page.chords_btn.clicked.connect(self.show_chords_page)
+                print("✅ Кнопка АККОРДЫ (аккорды) подключена")
+
+            print("✅ Все сигналы меню успешно подключены")
+
+        except Exception as e:
+            print(f"❌ Ошибка подключения сигналов меню: {e}")
+
+    def closeEvent(self, event):
+        """Обработчик закрытия окна"""
+        print("🔚 Закрытие приложения...")
+        # Вызываем cleanup для всех страниц
+        try:
+            if hasattr(self.songs_page, 'cleanup'):
+                self.songs_page.cleanup()
+            if hasattr(self.chords_page, 'cleanup'):
+                self.chords_page.cleanup()
+        except Exception as e:
+            print(f"⚠️ Ошибка при очистке ресурсов: {e}")
+
+        event.accept()

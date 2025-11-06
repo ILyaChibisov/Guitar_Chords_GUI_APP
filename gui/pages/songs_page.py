@@ -498,6 +498,8 @@ class ChordConfigManager:
             chord_name,
             f"{chord_name}v1", f"{chord_name}v2", f"{chord_name}v3",
             f"{chord_name}v4", f"{chord_name}v5", f"{chord_name}v6",
+            f"{chord_name}v7", f"{chord_name}v8", f"{chord_name}v9",
+            f"{chord_name}v10", f"{chord_name}v11", f"{chord_name}v12",
             chord_name.upper(),
             chord_name.upper().replace('M', 'm'),
         ]
@@ -510,7 +512,7 @@ class ChordConfigManager:
     def get_chord_variants_count(self, chord_name):
         """Получение количества вариантов для аккорда"""
         count = 0
-        for i in range(1, 10):  # Проверяем до 9 вариантов
+        for i in range(1, 13):  # Проверяем до 12 вариантов
             variant_key = f"{chord_name}v{i}"
             if variant_key in self.chord_configs_cache:
                 count += 1
@@ -569,6 +571,7 @@ class SongsPage(BasePage):
             print(f"🔍 Примеры аккордов: {sample_chords}")
         else:
             print("❌ Ошибка загрузки конфигураций из Excel")
+
 
     def get_chord_description(self, chord_name):
         """Получает описание аккорда из данных const"""
@@ -727,24 +730,27 @@ class SongsPage(BasePage):
         chords_frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         chords_frame.setStyleSheet("background: transparent; border: none;")
         chords_layout_right = QVBoxLayout(chords_frame)
-        chords_layout_right.setSpacing(5)
+        chords_layout_right.setSpacing(1)
+
 
         chord_info_widget = QWidget()
         chord_info_widget.setStyleSheet("background: transparent; border: none;")
         chord_info_layout = QVBoxLayout(chord_info_widget)
-        chord_info_layout.setSpacing(2)
+        chord_info_layout.setSpacing(0)
         chord_info_layout.setContentsMargins(0, 0, 0, 0)
 
         self.chord_name_label = QLabel("")
         self.chord_name_label.setStyleSheet("""
             QLabel {
                 color: white;
-                font-size: 18px;
+                font-size: 16px;
                 font-weight: bold;
                 text-align: center;
-                padding: 2px;
+                padding: 1px;
+                margin: 0px;
                 background: transparent;
                 border: none;
+                line-height: 1.2;
             }
         """)
         self.chord_name_label.setAlignment(Qt.AlignCenter)
@@ -753,12 +759,14 @@ class SongsPage(BasePage):
         self.chord_description_label = QLabel("")
         self.chord_description_label.setStyleSheet("""
             QLabel {
-                color: white;
-                font-size: 14px;
+                color: transparent;
+                font-size: 0px;
                 text-align: center;
                 padding: 2px;
+                margin: 0px;
                 background: transparent;
                 border: none;
+                max-height: 0px;
             }
         """)
         self.chord_description_label.setAlignment(Qt.AlignCenter)
@@ -775,20 +783,22 @@ class SongsPage(BasePage):
 
         # ПАНЕЛЬ УПРАВЛЕНИЯ ОТОБРАЖЕНИЕМ АККОРДОВ (ПЕРЕМЕЩЕНА ПОД ИЗОБРАЖЕНИЕ)
         control_widget = QWidget()
+        control_widget.setStyleSheet("background: transparent; border: none; margin: 0px; padding: 0px;")
         control_layout = QHBoxLayout(control_widget)
         control_layout.setAlignment(Qt.AlignCenter)
-        control_layout.setSpacing(10)
+        control_layout.setSpacing(5)
+        control_layout.setContentsMargins(0, 0, 0, 0)
 
         # Кнопка переключения ноты/пальцы
-        self.display_toggle_btn = QPushButton("🎵")
+        self.display_toggle_btn = QPushButton("🎵 Ноты")
         self.display_toggle_btn.setCheckable(True)
         self.display_toggle_btn.setChecked(False)
-        self.display_toggle_btn.setFixedSize(50, 35)
+        self.display_toggle_btn.setFixedSize(80, 24)
         self.display_toggle_btn.clicked.connect(self.toggle_display_type)
 
         # Кнопка звука
-        self.sound_btn = QPushButton("🔊")
-        self.sound_btn.setFixedSize(50, 35)
+        self.sound_btn = QPushButton("🔊 Слушать")
+        self.sound_btn.setFixedSize(70, 24)
         self.sound_btn.clicked.connect(self.play_chord_sound)
 
         control_layout.addWidget(self.display_toggle_btn)
@@ -802,6 +812,7 @@ class SongsPage(BasePage):
         self.variants_layout = QHBoxLayout(self.variants_container)
         self.variants_layout.setAlignment(Qt.AlignCenter)
         self.variants_layout.setSpacing(8)
+
         chords_layout_right.addWidget(self.variants_container)
 
         right_layout.addWidget(chords_frame, 1)
@@ -873,41 +884,65 @@ class SongsPage(BasePage):
             }
         """)
 
-        # Стили для кнопок управления
+        # СОВРЕМЕННЫЕ КОМПАКТНЫЕ СТИЛИ ДЛЯ КНОПОК УПРАВЛЕНИЯ С ТЕКСТОМ
         self.display_toggle_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(52, 152, 219, 0.7);
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-radius: 10px;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #5D6D7E, stop:1 #34495E);
+                border: 1px solid #2C3E50;
+                border-radius: 6px;
                 color: white;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
-                padding: 5px;
+                padding: 2px 4px;
+                min-width: 80px;
+                min-height: 18px;
             }
             QPushButton:checked {
-                background: rgba(231, 76, 60, 0.7);
-                border: 2px solid rgba(255, 255, 255, 0.5);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #27AE60, stop:1 #229954);
+                border: 1px solid #1E8449;
             }
             QPushButton:hover {
-                background: rgba(52, 152, 219, 0.9);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #6C7A89, stop:1 #415B76);
             }
             QPushButton:checked:hover {
-                background: rgba(231, 76, 60, 0.9);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2ECC71, stop:1 #27AE60);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2C3E50, stop:1 #34495E);
+                padding: 3px 3px 1px 5px;
+            }
+            QPushButton:checked:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #1E8449, stop:1 #145A32);
             }
         """)
 
         self.sound_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(46, 204, 113, 0.7);
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-radius: 10px;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #3498DB, stop:1 #2980B9);
+                border: 1px solid #2471A3;
+                border-radius: 6px;
                 color: white;
-                font-size: 16px;
+                font-size: 11px;
                 font-weight: bold;
-                padding: 5px;
+                padding: 2px 4px;
+                min-width: 70px;
+                min-height: 18px;
             }
             QPushButton:hover {
-                background: rgba(46, 204, 113, 0.9);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #5DADE2, stop:1 #3498DB);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2471A3, stop:1 #1B4F72);
+                padding: 3px 3px 1px 5px;
             }
         """)
 
@@ -1110,10 +1145,12 @@ class SongsPage(BasePage):
             self.show_current_page()
             self.update_pagination_buttons()
 
+
     def on_chord_button_clicked(self, chord_name):
         """Обработчик клика по кнопке аккорда"""
         chord_url = QUrl(chord_name)
         self.chord_clicked(chord_url)
+
 
     def chord_clicked(self, url):
         """Обработчик клика по аккорду в тексте песни"""
@@ -1124,10 +1161,15 @@ class SongsPage(BasePage):
 
             print(f"🎯 Клик по аккорду: {chord_name}")
 
-            # Показываем информацию об аккорде
-            self.chord_name_label.setText(f"Аккорд {chord_name}")
+            # Получаем описание аккорда
             chord_description = self.get_chord_description(chord_name)
-            self.chord_description_label.setText(chord_description)
+
+            # Объединяем имя аккорда и описание в одну строку
+            full_chord_info = f"{chord_name} {chord_description}"
+
+            # Устанавливаем объединенный текст в один лейбл
+            self.chord_name_label.setText(full_chord_info)
+            self.chord_description_label.setText("")  # Очищаем второй лейбл
 
             # Показываем кнопки управления
             self.display_toggle_btn.show()
@@ -1424,10 +1466,10 @@ class SongsPage(BasePage):
         """Переключение между нотами и пальцами"""
         if self.display_toggle_btn.isChecked():
             self.current_display_type = "notes"
-            self.display_toggle_btn.setText("👆")
+            self.display_toggle_btn.setText("👆 Пальцы")
         else:
             self.current_display_type = "fingers"
-            self.display_toggle_btn.setText("🎵")
+            self.display_toggle_btn.setText("🎵 Ноты")
 
         self.refresh_current_chord()
 
