@@ -11,51 +11,20 @@ from gui.widgets.buttons import MenuButton, ChordButton, ChordVariantButton
 from gui.widgets.labels import AdaptiveChordLabel
 from config.styles import DarkTheme
 
-# Импортируем данные аккордов из const
+# Импортируем данные аккордов из нового файла
 try:
-    from const import CHORDS_TYPE_LIST, CHORDS_TYPE_NAME_LIST_DSR, CHORDS_TYPE
+    from type_chords import CHORDS_TYPE_BY_NOTE, CHORDS_BY_NOTE, CHORDS_TYPE_BY_STYLE, CHORDS_BY_STYLE, \
+        CHORDS_DESCRIPTIONS
 
-    # Создаем словарь для быстрого доступа к аккордам по типам
-    CHORDS_BY_TYPE = {}
-    if (isinstance(CHORDS_TYPE_NAME_LIST_DSR, list) and
-            isinstance(CHORDS_TYPE_LIST, list) and
-            len(CHORDS_TYPE_NAME_LIST_DSR) == len(CHORDS_TYPE_LIST)):
-
-        for i, (chord_type, chords_list) in enumerate(zip(CHORDS_TYPE_NAME_LIST_DSR, CHORDS_TYPE_LIST)):
-            # Используем индекс как ключ, если тип - список
-            if isinstance(chord_type, list):
-                key = f"Type_{i}"
-            else:
-                key = str(chord_type)
-            CHORDS_BY_TYPE[key] = chords_list
-
-    # Создаем общий словарь аккордов и их описаний
-    CHORDS_DATA = {}
-    if (isinstance(CHORDS_TYPE_LIST, list) and
-            isinstance(CHORDS_TYPE_NAME_LIST_DSR, list)):
-
-        for chords_list, desc_list in zip(CHORDS_TYPE_LIST, CHORDS_TYPE_NAME_LIST_DSR):
-            if isinstance(chords_list, list) and isinstance(desc_list, list):
-                for chord, description in zip(chords_list, desc_list):
-                    if isinstance(chord, str) and isinstance(description, str):
-                        CHORDS_DATA[chord] = description
-
-    print(f"✅ ChordsPage: Загружено {len(CHORDS_BY_TYPE)} типов аккордов")
-    print(f"✅ ChordsPage: Загружено {len(CHORDS_DATA)} аккордов с описаниями")
-
+    print("✅ ChordsPage: Данные аккордов загружены из type_chords.py")
 except ImportError as e:
-    print(f"⚠️ ChordsPage: Не удалось загрузить данные аккордов из const: {e}")
-    CHORDS_BY_TYPE = {}
-    CHORDS_DATA = {}
-
-# Заглушка для CHORDS_TYPE если не загрузился
-try:
-    from const import CHORDS_TYPE
-
-    if not isinstance(CHORDS_TYPE, list):
-        CHORDS_TYPE = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
-except ImportError:
-    CHORDS_TYPE = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+    print(f"⚠️ ChordsPage: Не удалось загрузить данные аккордов: {e}")
+    # Заглушки на случай ошибки
+    CHORDS_TYPE_BY_NOTE = ['A', 'A#|Bb', 'B|H', 'C', 'C#|Db', 'D', 'D#|Eb', 'E', 'F', 'F#|Gb', 'G', 'G#|Ab']
+    CHORDS_BY_NOTE = {'A': ['A', 'Am']}
+    CHORDS_TYPE_BY_STYLE = ['Major', 'Minor']
+    CHORDS_BY_STYLE = {'Major': ['A', 'B', 'C'], 'Minor': ['Am', 'Bm', 'Cm']}
+    CHORDS_DESCRIPTIONS = {'A': 'Ля мажор', 'Am': 'Ля минор'}
 
 # Импортируем систему отображения аккордов
 try:
@@ -74,7 +43,7 @@ class ChordsPage(BasePage):
         super().__init__("chords", parent)
 
         # Переменные для навигации
-        self.current_view = "type"  # "type" или "note"
+        self.current_view = "style"  # "style" или "note"
         self.selected_type = None
         self.selected_note = None
         self.current_chord_name = ""
@@ -102,14 +71,14 @@ class ChordsPage(BasePage):
     def setup_ui(self):
         """Настройка UI страницы аккордов"""
         main_layout = QVBoxLayout(self)
-        main_layout.setSpacing(15)
-        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(15, 15, 15, 15)
 
         # Главное меню сверху
         menu_widget = QFrame()
         menu_layout = QHBoxLayout(menu_widget)
         menu_layout.setAlignment(Qt.AlignCenter)
-        menu_layout.setSpacing(10)
+        menu_layout.setSpacing(8)
         menu_layout.setContentsMargins(0, 0, 0, 0)
 
         # Кнопки главного меню
@@ -117,7 +86,7 @@ class ChordsPage(BasePage):
         self.chords_btn = MenuButton("🎸 АККОРДЫ")
         self.tuner_btn = MenuButton("🎵 ТЮНЕР")
         self.learning_btn = MenuButton("📚 ОБУЧЕНИЕ")
-        self.theory_btn = MenuButton("🎼 МУЗЫКАЛЬНАЯ ТЕОРИЯ")
+        self.theory_btn = MenuButton("🎼 ТЕОРИЯ")
 
         menu_layout.addWidget(self.songs_btn)
         menu_layout.addWidget(self.chords_btn)
@@ -128,8 +97,19 @@ class ChordsPage(BasePage):
         main_layout.addWidget(menu_widget)
 
         # ЗАГОЛОВОК СТРАНИЦЫ
-        self.page_title = QLabel("🎸 БИБЛИОТЕКА АККОРДОВ")
-        self.page_title.setStyleSheet(DarkTheme.SONG_TITLE_STYLE)
+        self.page_title = QLabel("🎸 АККОРДЫ")
+        self.page_title.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+                text-align: center;
+                padding: 10px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 10px;
+                margin: 5px;
+            }
+        """)
         self.page_title.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.page_title)
 
@@ -137,102 +117,18 @@ class ChordsPage(BasePage):
         content_layout = QHBoxLayout()
         content_layout.setSpacing(15)
 
-        # ЛЕВАЯ ЧАСТЬ - ВЫБОР АККОРДОВ
+        # ЛЕВАЯ ЧАСТЬ - ОТОБРАЖЕНИЕ АККОРДА (ОСНОВНОЕ)
         left_widget = QFrame()
         left_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         left_layout = QVBoxLayout(left_widget)
-        left_layout.setSpacing(15)
+        left_layout.setSpacing(10)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
-        # ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ВЫБОРА
-        mode_selector_widget = QWidget()
-        mode_selector_widget.setStyleSheet("background: transparent; border: none;")
-        mode_selector_layout = QHBoxLayout(mode_selector_widget)
-        mode_selector_layout.setAlignment(Qt.AlignCenter)
-        mode_selector_layout.setSpacing(10)
-
-        self.type_mode_btn = QPushButton("📊 По типам")
-        self.type_mode_btn.setCheckable(True)
-        self.type_mode_btn.setChecked(True)
-        self.type_mode_btn.setFixedSize(120, 35)
-
-        self.note_mode_btn = QPushButton("🎵 По нотам")
-        self.note_mode_btn.setCheckable(True)
-        self.note_mode_btn.setFixedSize(120, 35)
-
-        mode_selector_layout.addWidget(self.type_mode_btn)
-        mode_selector_layout.addWidget(self.note_mode_btn)
-
-        left_layout.addWidget(mode_selector_widget)
-
-        # ОБЛАСТЬ ВЫБОРА ТИПОВ/НОТ
-        self.selection_container = QScrollArea()
-        self.selection_container.setWidgetResizable(True)
-        self.selection_container.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.selection_container.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.selection_container.setStyleSheet("""
-            QScrollArea {
-                background: transparent;
-                border: 2px solid rgba(255, 255, 255, 0.1);
-                border-radius: 15px;
-            }
-            QWidget {
-                background: transparent;
-            }
-        """)
-
-        self.selection_widget = QWidget()
-        self.selection_layout = QGridLayout(self.selection_widget)
-        self.selection_layout.setSpacing(10)
-        self.selection_layout.setContentsMargins(15, 15, 15, 15)
-        self.selection_layout.setAlignment(Qt.AlignTop)
-
-        self.selection_container.setWidget(self.selection_widget)
-        left_layout.addWidget(self.selection_container, 1)
-
-        # КНОПКА НАЗАД
-        self.back_button = QPushButton("⬅️ Назад")
-        self.back_button.setFixedHeight(40)
-        self.back_button.hide()
-        left_layout.addWidget(self.back_button)
-
-        content_layout.addWidget(left_widget, 2)
-
-        # ПРАВАЯ ЧАСТЬ - ОТОБРАЖЕНИЕ АККОРДА
-        right_widget = QFrame()
-        right_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        right_layout = QVBoxLayout(right_widget)
-        right_layout.setSpacing(15)
-
-        # ИНФОРМАЦИЯ О ВЫБРАННОМ АККОРДЕ
-        chord_info_widget = QWidget()
-        chord_info_widget.setStyleSheet("background: transparent; border: none;")
-        chord_info_layout = QVBoxLayout(chord_info_widget)
-        chord_info_layout.setSpacing(0)
-        chord_info_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.chord_name_label = QLabel("Выберите аккорд")
-        self.chord_name_label.setStyleSheet("""
-            QLabel {
-                color: white;
-                font-size: 18px;
-                font-weight: bold;
-                text-align: center;
-                padding: 10px;
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 10px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-        """)
-        self.chord_name_label.setAlignment(Qt.AlignCenter)
-        chord_info_layout.addWidget(self.chord_name_label)
-
-        right_layout.addWidget(chord_info_widget)
-
-        # ИЗОБРАЖЕНИЕ АККОРДА
+        # ИЗОБРАЖЕНИЕ АККОРДА (КРУПНОЕ И КАЧЕСТВЕННОЕ)
         self.chord_image_label = AdaptiveChordLabel()
         self.chord_image_label.clicked.connect(self.show_chord_large)
         self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.chord_image_label.setMinimumHeight(400)
         self.chord_image_label.setStyleSheet("""
             AdaptiveChordLabel {
                 background: rgba(255, 255, 255, 0.05);
@@ -240,31 +136,54 @@ class ChordsPage(BasePage):
                 border-radius: 15px;
             }
         """)
-        right_layout.addWidget(self.chord_image_label, 1)
+        left_layout.addWidget(self.chord_image_label, 1)
 
-        # ПАНЕЛЬ УПРАВЛЕНИЯ ОТОБРАЖЕНИЕМ
-        control_widget = QWidget()
-        control_widget.setStyleSheet("background: transparent; border: none;")
-        control_layout = QHBoxLayout(control_widget)
-        control_layout.setAlignment(Qt.AlignCenter)
-        control_layout.setSpacing(10)
+        # ПАНЕЛЬ УПРАВЛЕНИЯ АККОРДОМ
+        chord_control_widget = QWidget()
+        chord_control_widget.setStyleSheet("background: transparent; border: none;")
+        chord_control_layout = QVBoxLayout(chord_control_widget)
+        chord_control_layout.setSpacing(8)
+        chord_control_layout.setContentsMargins(0, 0, 0, 0)
+
+        # ИНФОРМАЦИЯ О АККОРДЕ
+        self.chord_name_label = QLabel("Выберите аккорд")
+        self.chord_name_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                text-align: center;
+                padding: 8px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+            }
+        """)
+        self.chord_name_label.setAlignment(Qt.AlignCenter)
+        chord_control_layout.addWidget(self.chord_name_label)
+
+        # КНОПКИ УПРАВЛЕНИЯ
+        control_buttons_widget = QWidget()
+        control_buttons_widget.setStyleSheet("background: transparent; border: none;")
+        control_buttons_layout = QHBoxLayout(control_buttons_widget)
+        control_buttons_layout.setAlignment(Qt.AlignCenter)
+        control_buttons_layout.setSpacing(10)
 
         # Кнопка переключения ноты/пальцы
         self.display_toggle_btn = QPushButton("🎵 Ноты")
         self.display_toggle_btn.setCheckable(True)
         self.display_toggle_btn.setChecked(False)
-        self.display_toggle_btn.setFixedSize(100, 30)
+        self.display_toggle_btn.setFixedSize(100, 35)
         self.display_toggle_btn.hide()
 
         # Кнопка звука
         self.sound_btn = QPushButton("🔊 Слушать")
-        self.sound_btn.setFixedSize(100, 30)
+        self.sound_btn.setFixedSize(100, 35)
         self.sound_btn.hide()
 
-        control_layout.addWidget(self.display_toggle_btn)
-        control_layout.addWidget(self.sound_btn)
+        control_buttons_layout.addWidget(self.display_toggle_btn)
+        control_buttons_layout.addWidget(self.sound_btn)
 
-        right_layout.addWidget(control_widget)
+        chord_control_layout.addWidget(control_buttons_widget)
 
         # ВАРИАНТЫ АККОРДА
         self.variants_container = QWidget()
@@ -274,13 +193,76 @@ class ChordsPage(BasePage):
         self.variants_layout.setSpacing(8)
         self.variants_container.hide()
 
-        right_layout.addWidget(self.variants_container)
+        chord_control_layout.addWidget(self.variants_container)
+        left_layout.addWidget(chord_control_widget)
 
-        content_layout.addWidget(right_widget, 1)
+        content_layout.addWidget(left_widget, 2)  # Левая часть занимает 2/3
+
+        # ПРАВАЯ ЧАСТЬ - ВЫБОР АККОРДОВ
+        right_widget = QFrame()
+        right_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        right_widget.setMaximumWidth(400)
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setSpacing(10)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+
+        # ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ВЫБОРА
+        mode_selector_widget = QWidget()
+        mode_selector_widget.setStyleSheet("background: transparent; border: none;")
+        mode_selector_layout = QHBoxLayout(mode_selector_widget)
+        mode_selector_layout.setAlignment(Qt.AlignCenter)
+        mode_selector_layout.setSpacing(8)
+
+        self.style_mode_btn = QPushButton("📊 По типу")
+        self.style_mode_btn.setCheckable(True)
+        self.style_mode_btn.setChecked(True)
+        self.style_mode_btn.setFixedSize(120, 35)
+
+        self.note_mode_btn = QPushButton("🎵 По тональности")
+        self.note_mode_btn.setCheckable(True)
+        self.note_mode_btn.setFixedSize(140, 35)
+
+        mode_selector_layout.addWidget(self.style_mode_btn)
+        mode_selector_layout.addWidget(self.note_mode_btn)
+
+        right_layout.addWidget(mode_selector_widget)
+
+        # ОБЛАСТЬ ВЫБОРА ТИПОВ/ТОНАЛЬНОСТЕЙ
+        self.selection_container = QScrollArea()
+        self.selection_container.setWidgetResizable(True)
+        self.selection_container.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.selection_container.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.selection_container.setStyleSheet("""
+            QScrollArea {
+                background: transparent;
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+            }
+            QWidget {
+                background: transparent;
+            }
+        """)
+
+        self.selection_widget = QWidget()
+        self.selection_layout = QGridLayout(self.selection_widget)
+        self.selection_layout.setSpacing(8)
+        self.selection_layout.setContentsMargins(10, 10, 10, 10)
+        self.selection_layout.setAlignment(Qt.AlignTop)
+
+        self.selection_container.setWidget(self.selection_widget)
+        right_layout.addWidget(self.selection_container, 1)
+
+        # КНОПКА НАЗАД
+        self.back_button = QPushButton("⬅️ Назад")
+        self.back_button.setFixedHeight(35)
+        self.back_button.hide()
+        right_layout.addWidget(self.back_button)
+
+        content_layout.addWidget(right_widget, 1)  # Правая часть занимает 1/3
         main_layout.addLayout(content_layout, 1)
 
         # Инициализация данных
-        self.show_type_selection()
+        self.show_style_selection()
 
     def apply_styles(self):
         """Применяет стили ко всем элементам страницы"""
@@ -292,7 +274,7 @@ class ChordsPage(BasePage):
         self.theory_btn.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
 
         # Стили для переключателя режимов
-        self.type_mode_btn.setStyleSheet("""
+        button_style = """
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #5D6D7E, stop:1 #34495E);
@@ -316,9 +298,9 @@ class ChordsPage(BasePage):
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #5DADE2, stop:1 #3498DB);
             }
-        """)
-
-        self.note_mode_btn.setStyleSheet(self.type_mode_btn.styleSheet())
+        """
+        self.style_mode_btn.setStyleSheet(button_style)
+        self.note_mode_btn.setStyleSheet(button_style)
 
         # Стили для кнопки назад
         self.back_button.setStyleSheet("""
@@ -328,17 +310,13 @@ class ChordsPage(BasePage):
                 border: 2px solid #922B21;
                 border-radius: 8px;
                 color: white;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: bold;
                 padding: 8px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #EC7063, stop:1 #E74C3C);
-            }
-            QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #CB4335, stop:1 #A93226);
             }
         """)
 
@@ -352,7 +330,7 @@ class ChordsPage(BasePage):
                 color: white;
                 font-size: 11px;
                 font-weight: bold;
-                padding: 2px 4px;
+                padding: 8px;
             }
             QPushButton:checked {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -362,10 +340,6 @@ class ChordsPage(BasePage):
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #6C7A89, stop:1 #415B76);
-            }
-            QPushButton:checked:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2ECC71, stop:1 #27AE60);
             }
         """)
 
@@ -378,7 +352,7 @@ class ChordsPage(BasePage):
                 color: white;
                 font-size: 11px;
                 font-weight: bold;
-                padding: 2px 4px;
+                padding: 8px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -396,7 +370,7 @@ class ChordsPage(BasePage):
 
     def connect_signals(self):
         """Подключение сигналов"""
-        self.type_mode_btn.clicked.connect(lambda: self.switch_mode("type"))
+        self.style_mode_btn.clicked.connect(lambda: self.switch_mode("style"))
         self.note_mode_btn.clicked.connect(lambda: self.switch_mode("note"))
         self.back_button.clicked.connect(self.go_back)
         self.display_toggle_btn.clicked.connect(self.toggle_display_type)
@@ -404,13 +378,13 @@ class ChordsPage(BasePage):
 
     def switch_mode(self, mode):
         """Переключение между режимами выбора"""
-        if mode == "type":
-            self.type_mode_btn.setChecked(True)
+        if mode == "style":
+            self.style_mode_btn.setChecked(True)
             self.note_mode_btn.setChecked(False)
-            self.current_view = "type"
-            self.show_type_selection()
+            self.current_view = "style"
+            self.show_style_selection()
         else:
-            self.type_mode_btn.setChecked(False)
+            self.style_mode_btn.setChecked(False)
             self.note_mode_btn.setChecked(True)
             self.current_view = "note"
             self.show_note_selection()
@@ -421,20 +395,16 @@ class ChordsPage(BasePage):
         self.back_button.hide()
         self.clear_chord_display()
 
-    def show_type_selection(self):
+    def show_style_selection(self):
         """Показ выбора по типам аккордов"""
         self.clear_selection_layout()
 
-        if not CHORDS_BY_TYPE:
-            self.show_error_message("Данные аккордов не загружены")
-            return
-
         row, col = 0, 0
-        max_cols = 6
+        max_cols = 4  # Максимум 4 кнопки в строке
 
-        for chord_type in CHORDS_BY_TYPE.keys():
-            btn = QPushButton(str(chord_type))
-            btn.setFixedSize(120, 50)
+        for style in CHORDS_TYPE_BY_STYLE:
+            btn = QPushButton(style)
+            btn.setFixedSize(80, 40)
             btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -450,7 +420,7 @@ class ChordsPage(BasePage):
                         stop:0 #5DADE2, stop:1 #3498DB);
                 }
             """)
-            btn.clicked.connect(lambda checked, ct=chord_type: self.on_type_selected(ct))
+            btn.clicked.connect(lambda checked, s=style: self.on_style_selected(s))
 
             self.selection_layout.addWidget(btn, row, col)
 
@@ -460,15 +430,15 @@ class ChordsPage(BasePage):
                 row += 1
 
     def show_note_selection(self):
-        """Показ выбора по нотам"""
+        """Показ выбора по тональностям"""
         self.clear_selection_layout()
 
         row, col = 0, 0
-        max_cols = 6
+        max_cols = 4  # Максимум 4 кнопки в строке
 
-        for note in CHORDS_TYPE:
-            btn = QPushButton(str(note))
-            btn.setFixedSize(80, 45)
+        for note in CHORDS_TYPE_BY_NOTE:
+            btn = QPushButton(note)
+            btn.setFixedSize(80, 40)
             btn.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -476,7 +446,7 @@ class ChordsPage(BasePage):
                     border: 2px solid #1E8449;
                     border-radius: 8px;
                     color: white;
-                    font-size: 14px;
+                    font-size: 11px;
                     font-weight: bold;
                 }
                 QPushButton:hover {
@@ -493,43 +463,36 @@ class ChordsPage(BasePage):
                 col = 0
                 row += 1
 
-    def on_type_selected(self, chord_type):
+    def on_style_selected(self, style):
         """Обработчик выбора типа аккорда"""
-        self.selected_type = chord_type
+        self.selected_type = style
         self.selected_note = None
-        self.show_chords_for_type(chord_type)
+        self.show_chords_for_style(style)
         self.back_button.show()
 
     def on_note_selected(self, note):
-        """Обработчик выбора ноты"""
+        """Обработчик выбора тональности"""
         self.selected_note = note
         self.selected_type = None
         self.show_chords_for_note(note)
         self.back_button.show()
 
-    def show_chords_for_type(self, chord_type):
+    def show_chords_for_style(self, style):
         """Показ аккордов для выбранного типа"""
         self.clear_selection_layout()
 
-        if chord_type not in CHORDS_BY_TYPE:
-            self.show_error_message(f"Тип '{chord_type}' не найден")
+        if style not in CHORDS_BY_STYLE:
+            self.show_error_message(f"Тип '{style}' не найден")
             return
 
-        chords = CHORDS_BY_TYPE[chord_type]
-
-        if not isinstance(chords, list):
-            self.show_error_message(f"Некорректные данные для типа '{chord_type}'")
-            return
+        chords = CHORDS_BY_STYLE[style]
 
         row, col = 0, 0
-        max_cols = 6
+        max_cols = 4  # Максимум 4 кнопки в строке
 
         for chord in chords:
-            if not isinstance(chord, str):
-                continue
-
             btn = ChordButton(chord)
-            btn.setFixedSize(90, 40)
+            btn.setFixedSize(80, 35)
             btn.clicked.connect(lambda checked, c=chord: self.on_chord_selected(c))
 
             self.selection_layout.addWidget(btn, row, col)
@@ -540,33 +503,21 @@ class ChordsPage(BasePage):
                 row += 1
 
     def show_chords_for_note(self, note):
-        """Показ аккордов для выбранной ноты"""
+        """Показ аккордов для выбранной тональности"""
         self.clear_selection_layout()
 
-        # Ищем аккорды, начинающиеся с выбранной ноты
-        chords_for_note = []
-        for chords_list in CHORDS_BY_TYPE.values():
-            if not isinstance(chords_list, list):
-                continue
-
-            for chord in chords_list:
-                if isinstance(chord, str) and chord.startswith(str(note)):
-                    chords_for_note.append(chord)
-
-        # Убираем дубликаты
-        chords_for_note = list(set(chords_for_note))
-        chords_for_note.sort()
-
-        if not chords_for_note:
-            self.show_error_message(f"Аккорды для ноты '{note}' не найдены")
+        if note not in CHORDS_BY_NOTE:
+            self.show_error_message(f"Тональность '{note}' не найдена")
             return
 
-        row, col = 0, 0
-        max_cols = 6
+        chords = CHORDS_BY_NOTE[note]
 
-        for chord in chords_for_note:
+        row, col = 0, 0
+        max_cols = 4  # Максимум 4 кнопки в строке
+
+        for chord in chords:
             btn = ChordButton(chord)
-            btn.setFixedSize(90, 40)
+            btn.setFixedSize(80, 35)
             btn.clicked.connect(lambda checked, c=chord: self.on_chord_selected(c))
 
             self.selection_layout.addWidget(btn, row, col)
@@ -597,25 +548,10 @@ class ChordsPage(BasePage):
 
     def get_chord_description(self, chord_name):
         """Получает описание аккорда"""
-        if not isinstance(chord_name, str):
-            return "Гитарный аккорд"
-
-        names_to_try = [
-            chord_name,
-            chord_name.upper(),
-            chord_name.upper().replace('M', 'm'),
-            chord_name.upper().replace('М', 'm'),
-        ]
-
-        for name in names_to_try:
-            if name in CHORDS_DATA:
-                return CHORDS_DATA[name]
-
-        return "Гитарный аккорд"
+        return CHORDS_DESCRIPTIONS.get(chord_name, "Гитарный аккорд")
 
     def load_chord_variants(self, chord_name):
         """Загрузка вариантов аккорда"""
-        # Очищаем предыдущие варианты
         for i in reversed(range(self.variants_layout.count())):
             widget = self.variants_layout.itemAt(i).widget()
             if widget:
@@ -625,14 +561,12 @@ class ChordsPage(BasePage):
             print("❌ ChordsPage: Config manager не установлен")
             return
 
-        # Получаем количество вариантов
         variants_count = self.config_manager.get_chord_variants_count(chord_name)
         print(f"🎯 ChordsPage: Для аккорда {chord_name} найдено {variants_count} вариантов")
 
         if variants_count == 0:
-            variants_count = 1  # Минимум один вариант
+            variants_count = 1
 
-        # Создаем кнопки вариантов
         for variant_num in range(1, variants_count + 1):
             btn = ChordVariantButton(str(variant_num))
             btn.setProperty('variant_num', variant_num)
@@ -642,7 +576,6 @@ class ChordsPage(BasePage):
                     self.current_variant = v_num
                     print(f"🔄 ChordsPage: Переключение на вариант {v_num} для аккорда {chord_name}")
                     self.refresh_chord_display()
-                    # Снимаем выделение с других кнопок
                     for i in range(self.variants_layout.count()):
                         other_btn = self.variants_layout.itemAt(i).widget()
                         if other_btn and other_btn.property('variant_num') != v_num:
@@ -654,7 +587,6 @@ class ChordsPage(BasePage):
             btn.clicked.connect(make_handler(variant_num))
             self.variants_layout.addWidget(btn)
 
-        # Активируем первый вариант
         if self.variants_layout.count() > 0:
             first_btn = self.variants_layout.itemAt(0).widget()
             if first_btn:
@@ -664,15 +596,23 @@ class ChordsPage(BasePage):
         self.variants_container.show()
 
     def refresh_chord_display(self):
-        """Обновление отображения аккорда"""
+        """Обновление отображения аккорда с высоким качеством"""
         if not self.current_chord_name or not self.config_manager:
             return
 
         try:
+            # Генерируем изображение с высоким качеством по принципу chord_viewer
             pixmap = self.generate_chord_from_config(self.current_chord_name, self.current_variant)
             if not pixmap.isNull():
+                # Принудительно обновляем отображение
                 self.chord_image_label.setChordPixmap(pixmap)
-                print(f"✅ ChordsPage: Аккорд {self.current_chord_name} вариант {self.current_variant} отображен")
+
+                # Принудительное обновление виджета
+                self.chord_image_label.update()
+                self.chord_image_label.repaint()
+
+                print(
+                    f"✅ ChordsPage: Аккорд {self.current_chord_name} вариант {self.current_variant} отображен с высоким качеством (50% масштаб)")
             else:
                 print(f"❌ ChordsPage: Не удалось сгенерировать изображение для {self.current_chord_name}")
                 self.show_chord_not_found()
@@ -681,7 +621,7 @@ class ChordsPage(BasePage):
             self.show_chord_not_found()
 
     def generate_chord_from_config(self, chord_name, variant=1):
-        """Генерация изображения аккорда из конфигурации"""
+        """Генерация изображения аккорда из конфигурации с высоким качеством (по принципу chord_viewer)"""
         if not self.config_manager:
             return QPixmap()
 
@@ -690,8 +630,6 @@ class ChordsPage(BasePage):
             chord_config = self.config_manager.get_chord_config(variant_key)
 
             if not chord_config:
-                print(f"❌ ChordsPage: Конфигурация не найдена для: {variant_key}")
-                # Пробуем найти базовый аккорд без варианта
                 chord_config = self.config_manager.get_chord_config(chord_name)
                 if not chord_config:
                     return QPixmap()
@@ -699,11 +637,12 @@ class ChordsPage(BasePage):
             # Получаем элементы для текущего типа отображения
             if self.current_display_type == "fingers":
                 elements = chord_config.get('elements_fingers', [])
+                print(f"👆 Используем элементы пальцев: {len(elements)}")
             else:
                 elements = chord_config.get('elements_notes', [])
+                print(f"🎵 Используем элементы нот: {len(elements)}")
 
             if not elements:
-                print(f"❌ ChordsPage: Нет элементов для аккорда {variant_key}")
                 return QPixmap()
 
             # Применяем обводку
@@ -712,18 +651,15 @@ class ChordsPage(BasePage):
             # Загружаем базовое изображение
             base_image_path = self.config_manager.get_base_image_path()
             if not base_image_path or not os.path.exists(base_image_path):
-                print(f"❌ ChordsPage: Базовое изображение не найдено: {base_image_path}")
                 return QPixmap()
 
             original_pixmap = QPixmap(base_image_path)
             if original_pixmap.isNull():
-                print(f"❌ ChordsPage: Не удалось загрузить базовое изображение")
                 return QPixmap()
 
             # Получаем область обрезки
             crop_rect = chord_config.get('crop_rect')
             if not crop_rect:
-                print(f"❌ ChordsPage: Нет области обрезки для аккорда {variant_key}")
                 return QPixmap()
 
             crop_x, crop_y, crop_width, crop_height = crop_rect
@@ -734,13 +670,20 @@ class ChordsPage(BasePage):
             crop_width = max(1, min(crop_width, original_pixmap.width() - crop_x))
             crop_height = max(1, min(crop_height, original_pixmap.height() - crop_y))
 
-            # Создаем новое изображение
+            print(f"🎯 Оригинальное изображение: {original_pixmap.width()}x{original_pixmap.height()}")
+            print(f"🎯 Область обрезки: ({crop_x}, {crop_y}, {crop_width}, {crop_height})")
+
+            # Создаем новое изображение размером с область обрезки
             result_pixmap = QPixmap(crop_width, crop_height)
             result_pixmap.fill(Qt.transparent)
 
             painter = QPainter(result_pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setRenderHint(QPainter.SmoothPixmapTransform)
+
+            # ВЫСОКОЕ КАЧЕСТВО РЕНДЕРИНГА
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+            painter.setRenderHint(QPainter.TextAntialiasing, True)
+            painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
 
             # Копируем область из оригинального изображения
             painter.drawPixmap(0, 0, original_pixmap, crop_x, crop_y, crop_width, crop_height)
@@ -749,20 +692,27 @@ class ChordsPage(BasePage):
             self.draw_elements_on_canvas(painter, elements, (crop_x, crop_y, crop_width, crop_height))
             painter.end()
 
-            # Масштабируем
-            display_width = min(400, crop_width)
-            scale_factor = display_width / crop_width
-            display_height = int(crop_height * scale_factor)
+            # МАСШТАБИРОВАНИЕ ПО ПРИНЦИПУ CHORD_VIEWER С УВЕЛИЧЕНИЕМ НА 50%
+            # В chord_viewer используется 0.3 (30%), здесь используем 0.5 (50%)
+            display_width = int(crop_width * 0.5)  # 50% увеличение вместо 30%
+            display_height = int(crop_height * 0.5)  # 50% увеличение вместо 30%
+
+            print(f"📏 Увеличенный масштаб (50%): {crop_width}x{crop_height} -> {display_width}x{display_height}")
 
             scaled_pixmap = result_pixmap.scaled(
-                display_width, display_height,
-                Qt.KeepAspectRatio, Qt.SmoothTransformation
+                display_width,
+                display_height,
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation
             )
 
+            print(f"✅ Изображение установлено: {scaled_pixmap.width()}x{scaled_pixmap.height()}")
             return scaled_pixmap
 
         except Exception as e:
             print(f"❌ ChordsPage: Ошибка генерации изображения для {chord_name} вариант {variant}: {e}")
+            import traceback
+            traceback.print_exc()
             return QPixmap()
 
     def apply_outline_settings(self, elements):
@@ -783,14 +733,19 @@ class ChordsPage(BasePage):
                 modified_elements.append(modified_element)
             else:
                 modified_elements.append(element)
-
         return modified_elements
 
     def draw_elements_on_canvas(self, painter, elements, crop_rect):
-        """Рисование элементов на canvas"""
+        """Рисование элементов на canvas с высоким качеством"""
         if not DrawingElements:
             print("❌ ChordsPage: DrawingElements не доступен")
             return
+
+        # Устанавливаем высокое качество рендеринга для всех элементов
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+        painter.setRenderHint(QPainter.TextAntialiasing, True)
+        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
 
         for element in elements:
             try:
@@ -804,25 +759,34 @@ class ChordsPage(BasePage):
                 print(f"❌ ChordsPage: Ошибка рисования элемента {element['type']}: {e}")
 
     def draw_fret_on_canvas(self, painter, fret_data, crop_rect):
-        """Рисование лада на canvas"""
+        """Рисование лада на canvas с высоким качеством"""
         try:
             adapted_data = self.adapt_coordinates(fret_data, crop_rect)
+            # Увеличиваем толщину линий для лучшей видимости
+            if 'line_width' not in adapted_data:
+                adapted_data['line_width'] = 3
             DrawingElements.draw_fret(painter, adapted_data)
         except Exception as e:
             print(f"❌ ChordsPage: Ошибка рисования лада: {e}")
 
     def draw_note_on_canvas(self, painter, note_data, crop_rect):
-        """Рисование ноты на canvas"""
+        """Рисование ноты на canvas с высоким качеством"""
         try:
             adapted_data = self.adapt_coordinates(note_data, crop_rect)
+            # Увеличиваем размер нот для лучшей видимости
+            if 'radius' not in adapted_data:
+                adapted_data['radius'] = 12
             DrawingElements.draw_note(painter, adapted_data)
         except Exception as e:
             print(f"❌ ChordsPage: Ошибка рисования ноты: {e}")
 
     def draw_barre_on_canvas(self, painter, barre_data, crop_rect):
-        """Рисование баре на canvas"""
+        """Рисование баре на canvas с высоким качеством"""
         try:
             adapted_data = self.adapt_coordinates(barre_data, crop_rect)
+            # Увеличиваем толщину баре
+            if 'line_width' not in adapted_data:
+                adapted_data['line_width'] = 8
             DrawingElements.draw_barre(painter, adapted_data)
         except Exception as e:
             print(f"❌ ChordsPage: Ошибка рисования баре: {e}")
@@ -859,8 +823,6 @@ class ChordsPage(BasePage):
     def show_chord_not_found(self):
         """Показ сообщения об отсутствии аккорда"""
         self.chord_image_label.clear()
-
-        # Создаем красный крестик
         pixmap = QPixmap(100, 100)
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
@@ -868,7 +830,6 @@ class ChordsPage(BasePage):
         painter.drawLine(10, 10, 90, 90)
         painter.drawLine(90, 10, 10, 90)
         painter.end()
-
         self.chord_image_label.setChordPixmap(pixmap)
 
     def toggle_display_type(self):
@@ -879,7 +840,6 @@ class ChordsPage(BasePage):
         else:
             self.current_display_type = "fingers"
             self.display_toggle_btn.setText("🎵 Ноты")
-
         self.refresh_chord_display()
 
     def play_chord_sound(self):
@@ -888,17 +848,11 @@ class ChordsPage(BasePage):
             return
 
         try:
-            print(
-                f"🔊 ChordsPage: Попытка воспроизведения звука для аккорда: {self.current_chord_name}, вариант: {self.current_variant}")
             success = self.sound_player.play_chord_sound(self.current_chord_name, str(self.current_variant))
-
             if not success:
-                # Если не нашли с вариантом, пробуем без варианта
                 success = self.sound_player.play_chord_sound(self.current_chord_name)
-
             if not success:
                 print(f"❌ ChordsPage: Не удалось найти звуковой файл для аккорда {self.current_chord_name}")
-
         except Exception as e:
             print(f"❌ ChordsPage: Ошибка при воспроизведении звука: {e}")
 
@@ -909,57 +863,37 @@ class ChordsPage(BasePage):
 
         try:
             from gui.windows.chord_viewer import ChordViewerWindow
-
             pixmap = self.generate_chord_from_config(self.current_chord_name, self.current_variant)
             if not pixmap.isNull():
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
                 temp_path = temp_file.name
                 pixmap.save(temp_path, 'PNG')
                 temp_file.close()
-
                 sound_path = self.get_chord_sound_path(self.current_chord_name, self.current_variant)
-
-                viewer = ChordViewerWindow(
-                    self.current_chord_name,
-                    temp_path,
-                    sound_path or "",
-                    self
-                )
+                viewer = ChordViewerWindow(self.current_chord_name, temp_path, sound_path or "", self)
                 viewer.exec_()
-
                 try:
                     if os.path.exists(temp_path):
                         os.unlink(temp_path)
                 except Exception as e:
                     print(f"⚠️ ChordsPage: Ошибка удаления временного файла: {e}")
-
         except Exception as e:
             print(f"❌ ChordsPage: Ошибка при открытии окна просмотра аккорда: {e}")
-            import traceback
-            traceback.print_exc()
 
     def get_chord_sound_path(self, chord_name, variant):
         """Получение пути к звуковому файлу аккорда"""
         try:
             sounds_dir = os.path.join("source", "sounds")
-
-            # Пробуем с вариантом
             sound_file = os.path.join(sounds_dir, f"{chord_name}/{chord_name}_{variant}.mp3")
             if os.path.exists(sound_file):
                 return sound_file
-
-            # Пробуем без варианта
             sound_file = os.path.join(sounds_dir, f"{chord_name}/{chord_name}.mp3")
             if os.path.exists(sound_file):
                 return sound_file
-
-            # Пробуем в корне папки с аккордом
             sound_file = os.path.join(sounds_dir, f"{chord_name}.mp3")
             if os.path.exists(sound_file):
                 return sound_file
-
             return None
-
         except Exception as e:
             print(f"❌ ChordsPage: Ошибка получения пути к звуковому файлу: {e}")
             return None
@@ -967,19 +901,14 @@ class ChordsPage(BasePage):
     def go_back(self):
         """Возврат к предыдущему уровню навигации"""
         if self.selected_type or self.selected_note:
-            # Возврат к выбору типа/ноты
             self.selected_type = None
             self.selected_note = None
             self.back_button.hide()
             self.clear_chord_display()
-
-            if self.current_view == "type":
-                self.show_type_selection()
+            if self.current_view == "style":
+                self.show_style_selection()
             else:
                 self.show_note_selection()
-        else:
-            # Возврат к главному меню
-            self.switch_mode(self.current_view)
 
     def clear_selection_layout(self):
         """Очистка layout выбора"""
@@ -995,8 +924,6 @@ class ChordsPage(BasePage):
         self.display_toggle_btn.hide()
         self.sound_btn.hide()
         self.variants_container.hide()
-
-        # Очищаем варианты
         for i in reversed(range(self.variants_layout.count())):
             widget = self.variants_layout.itemAt(i).widget()
             if widget:
