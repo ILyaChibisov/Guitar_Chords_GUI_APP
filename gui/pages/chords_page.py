@@ -1,8 +1,7 @@
-# gui/pages/chords_page.py
 import os
 import tempfile
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-                             QLabel, QFrame, QScrollArea, QGridLayout, QSizePolicy)
+                             QLabel, QFrame, QScrollArea, QGridLayout, QSizePolicy, QLineEdit, QListWidget)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QPainter, QPen
 
@@ -56,7 +55,19 @@ class ChordsPage(BasePage):
         self.config_manager = None
         self.sound_player = None
 
+        # Для поиска аккордов
+        self.all_chords = self.get_all_chords()
+
         self.initialize_page()
+
+    def get_all_chords(self):
+        """Получает список всех доступных аккордов"""
+        all_chords = []
+        for chords in CHORDS_BY_STYLE.values():
+            all_chords.extend(chords)
+        for chords in CHORDS_BY_NOTE.values():
+            all_chords.extend(chords)
+        return sorted(set(all_chords))
 
     def set_config_manager(self, config_manager):
         """Установка менеджера конфигураций из главного приложения"""
@@ -96,23 +107,6 @@ class ChordsPage(BasePage):
 
         main_layout.addWidget(menu_widget)
 
-        # ЗАГОЛОВОК СТРАНИЦЫ
-        self.page_title = QLabel("🎸 АККОРДЫ")
-        self.page_title.setStyleSheet("""
-            QLabel {
-                color: white;
-                font-size: 24px;
-                font-weight: bold;
-                text-align: center;
-                padding: 10px;
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 10px;
-                margin: 5px;
-            }
-        """)
-        self.page_title.setAlignment(Qt.AlignCenter)
-        main_layout.addWidget(self.page_title)
-
         # ОСНОВНОЙ КОНТЕНТ
         content_layout = QHBoxLayout()
         content_layout.setSpacing(15)
@@ -123,6 +117,22 @@ class ChordsPage(BasePage):
         left_layout = QVBoxLayout(left_widget)
         left_layout.setSpacing(10)
         left_layout.setContentsMargins(0, 0, 0, 0)
+
+        # НАЗВАНИЕ АККОРДА НАД КАРТИНКОЙ
+        self.chord_name_label = QLabel("Аккорд A (Ля мажор)")
+        self.chord_name_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                text-align: center;
+                padding: 8px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+            }
+        """)
+        self.chord_name_label.setAlignment(Qt.AlignCenter)
+        left_layout.addWidget(self.chord_name_label)
 
         # ИЗОБРАЖЕНИЕ АККОРДА (КРУПНОЕ И КАЧЕСТВЕННОЕ)
         self.chord_image_label = AdaptiveChordLabel()
@@ -144,22 +154,6 @@ class ChordsPage(BasePage):
         chord_control_layout = QVBoxLayout(chord_control_widget)
         chord_control_layout.setSpacing(8)
         chord_control_layout.setContentsMargins(0, 0, 0, 0)
-
-        # ИНФОРМАЦИЯ О АККОРДЕ
-        self.chord_name_label = QLabel("Выберите аккорд")
-        self.chord_name_label.setStyleSheet("""
-            QLabel {
-                color: white;
-                font-size: 18px;
-                font-weight: bold;
-                text-align: center;
-                padding: 8px;
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 8px;
-            }
-        """)
-        self.chord_name_label.setAlignment(Qt.AlignCenter)
-        chord_control_layout.addWidget(self.chord_name_label)
 
         # КНОПКИ УПРАВЛЕНИЯ
         control_buttons_widget = QWidget()
@@ -205,6 +199,39 @@ class ChordsPage(BasePage):
         right_layout = QVBoxLayout(right_widget)
         right_layout.setSpacing(10)
         right_layout.setContentsMargins(0, 0, 0, 0)
+
+        # ПОИСК АККОРДОВ (АНАЛОГИЧНО SONGS_PAGE)
+        search_frame = QFrame()
+        search_layout = QVBoxLayout(search_frame)
+        search_layout.setSpacing(10)
+        search_layout.setContentsMargins(0, 0, 0, 0)
+
+        search_input_container = QWidget()
+        search_input_container.setStyleSheet("background: transparent; border: none;")
+        search_input_layout = QHBoxLayout(search_input_container)
+        search_input_layout.setSpacing(10)
+        search_input_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("🔍 Введите название аккорда...")
+        self.search_input.returnPressed.connect(self.search_chords)
+
+        self.search_button = QPushButton("Найти")
+        self.search_button.setCursor(Qt.PointingHandCursor)
+        self.search_button.setFixedHeight(40)
+        self.search_button.clicked.connect(self.search_chords)
+
+        search_input_layout.addWidget(self.search_input, 3)
+        search_input_layout.addWidget(self.search_button, 1)
+        search_layout.addWidget(search_input_container)
+
+        self.results_list = QListWidget()
+        self.results_list.itemClicked.connect(self.load_chord_from_search)
+        self.results_list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.results_list.hide()
+        search_layout.addWidget(self.results_list)
+
+        right_layout.addWidget(search_frame)
 
         # ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ВЫБОРА
         mode_selector_widget = QWidget()
@@ -261,8 +288,13 @@ class ChordsPage(BasePage):
         content_layout.addWidget(right_widget, 1)  # Правая часть занимает 1/3
         main_layout.addLayout(content_layout, 1)
 
-        # Инициализация данных
+        # Инициализация данных - показываем аккорд A по умолчанию
         self.show_style_selection()
+        self.load_default_chord()
+
+    def load_default_chord(self):
+        """Загружает аккорд A по умолчанию"""
+        self.on_chord_selected("A")
 
     def apply_styles(self):
         """Применяет стили ко всем элементам страницы"""
@@ -357,6 +389,50 @@ class ChordsPage(BasePage):
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #5DADE2, stop:1 #3498DB);
+            }
+        """)
+
+        # Стили для поиска
+        self.search_input.setStyleSheet("""
+            QLineEdit {
+                background: rgba(255, 255, 255, 0.1);
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                border-radius: 20px;
+                padding: 12px 20px;
+                color: white;
+                font-size: 14px;
+                selection-background-color: #3498db;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3498db;
+                background: rgba(255, 255, 255, 0.15);
+            }
+        """)
+
+        self.search_button.setStyleSheet(DarkTheme.MENU_BUTTON_STYLE)
+
+        self.results_list.setStyleSheet("""
+            QListWidget {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid rgba(255, 255, 255, 0.1);
+                border-radius: 15px;
+                padding: 5px;
+                color: white;
+                font-size: 14px;
+                outline: none;
+            }
+            QListWidget::item {
+                background: transparent;
+                border-radius: 10px;
+                padding: 10px;
+                margin: 2px;
+            }
+            QListWidget::item:selected {
+                background: rgba(52, 152, 219, 0.3);
+                border: 1px solid rgba(52, 152, 219, 0.5);
+            }
+            QListWidget::item:hover {
+                background: rgba(255, 255, 255, 0.1);
             }
         """)
 
@@ -463,6 +539,60 @@ class ChordsPage(BasePage):
                 col = 0
                 row += 1
 
+    def search_chords(self):
+        """Поиск аккордов по имени или описанию"""
+        try:
+            query = self.search_input.text().strip().lower()
+            if not query:
+                self.results_list.hide()
+                return
+
+            results = []
+            for chord in self.all_chords:
+                # Поиск по имени аккорда
+                if query in chord.lower():
+                    results.append(chord)
+                # Поиск по описанию
+                elif chord in CHORDS_DESCRIPTIONS:
+                    description = CHORDS_DESCRIPTIONS[chord].lower()
+                    if query in description:
+                        results.append(chord)
+
+            self.results_list.clear()
+            for chord in results:
+                self.results_list.addItem(chord)
+
+            if results:
+                self.results_list.show()
+                self.adjust_results_list_height()
+            else:
+                self.results_list.hide()
+
+        except Exception as e:
+            print(f"Ошибка поиска аккордов: {e}")
+
+    def adjust_results_list_height(self):
+        """Динамически регулирует высоту списка результатов"""
+        item_count = self.results_list.count()
+        if item_count == 0:
+            self.results_list.setFixedHeight(0)
+            self.results_list.hide()
+        else:
+            item_height = 50
+            max_height = min(item_count, 6) * item_height + 20
+            self.results_list.setFixedHeight(max_height)
+            self.results_list.show()
+
+    def load_chord_from_search(self, item):
+        """Загрузка аккорда из результатов поиска"""
+        if not item:
+            return
+
+        chord_name = item.text()
+        self.on_chord_selected(chord_name)
+        self.results_list.hide()
+        self.search_input.clear()
+
     def on_style_selected(self, style):
         """Обработчик выбора типа аккорда"""
         self.selected_type = style
@@ -536,7 +666,7 @@ class ChordsPage(BasePage):
 
         # Обновляем информацию об аккорде
         chord_description = self.get_chord_description(chord_name)
-        self.chord_name_label.setText(f"{chord_name} - {chord_description}")
+        self.chord_name_label.setText(f"Аккорд {chord_name} ({chord_description})")
 
         # Показываем элементы управления
         self.display_toggle_btn.show()
