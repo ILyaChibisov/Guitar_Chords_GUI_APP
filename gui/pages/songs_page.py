@@ -1,3 +1,4 @@
+# gui/pages/songs_page.py
 import os
 import re
 import html
@@ -20,7 +21,7 @@ from database.queries import SongQueries
 import database.db_scripts as db
 from config.styles import DarkTheme
 
-# Импортируем систему отображения аккордов из первого приложения
+# Импортируем систему отображения аккордов
 try:
     from drawing_elements import DrawingElements
 
@@ -78,68 +79,36 @@ class ChordSoundPlayer:
 
 
 class ChordConfigManager:
-    """Менеджер конфигураций аккордов - читает из Excel и JSON как в оригинальном приложении"""
+    """Менеджер конфигураций аккордов - работает через новый ChordManager"""
 
     def __init__(self):
-        self.excel_path = os.path.join("source", "chord_config.xlsx")
-        self.template_path = os.path.join("source", "template.json")
-        self.image_path = os.path.join("source", "img.png")
-        self.chord_data = {}
-        self.ram_data = {}
-        self.note_data = []  # Данные из листа NOTE - ВАЖНО!
-        self.templates = {}
         self.chord_configs_cache = {}
+        self.load_configurations()
 
     def load_configurations(self):
-        """Загрузка конфигураций из source как в оригинальном приложении"""
+        """Загрузка конфигураций из Python модулей"""
         try:
-            print("🎵 Загрузка конфигураций из source...")
+            print("🎵 Загрузка конфигураций из Python модулей...")
 
-            # Загружаем Excel как в оригинале
-            if os.path.exists(self.excel_path):
-                # Основной лист с аккордами
-                df_chords = pd.read_excel(self.excel_path, sheet_name='CHORDS')
-                self.chord_data = df_chords.to_dict('records')
-                print(f"✅ Загружено {len(self.chord_data)} аккордов из Excel")
+            # Пытаемся загрузить из нового chord_manager
+            try:
+                from core.chord_manager import ChordManager
+                if ChordManager.is_initialized():
+                    print("✅ Данные аккордов загружены из chord_manager")
 
-                # Загружаем данные RAM
-                try:
-                    df_ram = pd.read_excel(self.excel_path, sheet_name='RAM')
-                    self.ram_data = df_ram.to_dict('records')
-                    print(f"✅ Загружено {len(self.ram_data)} RAM конфигураций")
-                except Exception as e:
-                    print(f"⚠️ Лист RAM не найден: {e}")
+                    # Получаем все аккорды
+                    all_chords = ChordManager.get_all_chords()
+                    print(f"📊 Всего аккордов в системе: {len(all_chords)}")
 
-                # Загружаем данные NOTE - ЭТО ВАЖНО!
-                try:
-                    df_note = pd.read_excel(self.excel_path, sheet_name='NOTE')
-                    self.note_data = df_note.to_dict('records')
-                    print(f"✅ Загружено {len(self.note_data)} NOTE конфигураций")
-                except Exception as e:
-                    print(f"⚠️ Лист NOTE не найден: {e}")
-                    self.note_data = []
-            else:
-                print(f"❌ Excel файл не найден: {self.excel_path}")
-                return False
+                    # Создаем кэш конфигураций из Python данных
+                    self.create_chord_configs_from_python()
+                    print(f"📊 Создано конфигураций: {len(self.chord_configs_cache)}")
+                    return True
 
-            # Загружаем JSON
-            if os.path.exists(self.template_path):
-                with open(self.template_path, 'r', encoding='utf-8') as f:
-                    self.templates = json.load(f)
-                print("✅ JSON шаблоны загружены")
-            else:
-                print(f"❌ JSON файл не найден: {self.template_path}")
-                return False
+            except ImportError as e:
+                print(f"⚠️ Не удалось загрузить chord_manager: {e}")
 
-            # Проверяем изображение
-            if not os.path.exists(self.image_path):
-                print(f"❌ Изображение не найдено: {self.image_path}")
-                return False
-
-            # Создаем кэш конфигураций
-            self.create_chord_configs_cache()
-            print(f"📊 Создано конфигураций: {len(self.chord_configs_cache)}")
-            return True
+            return False
 
         except Exception as e:
             print(f"❌ Ошибка загрузки конфигураций: {e}")
@@ -147,350 +116,48 @@ class ChordConfigManager:
             traceback.print_exc()
             return False
 
-    def create_chord_configs_cache(self):
-        """Создание кэша конфигураций аккордов"""
-        for chord_row in self.chord_data:
-            chord_name = str(chord_row.get('CHORD', '')).strip()
-            variant = str(chord_row.get('VARIANT', '')).strip()
-
-            if chord_name:
-                chord_key = f"{chord_name}v{variant}" if variant else chord_name
-
-                self.chord_configs_cache[chord_key] = {
-                    'base_info': {
-                        'chord': chord_name,
-                        'variant': variant,
-                        'caption': chord_row.get('CAPTION', ''),
-                        'type': chord_row.get('TYPE', '')
-                    },
-                    'excel_data': chord_row,
-                    'crop_rect': self.get_crop_rect(chord_row.get('RAM')),
-                    'elements_fingers': self.get_chord_elements(chord_row, "fingers"),
-                    'elements_notes': self.get_chord_elements(chord_row, "notes")
-                }
-
-    def get_crop_rect(self, ram_value):
-        """Получение области обрезки из RAM в JSON"""
-        if not ram_value or self._is_empty_value(ram_value):
-            return None
-
-        ram_name = str(ram_value).strip()
-
-        # Ищем RAM в разделе crop_rects
-        if 'crop_rects' in self.templates and ram_name in self.templates['crop_rects']:
-            crop_data = self.templates['crop_rects'][ram_name]
-            return (
-                crop_data.get('x', 0),
-                crop_data.get('y', 0),
-                crop_data.get('width', 100),
-                crop_data.get('height', 100)
-            )
-        return None
-
-    def get_chord_elements(self, chord_config, display_type):
-        """Получение элементов аккорда в зависимости от типа отображения - как в оригинале"""
-        elements = []
-
-        # Получаем значение LAD из таблицы RAM на основе RAM аккорда
-        ram_key = chord_config.get('RAM')
-        lad_value = None
-        if ram_key:
-            lad_value = self.get_ram_lad_value(ram_key)
-
-        # Добавляем RAM элементы из колонки RAM (для обрезки)
-        if ram_key:
-            ram_elements = self.get_ram_elements(ram_key)
-            elements.extend(ram_elements)
-
-        # Добавляем LAD элементы на основе значения из таблицы RAM
-        if lad_value:
-            lad_elements = self.get_ram_elements_from_lad(lad_value)
-            elements.extend(lad_elements)
-
-        # Добавляем элементы баре ТОЛЬКО для режима пальцев
-        if display_type == "fingers":
-            bar_elements = self.get_barre_elements(chord_config.get('BAR'))
-            elements.extend(bar_elements)
-
-        if display_type == "notes":
-            # Для нот: используем FNL и FN
-            fnl_elements = self.get_note_elements_from_column(chord_config.get('FNL'), 'FNL')
-            fn_elements = self.get_note_elements_from_column(chord_config.get('FN'), 'FN')
-            elements.extend(fnl_elements)
-            elements.extend(fn_elements)
-        else:  # fingers
-            # Для пальцев: используем FPOL, FPXL, FP1, FP2, FP3, FP4
-            fpol_elements = self.get_note_elements_from_column(chord_config.get('FPOL'), 'FPOL')
-            fpxl_elements = self.get_note_elements_from_column(chord_config.get('FPXL'), 'FPXL')
-            fp1_elements = self.get_note_elements_from_column(chord_config.get('FP1'), 'FP1')
-            fp2_elements = self.get_note_elements_from_column(chord_config.get('FP2'), 'FP2')
-            fp3_elements = self.get_note_elements_from_column(chord_config.get('FP3'), 'FP3')
-            fp4_elements = self.get_note_elements_from_column(chord_config.get('FP4'), 'FP4')
-            elements.extend(fpol_elements)
-            elements.extend(fpxl_elements)
-            elements.extend(fp1_elements)
-            elements.extend(fp2_elements)
-            elements.extend(fp3_elements)
-            elements.extend(fp4_elements)
-
-        return elements
-
-    def get_ram_lad_value(self, ram_name):
-        """Получение значения LAD для указанного RAM из таблицы RAM"""
-        if not ram_name or self._is_empty_value(ram_name):
-            return None
-
-        ram_name = str(ram_name).strip()
-
-        # Ищем RAM в таблице RAM
-        for ram_item in self.ram_data:
-            item_ram = ram_item.get('RAM')
-            if item_ram and str(item_ram).strip() == ram_name:
-                return ram_item.get('LAD')
-        return None
-
-    def get_ram_elements(self, ram_name):
-        """Получение элементов RAM по имени"""
-        elements = []
-        if not ram_name or self._is_empty_value(ram_name):
-            return elements
-
-        ram_name = str(ram_name).strip()
-
-        # Ищем элементы RAM в frets
-        if ram_name in self.templates.get('frets', {}):
-            element_data = self.templates['frets'][ram_name]
-            element_data['_key'] = ram_name
-            element_data['type'] = 'fret'
-            elements.append({
-                'type': 'fret',
-                'data': element_data
-            })
-
-        # Ищем элементы с суффиксами (RAM1, RAM2 и т.д.)
-        for i in range(1, 5):
-            element_key = f"{ram_name}{i}"
-            if element_key in self.templates.get('frets', {}):
-                element_data = self.templates['frets'][element_key]
-                element_data['_key'] = element_key
-                element_data['type'] = 'fret'
-                elements.append({
-                    'type': 'fret',
-                    'data': element_data
-                })
-
-        return elements
-
-    def get_ram_elements_from_lad(self, lad_value):
-        """Получение элементов RAM на основе значения LAD"""
-        elements = []
-        if not lad_value or self._is_empty_value(lad_value):
-            return elements
-
-        lad_value = str(lad_value).strip()
-        lad_keys = [key.strip() for key in lad_value.split(',')]
-
-        for lad_key in lad_keys:
-            json_key = f"{lad_key}LAD"
-            if json_key in self.templates.get('frets', {}):
-                element_data = self.templates['frets'][json_key]
-                element_data['_key'] = json_key
-                element_data['type'] = 'fret'
-                elements.append({
-                    'type': 'fret',
-                    'data': element_data
-                })
-
-        return elements
-
-    def get_barre_elements(self, bar_value):
-        """Получение элементов баре из колонки BAR"""
-        elements = []
-        if self._is_empty_value(bar_value):
-            return elements
-
-        bar_str = str(bar_value).strip()
-        if bar_str in self.templates.get('barres', {}):
-            barre_data = self.templates['barres'][bar_str]
-            barre_data['_key'] = bar_str
-            barre_data['type'] = 'barre'
-            elements.append({
-                'type': 'barre',
-                'data': barre_data
-            })
-
-        return elements
-
-    def get_note_elements_from_column(self, column_value, column_name):
-        """Получение элементов нот из колонки с поиском в таблице NOTE - КЛЮЧЕВАЯ ФУНКЦИЯ!"""
-        elements = []
-        if self._is_empty_value(column_value):
-            return elements
-
-        # Преобразуем значение в строку
-        note_str = self._convert_value_to_string(column_value)
-        note_list = self._parse_note_values(note_str)
-
-        for note_key in note_list:
-            # Ищем в таблице NOTE
-            element_found = self._find_element_in_note_table(note_key, column_name)
-            if element_found:
-                elements.append(element_found)
-
-        return elements
-
-    def _parse_note_values(self, note_str):
-        """Парсит значения нот, обрабатывая специальные случаи с числами"""
-        note_str = str(note_str).strip()
-
-        # Сначала пробуем разделить по запятой (нормальный случай)
-        if ',' in note_str:
-            return [item.strip() for item in note_str.split(',') if item.strip()]
-
-        # Если есть точка и выглядит как несколько чисел (например "21.25" вместо "21,25")
-        if '.' in note_str:
-            parts = note_str.split('.')
-            # Проверяем, может ли это быть несколько целых чисел
-            if len(parts) == 2 and all(part.isdigit() for part in parts):
-                # Вероятно это "21,25" превратилось в "21.25"
-                return [parts[0], parts[1]]
-            elif len(parts) > 2 and all(part.isdigit() for part in parts):
-                # Множественные числа через точку
-                return parts
-
-        # Если ничего не подошло, возвращаем как одно значение
-        return [note_str]
-
-    def _convert_value_to_string(self, value):
-        """Конвертирует значение в строку, правильно обрабатывая числа с плавающей точкой"""
-        if value is None:
-            return ""
-
-        if isinstance(value, float):
-            # Если число выглядит как целое - преобразуем в int
-            if value.is_integer():
-                return str(int(value))
-            else:
-                # Для дробных чисел проверяем, не является ли это несколькими значениями
-                str_value = str(value)
-                if '.' in str_value:
-                    parts = str_value.split('.')
-                    # Если после точки 2 цифры и обе части выглядят как отдельные значения
-                    if len(parts) == 2 and len(parts[1]) == 2 and parts[0].isdigit() and parts[1].isdigit():
-                        # Вероятно это "21,25" -> 21.25
-                        return f"{parts[0]}.{parts[1]}"  # Оставляем как есть для дальнейшего парсинга
-                return str(value)
-        elif isinstance(value, int):
-            return str(value)
-        else:
-            return str(value)
-
-    def _find_element_in_note_table(self, note_key, column_name):
-        """Поиск элемента в таблице NOTE по ключу и колонке - ВАЖНО!"""
-        if not self.note_data:
-            return self._find_element_in_json(note_key)
-
-        # Определяем соответствие колонок как в оригинале
-        column_mapping = {
-            'FNL': ('FNL', 'FNL_ELEM'),
-            'FN': ('FN', 'FN_ELEM'),
-            'FPOL': ('FPOL', 'FPOL_ELEM'),
-            'FPXL': ('FPXL', 'FPXL_ELEM'),
-            'FP1': ('FP1', 'FP1_ELEM'),
-            'FP2': ('FP2', 'FP2_ELEM'),
-            'FP3': ('FP3', 'FP3_ELEM'),
-            'FP4': ('FP4', 'FP4_ELEM')
-        }
-
-        if column_name not in column_mapping:
-            return None
-
-        source_col, elem_col = column_mapping[column_name]
-
-        # Ищем в таблице NOTE
-        for note_item in self.note_data:
-            item_value = note_item.get(source_col)
-            if item_value and not self._is_empty_value(item_value):
-                # Конвертируем значение из таблицы для сравнения
-                item_value_str = self._convert_value_to_string(item_value)
-
-                # Пробуем разные варианты сравнения
-                if self._values_match(item_value_str, note_key):
-                    elem_value = note_item.get(elem_col)
-                    if elem_value and not self._is_empty_value(elem_value):
-                        elem_key = self._convert_value_to_string(elem_value)
-                        return self._find_element_in_json(elem_key)
-
-        return None
-
-    def _values_match(self, value1, value2):
-        """Проверяет, совпадают ли значения с учетом специальных случаев"""
-        # Прямое сравнение
-        if str(value1).strip() == str(value2).strip():
-            return True
-
-        # Если одно значение с точкой, а другое с запятой
-        v1_clean = str(value1).replace('.', ',').strip()
-        v2_clean = str(value2).replace('.', ',').strip()
-        if v1_clean == v2_clean:
-            return True
-
-        # Если одно значение целое, а другое дробное с .0
+    def create_chord_configs_from_python(self):
+        """Создание кэша конфигураций аккордов из Python данных"""
         try:
-            v1_float = float(value1)
-            v2_float = float(value2)
-            if abs(v1_float - v2_float) < 0.001:
-                return True
-        except (ValueError, TypeError):
-            pass
+            from core.chord_manager import ChordManager
 
-        return False
+            all_chords = ChordManager.get_all_chords()
 
-    def _find_element_in_json(self, element_key):
-        """Поиск элемента в различных разделах JSON"""
-        element_key = element_key.strip()
+            for chord_name in all_chords:
+                chord_data = ChordManager.get_chord_data(chord_name)
+                if chord_data:
+                    # Получаем варианты аккорда
+                    variants = chord_data.get('variants', [])
 
-        # Ищем в notes
-        if element_key in self.templates.get('notes', {}):
-            element_data = self.templates['notes'][element_key]
-            element_data['_key'] = element_key
-            element_data['type'] = 'note'
-            return {
-                'type': 'note',
-                'data': element_data
-            }
+                    for variant in variants:
+                        variant_num = variant.get('variant_number', 1)
+                        variant_key = f"{chord_name}v{variant_num}" if variant_num > 1 else chord_name
 
-        # Ищем в open_notes
-        if element_key in self.templates.get('open_notes', {}):
-            element_data = self.templates['open_notes'][element_key]
-            element_data['_key'] = element_key
-            element_data['type'] = 'note'
-            return {
-                'type': 'note',
-                'data': element_data
-            }
+                        # Используем данные из нового формата
+                        drawing_elements = variant.get('drawing_elements', {})
 
-        # Ищем в frets (лады)
-        if element_key in self.templates.get('frets', {}):
-            element_data = self.templates['frets'][element_key]
-            element_data['_key'] = element_key
-            element_data['type'] = 'fret'
-            return {
-                'type': 'fret',
-                'data': element_data
-            }
+                        self.chord_configs_cache[variant_key] = {
+                            'base_info': {
+                                'chord': chord_name,
+                                'variant': str(variant_num),
+                                'caption': variant.get('description', ''),
+                                'type': chord_data.get('type', '')
+                            },
+                            'json_parameters': {
+                                'crop_rect': variant.get('crop_rect'),
+                                'elements_fingers': drawing_elements.get('notes', []),
+                                'elements_notes': drawing_elements.get('notes', [])
+                            },
+                            'crop_rect': variant.get('crop_rect'),
+                            'elements_fingers': drawing_elements.get('notes', []),
+                            'elements_notes': drawing_elements.get('notes', []),
+                            'sound_files': variant.get('sound_files', [])
+                        }
 
-        return None
+            print(f"✅ Создано {len(self.chord_configs_cache)} конфигураций из Python данных")
 
-    def _is_empty_value(self, value):
-        """Проверка на пустое значение"""
-        if value is None:
-            return True
-        if isinstance(value, float) and pd.isna(value):
-            return True
-        if isinstance(value, str) and value.strip() == '':
-            return True
-        return False
+        except Exception as e:
+            print(f"❌ Ошибка создания конфигураций из Python данных: {e}")
 
     def get_chord_config(self, chord_name):
         """Получение конфигурации аккорда с улучшенным поиском"""
@@ -498,8 +165,6 @@ class ChordConfigManager:
             chord_name,
             f"{chord_name}v1", f"{chord_name}v2", f"{chord_name}v3",
             f"{chord_name}v4", f"{chord_name}v5", f"{chord_name}v6",
-            f"{chord_name}v7", f"{chord_name}v8", f"{chord_name}v9",
-            f"{chord_name}v10", f"{chord_name}v11", f"{chord_name}v12",
             chord_name.upper(),
             chord_name.upper().replace('M', 'm'),
         ]
@@ -511,21 +176,28 @@ class ChordConfigManager:
 
     def get_chord_variants_count(self, chord_name):
         """Получение количества вариантов для аккорда"""
-        count = 0
-        for i in range(1, 13):  # Проверяем до 12 вариантов
-            variant_key = f"{chord_name}v{i}"
-            if variant_key in self.chord_configs_cache:
-                count += 1
-            else:
-                break
-        return count if count > 0 else 1
+        try:
+            from core.chord_manager import ChordManager
+            variants = ChordManager.get_chord_variants(chord_name)
+            return len(variants) if variants else 1
+        except Exception as e:
+            print(f"❌ Ошибка получения количества вариантов: {e}")
+            return 1
 
     def get_base_image_path(self):
-        return self.image_path
+        """Получение пути к базовому изображению"""
+        try:
+            from core.chord_manager import ChordManager
+            return ChordManager.get_template_image_path()
+        except ImportError as e:
+            print(f"⚠️ Ошибка импорта ChordManager: {e}")
+
+        # Запасной вариант
+        return os.path.join("source", "img.png")
 
 
 class SongsPage(BasePage):
-    """Страница песен и аккордов с системой конфигураций из Excel"""
+    """Страница песен и аккордов"""
 
     def __init__(self, parent=None):
         super().__init__("songs", parent)
@@ -539,39 +211,19 @@ class SongsPage(BasePage):
         self.chords_list = []
         self.current_chord_name = ""
         self.current_song_title = ""
-        self.current_variant = 1  # Текущий вариант аккорда
+        self.current_variant = 1
 
         # Настройки отображения аккордов
-        self.current_display_type = "fingers"  # Начинаем с пальцев
+        self.current_display_type = "fingers"
 
         # Менеджер конфигураций аккордов
         self.config_manager = ChordConfigManager()
-        self.load_configurations()
-
-        # Проигрыватель звуков
         self.sound_player = ChordSoundPlayer()
 
         self.player = QMediaPlayer()
         self.player.error.connect(self.handle_error)
 
         self.initialize_page()
-
-    def load_configurations(self):
-        """Загрузка конфигураций с диагностикой"""
-        print("🎵 Загрузка конфигураций аккордов из Excel...")
-        success = self.config_manager.load_configurations()
-
-        if success:
-            print("✅ Конфигурации успешно загружены из Excel")
-            print(f"📊 Создано конфигураций: {len(self.config_manager.chord_configs_cache)}")
-            print(f"🖼️ Базовое изображение: {self.config_manager.get_base_image_path()}")
-
-            # Покажем несколько примеров загруженных аккордов
-            sample_chords = list(self.config_manager.chord_configs_cache.keys())[:10]
-            print(f"🔍 Примеры аккордов: {sample_chords}")
-        else:
-            print("❌ Ошибка загрузки конфигураций из Excel")
-
 
     def get_chord_description(self, chord_name):
         """Получает описание аккорда из данных const"""
@@ -589,7 +241,7 @@ class SongsPage(BasePage):
         return f"Гитарный аккорд {chord_name}"
 
     def setup_ui(self):
-        """Настройка UI с правильной пагинацией и настройками отображения"""
+        """Настройка UI"""
         main_layout = QVBoxLayout(self)
         main_layout.setSpacing(15)
         main_layout.setContentsMargins(20, 20, 20, 20)
@@ -681,6 +333,8 @@ class SongsPage(BasePage):
         chords_pagination_layout.addWidget(self.scroll_right_btn)
 
         chords_main_layout.addWidget(chords_pagination_container)
+
+        chords_main_layout.addWidget(chords_pagination_container)
         self.chords_main_container.hide()
         left_layout.addWidget(self.chords_main_container)
 
@@ -732,7 +386,6 @@ class SongsPage(BasePage):
         chords_layout_right = QVBoxLayout(chords_frame)
         chords_layout_right.setSpacing(1)
 
-
         chord_info_widget = QWidget()
         chord_info_widget.setStyleSheet("background: transparent; border: none;")
         chord_info_layout = QVBoxLayout(chord_info_widget)
@@ -775,13 +428,13 @@ class SongsPage(BasePage):
 
         chords_layout_right.addWidget(chord_info_widget)
 
-        # ИЗОБРАЖЕНИЕ АККОРДА (теперь выше кнопок управления)
+        # ИЗОБРАЖЕНИЕ АККОРДА
         self.chord_image_label = AdaptiveChordLabel()
         self.chord_image_label.clicked.connect(self.show_chord_large)
         self.chord_image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         chords_layout_right.addWidget(self.chord_image_label, 1)
 
-        # ПАНЕЛЬ УПРАВЛЕНИЯ ОТОБРАЖЕНИЕМ АККОРДОВ (ПЕРЕМЕЩЕНА ПОД ИЗОБРАЖЕНИЕ)
+        # ПАНЕЛЬ УПРАВЛЕНИЯ ОТОБРАЖЕНИЕМ АККОРДОВ
         control_widget = QWidget()
         control_widget.setStyleSheet("background: transparent; border: none; margin: 0px; padding: 0px;")
         control_layout = QHBoxLayout(control_widget)
@@ -806,7 +459,7 @@ class SongsPage(BasePage):
 
         chords_layout_right.addWidget(control_widget)
 
-        # ВАРИАНТЫ АККОРДА (остаются внизу)
+        # ВАРИАНТЫ АККОРДА
         self.variants_container = QWidget()
         self.variants_container.setStyleSheet("background: transparent; border: none;")
         self.variants_layout = QHBoxLayout(self.variants_container)
@@ -884,7 +537,7 @@ class SongsPage(BasePage):
             }
         """)
 
-        # СОВРЕМЕННЫЕ КОМПАКТНЫЕ СТИЛИ ДЛЯ КНОПОК УПРАВЛЕНИЯ С ТЕКСТОМ
+        # СТИЛИ ДЛЯ КНОПОК УПРАВЛЕНИЯ
         self.display_toggle_btn.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -1145,12 +798,10 @@ class SongsPage(BasePage):
             self.show_current_page()
             self.update_pagination_buttons()
 
-
     def on_chord_button_clicked(self, chord_name):
         """Обработчик клика по кнопке аккорда"""
         chord_url = QUrl(chord_name)
         self.chord_clicked(chord_url)
-
 
     def chord_clicked(self, url):
         """Обработчик клика по аккорду в тексте песни"""
@@ -1198,8 +849,11 @@ class SongsPage(BasePage):
     def load_chord_from_config(self, chord_name):
         """Загрузка аккорда из конфигурации"""
         try:
+            from core.chord_manager import ChordManager
+
             # Получаем количество вариантов динамически
-            variants_count = self.config_manager.get_chord_variants_count(chord_name)
+            variants = ChordManager.get_chord_variants(chord_name)
+            variants_count = len(variants) if variants else 1
             print(f"🎯 Для аккорда {chord_name} найдено {variants_count} вариантов")
 
             for variant_num in range(1, variants_count + 1):
@@ -1291,10 +945,10 @@ class SongsPage(BasePage):
 
             # Получаем элементы для текущего типа отображения
             if self.current_display_type == "fingers":
-                elements = chord_config['elements_fingers']
+                elements = chord_config.get('elements_fingers', [])
                 print(f"👆 Используем элементы пальцев: {len(elements)}")
             else:
-                elements = chord_config['elements_notes']
+                elements = chord_config.get('elements_notes', [])
                 print(f"🎵 Используем элементы нот: {len(elements)}")
 
             if not elements:
@@ -1403,23 +1057,19 @@ class SongsPage(BasePage):
             print(f"❌ Ошибка рисования баре: {e}")
 
     def adapt_coordinates(self, element_data, crop_rect):
-        """Точная копия адаптации координат из оригинального приложения"""
+        """ИСПРАВЛЕННАЯ адаптация координат элементов - как в старом приложении"""
         if not crop_rect:
             return element_data.copy()
 
-        # Копируем данные элемента
         adapted_data = element_data.copy()
-
-        # Получаем координаты обрезки
         crop_x, crop_y, crop_width, crop_height = crop_rect
 
         original_x = element_data.get('x', 0)
         original_y = element_data.get('y', 0)
 
-        # Для ВСЕХ элементов просто вычитаем координаты обрезки
+        # Простое вычитание координат обрезки для ВСЕХ элементов
         if 'x' in adapted_data:
             adapted_data['x'] = original_x - crop_x
-
         if 'y' in adapted_data:
             adapted_data['y'] = original_y - crop_y
 
@@ -1427,11 +1077,12 @@ class SongsPage(BasePage):
         adapted_data['x'] = int(round(adapted_data.get('x', 0)))
         adapted_data['y'] = int(round(adapted_data.get('y', 0)))
 
-        # Для баре - дополнительная коррекция координат (центр -> левый верхний угол)
+        # ОСОБАЯ КОРРЕКЦИЯ ТОЛЬКО ДЛЯ БАРЕ - как в старом приложении
         if adapted_data.get('type') == 'barre':
             barre_width = adapted_data.get('width', 100)
             barre_height = adapted_data.get('height', 20)
 
+            # Для баре - координаты указывают на центр, нужно сместить в левый верхний угол
             if 'x' in adapted_data:
                 adapted_data['x'] = adapted_data['x'] - (barre_width // 2)
             if 'y' in adapted_data:
@@ -1440,25 +1091,47 @@ class SongsPage(BasePage):
         return adapted_data
 
     def apply_outline_settings(self, elements):
-        """Применение настроек обводки к элементам"""
+        """ИСПРАВЛЕННОЕ применение настроек обводки - как в старом приложении"""
         modified_elements = []
         for element in elements:
-            if element['type'] == 'barre':
-                # Средняя обводка для баре
-                modified_element = element.copy()
-                modified_element['data'] = element['data'].copy()
-                modified_element['data']['outline_width'] = 4
-                modified_element['data']['outline_color'] = [0, 0, 0]
-                modified_elements.append(modified_element)
-            elif element['type'] == 'note':
-                # Толстая обводка для нот
-                modified_element = element.copy()
-                modified_element['data'] = element['data'].copy()
-                modified_element['data']['outline_width'] = 6
-                modified_element['data']['outline_color'] = [0, 0, 0]
-                modified_elements.append(modified_element)
-            else:
-                modified_elements.append(element)
+            if not isinstance(element, dict):
+                continue
+
+            element_type = element.get('type')
+            element_data = element.get('data', {}).copy()
+
+            if element_type == 'barre':
+                # Для баре - оранжевый градиент с черной обводкой
+                element_data['style'] = 'orange_gradient'
+                element_data['outline_width'] = 2
+                element_data['outline_color'] = [0, 0, 0]
+
+            elif element_type == 'note':
+                # Для нот - красный 3D с черной обводкой
+                element_data['style'] = 'red_3d'
+                element_data['outline_width'] = 2
+                element_data['outline_color'] = [0, 0, 0]
+                element_data['text_color'] = [255, 255, 255]  # Белый текст
+
+                # Убедимся, что есть текст для отображения
+                if 'finger' not in element_data:
+                    # Пытаемся получить номер пальца из других полей
+                    if 'note_name' in element_data:
+                        element_data['finger'] = element_data['note_name']
+                    else:
+                        element_data['finger'] = '1'  # Значение по умолчанию
+
+                element_data['display_text'] = 'finger'
+
+            elif element_type == 'fret':
+                # Для ладов - черный текст
+                element_data['color'] = [0, 0, 0]
+                element_data['style'] = 'default'
+
+            modified_elements.append({
+                'type': element_type,
+                'data': element_data
+            })
 
         return modified_elements
 
@@ -1523,7 +1196,7 @@ class SongsPage(BasePage):
                     self.current_chord_name,
                     temp_path,
                     sound_path or "",
-                    self  # Передаем self как parent, чтобы получить config_manager
+                    self
                 )
                 viewer.exec_()
 
@@ -1539,12 +1212,9 @@ class SongsPage(BasePage):
             import traceback
             traceback.print_exc()
 
-
     def get_chord_sound_path(self, chord_name, variant_index=0):
         """Получение пути к звуковому файлу аккорда"""
         try:
-            # Здесь должна быть логика получения пути к звуковому файлу
-            # Временная заглушка
             sounds_dir = os.path.join("source", "sounds")
             sound_file = os.path.join(sounds_dir, f"{chord_name}/{chord_name}_{variant_index}.mp3")
 

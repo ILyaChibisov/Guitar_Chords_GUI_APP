@@ -1,4 +1,3 @@
-# core/app.py
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -23,32 +22,6 @@ class GuitarApp:
         self.app.setFont(default_font)
 
         self.apply_styles()
-
-        # Инициализация менеджеров конфигураций
-        self.initialize_managers()
-
-    def initialize_managers(self):
-        """Инициализация менеджеров конфигураций и звука"""
-        try:
-            from gui.pages.songs_page import ChordConfigManager, ChordSoundPlayer
-
-            # Создаем и настраиваем менеджер конфигураций
-            config_manager = ChordConfigManager()
-            if config_manager.load_configurations():
-                self.main_window.set_config_manager(config_manager)
-                print("✅ Менеджер конфигураций успешно загружен")
-            else:
-                print("❌ Не удалось загрузить менеджер конфигураций")
-
-            # Создаем проигрыватель звуков
-            sound_player = ChordSoundPlayer()
-            self.main_window.set_sound_player(sound_player)
-            print("✅ Проигрыватель звуков инициализирован")
-
-        except Exception as e:
-            print(f"❌ Ошибка инициализации менеджеров: {e}")
-            import traceback
-            traceback.print_exc()
 
     def apply_styles(self):
         """Применяет стили ко всему приложению"""

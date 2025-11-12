@@ -1,4 +1,4 @@
-# gui/main_window.py
+# main_window.py
 from PyQt5.QtWidgets import QMainWindow, QStackedWidget
 from gui.pages.songs_page import SongsPage
 from gui.pages.chords_page import ChordsPage
@@ -13,8 +13,8 @@ class MainWindow(QMainWindow):
         self.setup_window()
         self.setup_ui()
 
-        # Менеджеры конфигураций (будут установлены позже)
-        self.config_manager = None
+        # Менеджеры (будут установлены позже)
+        self.chord_manager = None
         self.sound_player = None
 
     def setup_window(self):
@@ -25,7 +25,6 @@ class MainWindow(QMainWindow):
 
     def setup_ui(self):
         """Настройка UI главного окна"""
-        # Создаем stacked widget для переключения между страницами
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
@@ -40,29 +39,28 @@ class MainWindow(QMainWindow):
         # Устанавливаем начальную страницу
         self.stacked_widget.setCurrentWidget(self.songs_page)
 
-    def set_config_manager(self, config_manager):
-        """Установка менеджера конфигураций для всех страниц"""
-        self.config_manager = config_manager
-        # Для songs_page
-        if hasattr(self.songs_page, 'config_manager'):
-            self.songs_page.config_manager = config_manager
-            print("✅ Config manager установлен для страницы песен")
-        # Для chords_page
-        if hasattr(self.chords_page, 'set_config_manager'):
-            self.chords_page.set_config_manager(config_manager)
-            print("✅ Config manager установлен для страницы аккордов")
+    def set_chord_manager(self, chord_manager):
+        """Установка менеджера аккордов для всех страниц"""
+        print("🎯 Установка chord manager для страниц...")
+        for page_name, page in self.pages.items():
+            if hasattr(page, 'set_chord_manager'):
+                page.set_chord_manager(chord_manager)
+                print(f"✅ {page_name}: Chord manager установлен")
+            elif hasattr(page, 'set_config_manager'):
+                page.set_config_manager(chord_manager)
+                print(f"✅ {page_name}: Config manager установлен")
+            else:
+                print(f"❌ {page_name} не имеет метода set_chord_manager или set_config_manager")
 
     def set_sound_player(self, sound_player):
         """Установка проигрывателя звуков для всех страниц"""
-        self.sound_player = sound_player
-        # Для songs_page
-        if hasattr(self.songs_page, 'sound_player'):
-            self.songs_page.sound_player = sound_player
-            print("✅ Sound player установлен для страницы песен")
-        # Для chords_page
-        if hasattr(self.chords_page, 'set_sound_player'):
-            self.chords_page.set_sound_player(sound_player)
-            print("✅ Sound player установлен для страницы аккордов")
+        print("🎯 Установка sound player для страниц...")
+        for page_name, page in self.pages.items():
+            if hasattr(page, 'set_sound_player'):
+                page.set_sound_player(sound_player)
+                print(f"✅ {page_name}: Sound player установлен")
+            else:
+                print(f"❌ {page_name} не имеет метода set_sound_player")
 
     def show_songs_page(self):
         """Показать страницу песен"""
@@ -81,10 +79,7 @@ class MainWindow(QMainWindow):
     def on_app_start(self):
         """Вызывается при запуске приложения"""
         print("🚀 Инициализация навигации приложения")
-        # Подключаем сигналы кнопок меню
         self.connect_menu_signals()
-
-        # Убеждаемся, что начальная страница инициализирована
         self.show_songs_page()
 
     def connect_menu_signals(self):
@@ -116,7 +111,6 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Обработчик закрытия окна"""
         print("🔚 Закрытие приложения...")
-        # Вызываем cleanup для всех страниц
         try:
             if hasattr(self.songs_page, 'cleanup'):
                 self.songs_page.cleanup()

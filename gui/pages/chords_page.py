@@ -70,12 +70,17 @@ class ChordsPage(BasePage):
         return sorted(set(all_chords))
 
     def set_config_manager(self, config_manager):
-        """Установка менеджера конфигураций из главного приложения"""
+        """Установка менеджера конфигураций"""
         self.config_manager = config_manager
         print("✅ ChordsPage: Config manager установлен")
 
+    def set_chord_manager(self, chord_manager):
+        """Альтернативное имя для совместимости"""
+        self.config_manager = chord_manager
+        print("✅ ChordsPage: Chord manager установлен")
+
     def set_sound_player(self, sound_player):
-        """Установка проигрывателя звуков из главного приложения"""
+        """Установка проигрывателя звуков"""
         self.sound_player = sound_player
         print("✅ ChordsPage: Sound player установлен")
 
@@ -731,7 +736,7 @@ class ChordsPage(BasePage):
             return
 
         try:
-            # Генерируем изображение с высоким качеством по принципу chord_viewer
+            # Генерируем изображение с высоким качеством
             pixmap = self.generate_chord_from_config(self.current_chord_name, self.current_variant)
             if not pixmap.isNull():
                 # Принудительно обновляем отображение
@@ -742,7 +747,7 @@ class ChordsPage(BasePage):
                 self.chord_image_label.repaint()
 
                 print(
-                    f"✅ ChordsPage: Аккорд {self.current_chord_name} вариант {self.current_variant} отображен с высоким качеством (50% масштаб)")
+                    f"✅ ChordsPage: Аккорд {self.current_chord_name} вариант {self.current_variant} отображен с высоким качеством")
             else:
                 print(f"❌ ChordsPage: Не удалось сгенерировать изображение для {self.current_chord_name}")
                 self.show_chord_not_found()
@@ -751,7 +756,7 @@ class ChordsPage(BasePage):
             self.show_chord_not_found()
 
     def generate_chord_from_config(self, chord_name, variant=1):
-        """Генерация изображения аккорда из конфигурации с высоким качеством (по принципу chord_viewer)"""
+        """Генерация изображения аккорда из конфигурации с высоким качеством"""
         if not self.config_manager:
             return QPixmap()
 
@@ -813,7 +818,6 @@ class ChordsPage(BasePage):
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
             painter.setRenderHint(QPainter.TextAntialiasing, True)
-            painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
 
             # Копируем область из оригинального изображения
             painter.drawPixmap(0, 0, original_pixmap, crop_x, crop_y, crop_width, crop_height)
@@ -822,12 +826,11 @@ class ChordsPage(BasePage):
             self.draw_elements_on_canvas(painter, elements, (crop_x, crop_y, crop_width, crop_height))
             painter.end()
 
-            # МАСШТАБИРОВАНИЕ ПО ПРИНЦИПУ CHORD_VIEWER С УВЕЛИЧЕНИЕМ НА 50%
-            # В chord_viewer используется 0.3 (30%), здесь используем 0.5 (50%)
-            display_width = int(crop_width * 0.5)  # 50% увеличение вместо 30%
-            display_height = int(crop_height * 0.5)  # 50% увеличение вместо 30%
+            # МАСШТАБИРОВАНИЕ
+            display_width = int(crop_width * 0.5)  # 50% масштаб
+            display_height = int(crop_height * 0.5)  # 50% масштаб
 
-            print(f"📏 Увеличенный масштаб (50%): {crop_width}x{crop_height} -> {display_width}x{display_height}")
+            print(f"📏 Масштаб (50%): {crop_width}x{crop_height} -> {display_width}x{display_height}")
 
             scaled_pixmap = result_pixmap.scaled(
                 display_width,
@@ -846,83 +849,76 @@ class ChordsPage(BasePage):
             return QPixmap()
 
     def apply_outline_settings(self, elements):
-        """Применение настроек обводки к элементам"""
+        """ИСПРАВЛЕННОЕ применение настроек обводки - идентичное songs_page"""
         modified_elements = []
         for element in elements:
-            if element['type'] == 'barre':
-                modified_element = element.copy()
-                modified_element['data'] = element['data'].copy()
-                modified_element['data']['outline_width'] = 4
-                modified_element['data']['outline_color'] = [0, 0, 0]
-                modified_elements.append(modified_element)
-            elif element['type'] == 'note':
-                modified_element = element.copy()
-                modified_element['data'] = element['data'].copy()
-                modified_element['data']['outline_width'] = 6
-                modified_element['data']['outline_color'] = [0, 0, 0]
-                modified_elements.append(modified_element)
-            else:
-                modified_elements.append(element)
+            if not isinstance(element, dict):
+                continue
+
+            element_type = element.get('type')
+            element_data = element.get('data', {}).copy()
+
+            if element_type == 'barre':
+                element_data['style'] = 'orange_gradient'
+                element_data['outline_width'] = 2
+                element_data['outline_color'] = [0, 0, 0]
+
+            elif element_type == 'note':
+                element_data['style'] = 'red_3d'
+                element_data['outline_width'] = 2
+                element_data['outline_color'] = [0, 0, 0]
+                element_data['text_color'] = [255, 255, 255]
+
+                if 'finger' not in element_data:
+                    if 'note_name' in element_data:
+                        element_data['finger'] = element_data['note_name']
+                    else:
+                        element_data['finger'] = '1'
+
+                element_data['display_text'] = 'finger'
+
+            elif element_type == 'fret':
+                element_data['color'] = [0, 0, 0]
+                element_data['style'] = 'default'
+
+            modified_elements.append({
+                'type': element_type,
+                'data': element_data
+            })
+
         return modified_elements
 
     def draw_elements_on_canvas(self, painter, elements, crop_rect):
-        """Рисование элементов на canvas с высоким качеством"""
-        if not DrawingElements:
-            print("❌ ChordsPage: DrawingElements не доступен")
-            return
-
-        # Устанавливаем высокое качество рендеринга для всех элементов
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-        painter.setRenderHint(QPainter.TextAntialiasing, True)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-
-        for element in elements:
-            try:
-                if element['type'] == 'fret':
-                    self.draw_fret_on_canvas(painter, element['data'], crop_rect)
-                elif element['type'] == 'note':
-                    self.draw_note_on_canvas(painter, element['data'], crop_rect)
-                elif element['type'] == 'barre':
-                    self.draw_barre_on_canvas(painter, element['data'], crop_rect)
-            except Exception as e:
-                print(f"❌ ChordsPage: Ошибка рисования элемента {element['type']}: {e}")
-
-    def draw_fret_on_canvas(self, painter, fret_data, crop_rect):
-        """Рисование лада на canvas с высоким качеством"""
+        """ИСПРАВЛЕННОЕ рисование элементов на canvas"""
         try:
-            adapted_data = self.adapt_coordinates(fret_data, crop_rect)
-            # Увеличиваем толщину линий для лучшей видимости
-            if 'line_width' not in adapted_data:
-                adapted_data['line_width'] = 3
-            DrawingElements.draw_fret(painter, adapted_data)
-        except Exception as e:
-            print(f"❌ ChordsPage: Ошибка рисования лада: {e}")
+            if not DrawingElements:
+                print("❌ ChordsPage: DrawingElements не доступен")
+                return
 
-    def draw_note_on_canvas(self, painter, note_data, crop_rect):
-        """Рисование ноты на canvas с высоким качеством"""
-        try:
-            adapted_data = self.adapt_coordinates(note_data, crop_rect)
-            # Увеличиваем размер нот для лучшей видимости
-            if 'radius' not in adapted_data:
-                adapted_data['radius'] = 12
-            DrawingElements.draw_note(painter, adapted_data)
-        except Exception as e:
-            print(f"❌ ChordsPage: Ошибка рисования ноты: {e}")
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
+            painter.setRenderHint(QPainter.TextAntialiasing, True)
 
-    def draw_barre_on_canvas(self, painter, barre_data, crop_rect):
-        """Рисование баре на canvas с высоким качеством"""
-        try:
-            adapted_data = self.adapt_coordinates(barre_data, crop_rect)
-            # Увеличиваем толщину баре
-            if 'line_width' not in adapted_data:
-                adapted_data['line_width'] = 8
-            DrawingElements.draw_barre(painter, adapted_data)
+            for element in elements:
+                try:
+                    element_type = element.get('type')
+                    element_data = element.get('data', {})
+
+                    if element_type == 'fret':
+                        DrawingElements.draw_fret(painter, element_data)
+                    elif element_type == 'note':
+                        DrawingElements.draw_note(painter, element_data)
+                    elif element_type == 'barre':
+                        DrawingElements.draw_barre(painter, element_data)
+
+                except Exception as e:
+                    print(f"❌ ChordsPage: Ошибка рисования элемента {element_type}: {e}")
+
         except Exception as e:
-            print(f"❌ ChordsPage: Ошибка рисования баре: {e}")
+            print(f"❌ ChordsPage: Ошибка рисования элементов: {e}")
 
     def adapt_coordinates(self, element_data, crop_rect):
-        """Адаптация координат элементов"""
+        """ИСПРАВЛЕННАЯ адаптация координат элементов - идентичная songs_page"""
         if not crop_rect:
             return element_data.copy()
 
@@ -932,17 +928,22 @@ class ChordsPage(BasePage):
         original_x = element_data.get('x', 0)
         original_y = element_data.get('y', 0)
 
+        # Простое вычитание координат обрезки для ВСЕХ элементов
         if 'x' in adapted_data:
             adapted_data['x'] = original_x - crop_x
         if 'y' in adapted_data:
             adapted_data['y'] = original_y - crop_y
 
+        # Преобразуем в целые числа для Qt
         adapted_data['x'] = int(round(adapted_data.get('x', 0)))
         adapted_data['y'] = int(round(adapted_data.get('y', 0)))
 
+        # ОСОБАЯ КОРРЕКЦИЯ ТОЛЬКО ДЛЯ БАРЕ
         if adapted_data.get('type') == 'barre':
             barre_width = adapted_data.get('width', 100)
             barre_height = adapted_data.get('height', 20)
+
+            # Для баре - координаты указывают на центр, нужно сместить в левый верхний угол
             if 'x' in adapted_data:
                 adapted_data['x'] = adapted_data['x'] - (barre_width // 2)
             if 'y' in adapted_data:

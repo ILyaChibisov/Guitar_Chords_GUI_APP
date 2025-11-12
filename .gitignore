@@ -1,6 +1,5 @@
 /scr/
 /.env
 /.venv/
-/data/chords_data.py
 /sounds/
 /source/

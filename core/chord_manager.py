@@ -1,581 +1,421 @@
+# core/chord_manager.py
+import os
 import base64
 import tempfile
-import os
-from PyQt5.QtGui import QPixmap, QImage
-from PyQt5.QtCore import QBuffer, QIODevice
-import io
-import json
+from typing import Dict, List, Optional, Any
+from pathlib import Path
 
-
-
+# Импортируем конвертированные данные
 try:
-    from data.chords_data import CHORDS_DATA  # ⬅️ ПРЯМОЙ ИМПОРТ ДАННЫХ
+    from data.chords_config import CHORDS_DATA, RAM_DATA, NOTE_DATA
+    from data.template import TEMPLATE_DATA
+    from data.template_guitar import GUITAR_IMAGE_DATA
+    from data.chord_sounds import SOUNDS_DATA
 
-    CHORD_DATA_AVAILABLE = True
-    print(f"✅ Данные аккордов загружены. Аккордов: {len(CHORDS_DATA.get('chords', {}))}")
-    print(f"✅ Шаблон: {'есть' if CHORDS_DATA.get('template_image') else 'нет'}")
-    print(f"✅ JSON конфигурация: {'есть' if CHORDS_DATA.get('original_json_config') else 'нет'}")
-
-    # Отладочная информация
-    print("🔍 Проверка конкретных аккордов:")
-    test_chords = ['A', 'B', 'C', 'G', 'D', 'Am', 'Em', 'D6']
-    chords_dict = CHORDS_DATA.get('chords', {})
-    for chord in test_chords:
-        exists = chord in chords_dict
-        status = "✅" if exists else "❌"
-        print(f"   {status} {chord}: {'найден' if exists else 'не найден'}")
-
+    print("✅ Все модули данных успешно загружены")
 except ImportError as e:
-    print(f"⚠️ Не удалось загрузить данные аккордов: {e}")
-    CHORD_DATA_AVAILABLE = False
-    CHORDS_DATA = {}
-
-# Импорт для генерации изображений
-try:
-    from PIL import Image, ImageDraw
-
-    HAS_PILLOW = True
-except ImportError:
-    HAS_PILLOW = False
-    print("❌ Pillow не установлен! Установите: pip install Pillow")
-
-try:
-    from drawing_elements import draw_chord_elements
-
-    HAS_DRAWING = True
-except ImportError as e:
-    HAS_DRAWING = False
-    print(f"❌ Модуль drawing_elements не найден: {e}")
-
-
-class ChordData:
-    """Класс-обертка для работы с данными аккордов"""
-
-    @classmethod
-    def get_chord_data(cls, chord_name):
-        """Получить данные аккорда по имени"""
-        chords_dict = CHORDS_DATA.get('chords', {})
-
-        # Пробуем разные варианты написания
-        names_to_try = [
-            chord_name,
-            chord_name.upper(),
-            chord_name.upper().replace('M', '').replace('М', ''),
-            chord_name.upper().replace('M', 'm').replace('М', 'm'),
-            chord_name.upper().replace('6', '').replace('7', '').replace('9', ''),
-        ]
-
-        for name in names_to_try:
-            if name in chords_dict:
-                print(f"✅ Аккорд '{chord_name}' найден как '{name}'")
-                return chords_dict[name]
-
-        # Если не нашли, выводим отладочную информацию
-        available_chords = list(chords_dict.keys())
-        print(f"❌ Аккорд '{chord_name}' не найден в данных")
-        if available_chords:
-            print(f"   Доступные аккорды: {', '.join(sorted(available_chords)[:10])}...")
-        return None
-
-    @classmethod
-    def get_all_chords(cls):
-        """Получить список всех доступных аккордов"""
-        return list(CHORDS_DATA.get('chords', {}).keys())
-
-    @classmethod
-    def get_chords_by_folder(cls, folder_num):
-        """Получить аккорды из указанной папки"""
-        folder_name = f'group_{folder_num}'
-        chords_dict = CHORDS_DATA.get('chords', {})
-        return [chord for chord, data in chords_dict.items()
-                if data.get('folder') == folder_name]
-
-    @classmethod
-    def get_chord_description(cls, chord_name):
-        """Получить описание аккорда"""
-        chord_data = cls.get_chord_data(chord_name)
-        if chord_data:
-            return chord_data.get('description', f'Аккорд {chord_name}')
-        return f'Аккорд {chord_name}'
-
-    @classmethod
-    def is_data_available(cls):
-        """Проверка доступности данных"""
-        return CHORD_DATA_AVAILABLE and len(CHORDS_DATA.get('chords', {})) > 0
-
-    @classmethod
-    def get_template_image(cls):
-        """Получить шаблон изображения"""
-        return CHORDS_DATA.get('template_image')
-
-    @classmethod
-    def get_display_types(cls):
-        """Получить доступные типы отображения"""
-        return ["fingers", "notes"]
-
-    @classmethod
-    def get_original_json_config(cls):
-        """Получить оригинальную JSON конфигурацию"""
-        return CHORDS_DATA.get('original_json_config', {})
-
-    @classmethod
-    def get_stats(cls):
-        """Получить статистику данных"""
-        chords_dict = CHORDS_DATA.get('chords', {})
-        metadata = CHORDS_DATA.get('metadata', {})
-
-        return {
-            'total_chords': len(chords_dict),
-            'template_size_kb': metadata.get('template_size', 0) / 1024,
-            'has_template': bool(CHORDS_DATA.get('template_image')),
-            'has_json_config': bool(CHORDS_DATA.get('original_json_config')),
-            'converter_version': metadata.get('converter_version', 'unknown')
-        }
+    print(f"❌ Ошибка импорта модулей данных: {e}")
+    # Создаем заглушки для избежания ошибок
+    CHORDS_DATA = []
+    RAM_DATA = []
+    NOTE_DATA = []
+    TEMPLATE_DATA = {}
+    GUITAR_IMAGE_DATA = ""
+    SOUNDS_DATA = {}
 
 
 class ChordManager:
-    """Управляет оптимизированными данными аккордов с генерацией изображений из JSON"""
+    """Менеджер для работы с данными аккордов из конвертированных модулей"""
 
-    def __init__(self):
-        self.temp_files = []
-        self.base_image = None
-        self._setup_temp_dir()
-        self.load_template_image()
+    _initialized = False
+    _chords_cache = {}
+    _template_image_path = None
+    _temp_sounds_dir = None
 
-        if not ChordData.is_data_available():
-            print("❌ Данные аккордов не загружены! Запустите конвертер.")
-        else:
-            stats = ChordData.get_stats()
-            print(f"✅ Данные аккордов загружены:")
-            print(f"   🎸 Аккордов: {stats['total_chords']}")
-            print(f"   🖼️  Шаблон: {stats['template_size_kb']:.1f} KB")
-            print(f"   📋 JSON конфигурация: {'есть' if stats['has_json_config'] else 'нет'}")
-
-    def _setup_temp_dir(self):
-        """Создает временную директорию для файлов"""
-        self.temp_dir = tempfile.mkdtemp(prefix="guitar_chords_")
-
-    def load_template_image(self):
-        """Загружает шаблон изображения из данных"""
-        if not HAS_PILLOW:
-            print("❌ Pillow не доступен, изображения не будут генерироваться")
-            return
-
-        template_b64 = ChordData.get_template_image()
-        if not template_b64:
-            print("❌ Шаблон изображения не найден в данных")
+    @classmethod
+    def initialize(cls):
+        """Инициализация менеджера аккордов"""
+        if cls._initialized:
             return
 
         try:
-            template_data = base64.b64decode(template_b64)
-            self.base_image = Image.open(io.BytesIO(template_data))
-            print(f"✅ Шаблон изображения загружен: {self.base_image.size}")
-        except Exception as e:
-            print(f"❌ Ошибка загрузки шаблона: {e}")
+            print("🎵 Инициализация менеджера аккордов...")
 
-    def process_crop_rect(self, crop_rect):
-        """Обрабатывает crop_rect"""
-        if isinstance(crop_rect, list) and len(crop_rect) == 4:
+            # Создаем структуру аккордов из Excel данных
+            cls._build_chords_cache()
+
+            # Создаем временные файлы для ресурсов
+            cls._create_temp_resources()
+
+            cls._initialized = True
+            print(f"✅ Менеджер аккордов инициализирован. Загружено {len(cls._chords_cache)} аккордов")
+
+        except Exception as e:
+            print(f"❌ Ошибка инициализации менеджера аккордов: {e}")
+            import traceback
+            traceback.print_exc()
+
+    @classmethod
+    def _build_chords_cache(cls):
+        """Создание кэша аккордов из Excel данных"""
+        cls._chords_cache = {}  # Очищаем кэш
+
+        for chord_record in CHORDS_DATA:
+            chord_name = chord_record["CHORD"]
+            variant = chord_record["VARIANT"]
+
+            # Нормализуем имя аккорда (обрабатываем варианты типа "B | H")
+            normalized_names = cls._normalize_chord_name(chord_name)
+
+            for name in normalized_names:
+                if name not in cls._chords_cache:
+                    cls._chords_cache[name] = {
+                        'name': name,
+                        'caption': chord_record["CAPTION"],
+                        'type': chord_record["TYPE"],
+                        'variants': []
+                    }
+
+                # Создаем вариант аккорда
+                variant_data = cls._create_variant_data(chord_record)
+                if variant_data:
+                    # Убедимся, что варианты отсортированы по номеру
+                    cls._chords_cache[name]['variants'].append(variant_data)
+                    cls._chords_cache[name]['variants'].sort(key=lambda x: x['variant_number'])
+
+    @classmethod
+    def _normalize_chord_name(cls, chord_name: str) -> List[str]:
+        """Нормализация имени аккорда (обработка вариантов типа 'B | H')"""
+        if '|' in chord_name:
+            return [name.strip() for name in chord_name.split('|')]
+        return [chord_name.strip()]
+
+    @classmethod
+    def _create_variant_data(cls, chord_record: Dict) -> Optional[Dict]:
+        """Создание данных варианта аккорда из записи Excel"""
+        try:
+            # Получаем элементы для отрисовки на основе FN кодов
+            drawing_elements = cls._get_drawing_elements(chord_record)
+
+            # Получаем область обрезки на основе RAM
+            crop_rect = cls._get_crop_rect(chord_record.get("RAM"))
+
+            # Получаем звуковые файлы (может быть пустым списком)
+            sound_files = cls._get_sound_files(chord_record["CHORD"], chord_record["VARIANT"])
+
             return {
-                'x': crop_rect[0],
-                'y': crop_rect[1],
-                'width': crop_rect[2],
-                'height': crop_rect[3]
+                'variant_number': chord_record["VARIANT"],
+                'description': f"Вариант {chord_record['VARIANT']}",
+                'ram': chord_record.get("RAM"),
+                'barre': chord_record.get("BAR"),
+                'crop_rect': crop_rect,
+                'drawing_elements': drawing_elements,
+                'sound_files': sound_files
             }
-        elif isinstance(crop_rect, dict):
-            return crop_rect
-        else:
-            return {'x': 0, 'y': 0, 'width': 400, 'height': 200}
-
-    def generate_chord_image(self, json_parameters, display_type="fingers"):
-        """Генерирует изображение аккорда из JSON параметров"""
-        print(f"🎨 Генерация изображения, тип: {display_type}")
-        print(f"📐 Размер шаблона: {self.base_image.size if self.base_image else 'нет'}")
-        print(f"📋 Параметры: {list(json_parameters.keys())}")
-        if not self.base_image or not HAS_DRAWING:
-            print("❌ Не могу сгенерировать изображение: нет шаблона или drawing_elements")
-            return None
-
-        try:
-            # Обрабатываем crop_rect
-            crop_rect_data = self.process_crop_rect(json_parameters.get('crop_rect', []))
-            crop_x = crop_rect_data.get('x', 0)
-            crop_y = crop_rect_data.get('y', 0)
-            crop_width = crop_rect_data.get('width', 400)
-            crop_height = crop_rect_data.get('height', 200)
-
-            # Проверяем границы обрезки
-            img_width, img_height = self.base_image.size
-            crop_x = max(0, min(crop_x, img_width - 1))
-            crop_y = max(0, min(crop_y, img_height - 1))
-            crop_width = max(1, min(crop_width, img_width - crop_x))
-            crop_height = max(1, min(crop_height, img_height - crop_y))
-
-            print(f"📐 Обрезка: ({crop_x}, {crop_y}, {crop_width}, {crop_height}) из {img_width}x{img_height}")
-
-            # Обрезаем изображение
-            cropped_image = self.base_image.crop((crop_x, crop_y, crop_x + crop_width, crop_y + crop_height))
-            chord_image = cropped_image.copy()
-            draw = ImageDraw.Draw(chord_image)
-
-            # Подготавливаем данные для отрисовки с учетом смещения
-            drawing_data = self.prepare_drawing_data(json_parameters, display_type, crop_x, crop_y)
-            if drawing_data and drawing_data.get('elements'):
-                print(f"🎯 Отрисовка {len(drawing_data['elements'])} элементов на изображении {chord_image.size}")
-                draw_chord_elements(draw, drawing_data, display_type, chord_image.size)
-            else:
-                print("⚠️ Нет элементов для отрисовки")
-
-            # Сохраняем в buffer
-            buffer = io.BytesIO()
-            chord_image.save(buffer, format='PNG', optimize=True)
-            image_data = buffer.getvalue()
-            print(f"✅ Изображение сгенерировано: {len(image_data)} bytes, размер: {chord_image.size}")
-            return image_data
 
         except Exception as e:
-            print(f"❌ Ошибка генерации изображения: {e}")
+            print(f"❌ Ошибка создания варианта для {chord_record['CHORD']} v{chord_record['VARIANT']}: {e}")
             import traceback
             traceback.print_exc()
             return None
 
-    def prepare_drawing_data(self, json_parameters, display_type, crop_x=0, crop_y=0):
-        """Подготавливает данные для отрисовки из JSON с учетом смещения"""
-        if display_type == "fingers":
-            elements = json_parameters.get('elements_fingers', [])
-            print(f"🎯 Используются элементы для пальцев: {len(elements)}")
-        elif display_type == "notes":
-            elements = json_parameters.get('elements_notes', [])
-            print(f"🎵 Используются элементы для нот: {len(elements)}")
-        else:
-            elements = []
-            print(f"⚠️ Неизвестный тип отображения: {display_type}")
-
-        if not elements:
-            print("⚠️ Нет элементов для отрисовки")
-            return None
-
-        # КОРРЕКТИРУЕМ КООРДИНАТЫ С УЧЕТОМ CROP
-        adjusted_elements = []
-        for element in elements:
-            if not isinstance(element, dict):
-                continue
-
-            element_type = element.get('type')
-            element_data = element.get('data', {}).copy()
-
-            # Корректируем координаты X и Y
-            if 'x' in element_data:
-                element_data['x'] = element_data['x'] - crop_x
-            if 'y' in element_data:
-                element_data['y'] = element_data['y'] - crop_y
-
-            adjusted_elements.append({
-                'type': element_type,
-                'data': element_data
-            })
-
-        # ВЫВОДИМ СКОРРЕКТИРОВАННЫЕ КООРДИНАТЫ ДЛЯ ОТЛАДКИ
-        print(f"📊 Скорректированные координаты (crop: {crop_x}, {crop_y}):")
-        for i, element in enumerate(adjusted_elements):
-            element_data = element.get('data', {})
-            x = element_data.get('x', 0)
-            y = element_data.get('y', 0)
-            print(f"  {i}: ({x}, {y}) - {element.get('type')}")
-
-        # Применяем настройки отображения
-        display_settings = json_parameters.get('display_settings', {})
-        if display_settings:
-            adjusted_elements = self.apply_display_settings(adjusted_elements, display_settings)
-
-        return {'elements': adjusted_elements}
-
-    def apply_display_settings(self, elements, display_settings):
-        """Применяет настройки отображения"""
-        barre_outline = display_settings.get('barre_outline', 'none')
-        note_outline = display_settings.get('note_outline', 'none')
-
-        outline_widths = {
-            "none": 0, "thin": 2, "medium": 4, "thick": 6
+    @classmethod
+    def _get_drawing_elements(cls, chord_record: Dict) -> Dict[str, List]:
+        """Получение элементов для отрисовки на основе FN кодов"""
+        elements = {
+            'frets': [],
+            'notes': [],
+            'open_notes': [],
+            'barres': []
         }
 
-        barre_width = outline_widths.get(barre_outline, 0)
-        note_width = outline_widths.get(note_outline, 0)
+        # Обрабатываем FN коды (ноты/пальцы)
+        fn_codes = cls._parse_fn_codes(chord_record.get("FN"))
+        for fn_code in fn_codes:
+            element_data = cls._get_element_by_fn_code(fn_code)
+            if element_data:
+                elements['notes'].append(element_data)
 
-        modified_elements = []
-        for element in elements:
-            if not isinstance(element, dict):
-                continue
+        # Обрабатываем баре
+        barre_data = cls._get_barre_element(chord_record.get("BAR"))
+        if barre_data:
+            elements['barres'].append(barre_data)
 
-            element_type = element.get('type')
-            element_data = element.get('data', {})
+        # Обрабатываем открытые струны (FNL, FPXL, FPOL)
+        open_notes = cls._get_open_notes(chord_record)
+        elements['open_notes'].extend(open_notes)
 
-            if element_type == 'barre' and barre_width > 0:
-                modified_element = element.copy()
-                modified_element['data'] = element_data.copy()
-                modified_element['data']['outline_width'] = barre_width
-                modified_elements.append(modified_element)
-            elif element_type == 'note' and note_width > 0:
-                modified_element = element.copy()
-                modified_element['data'] = element_data.copy()
-                modified_element['data']['outline_width'] = note_width
-                modified_elements.append(modified_element)
-            else:
-                modified_elements.append(element)
+        return elements
 
-        return modified_elements
-
-    def get_chord_variants(self, chord_name):
-        """Возвращает варианты аккорда"""
-        if not ChordData.is_data_available():
+    @classmethod
+    def _parse_fn_codes(cls, fn_value) -> List[str]:
+        """Парсинг FN кодов из строки или числа"""
+        if fn_value is None:
             return []
 
-        chord_data = ChordData.get_chord_data(chord_name)
-        if not chord_data:
-            print(f"❌ Аккорд '{chord_name}' не найден в данных")
-            return []
+        if isinstance(fn_value, (int, float)):
+            return [str(int(fn_value))]
 
-        variants = chord_data.get('variants', [])
+        if isinstance(fn_value, str):
+            # Обрабатываем строки типа "22,23,24" или "51,22,23,24"
+            codes = []
+            for part in fn_value.split(','):
+                part = part.strip()
+                if part and (part.isdigit() or ('.' in part and part.replace('.', '').isdigit())):
+                    # Преобразуем в целое число, если это float
+                    try:
+                        codes.append(str(int(float(part))))
+                    except ValueError:
+                        codes.append(part)
+            return codes
 
-        # ДОБАВЛЯЕМ variant_index К КАЖДОМУ ВАРИАНТУ
-        for i, variant in enumerate(variants):
-            variant['variant_index'] = i  # Добавляем индекс для использования в get_chord_variant_data
+        return []
 
-        print(f"✅ Аккорд '{chord_name}': найдено {len(variants)} вариантов")
-        return variants
-
-    def get_chord_description(self, chord_name):
-        """Возвращает описание аккорда"""
-        return ChordData.get_chord_description(chord_name)
-
-    def base64_to_pixmap(self, base64_data):
-        """Конвертирует base64 в QPixmap с поддержкой прозрачности"""
+    @classmethod
+    def _get_element_by_fn_code(cls, fn_code: str) -> Optional[Dict]:
+        """Получение элемента отрисовки по FN коду"""
         try:
-            if not base64_data:
-                return QPixmap()
-
-            # Убираем возможные разрывы строк в base64 данных
-            clean_base64 = base64_data.replace('\n', '').replace('\\', '')
-            image_data = base64.b64decode(clean_base64)
-
-            # Создаем QImage из данных
-            image = QImage()
-            image.loadFromData(image_data)
-
-            if image.isNull():
-                print("❌ Не удалось создать QImage из base64 данных")
-                return QPixmap()
-
-            # Конвертируем в правильный формат для прозрачности
-            if image.hasAlphaChannel():
-                image = image.convertToFormat(QImage.Format_ARGB32)
-            else:
-                image = image.convertToFormat(QImage.Format_RGB32)
-
-            # Конвертируем QImage в QPixmap
-            pixmap = QPixmap.fromImage(image)
-
-            if pixmap.isNull():
-                print("❌ Не удалось создать QPixmap из QImage")
-                return QPixmap()
-
-            return pixmap
-
+            # Ищем в NOTE_DATA по полю FN
+            for note_record in NOTE_DATA:
+                if note_record.get("FN") is not None:
+                    record_fn = str(note_record.get("FN"))
+                    if record_fn == fn_code:
+                        element_id = note_record.get("FN_ELEM")
+                        if element_id and element_id in TEMPLATE_DATA.get("notes", {}):
+                            return {
+                                'type': 'note',
+                                'element_id': element_id,
+                                'data': TEMPLATE_DATA["notes"][element_id]
+                            }
         except Exception as e:
-            print(f"❌ Ошибка создания pixmap: {e}")
-            return QPixmap()
+            print(f"❌ Ошибка получения элемента по FN коду {fn_code}: {e}")
 
-    def base64_to_temp_file(self, base64_data, extension):
-        """Создает временный файл из base64 данных"""
+        return None
+
+    @classmethod
+    def _get_barre_element(cls, barre_code: str) -> Optional[Dict]:
+        """Получение элемента баре по коду"""
+        if not barre_code or barre_code == "None":
+            return None
+
         try:
-            if not base64_data:
+            # Пример: "2BAR2-4" -> ищем "2BAR2-4" в шаблонах
+            if barre_code in TEMPLATE_DATA.get("barres", {}):
+                return {
+                    'type': 'barre',
+                    'element_id': barre_code,
+                    'data': TEMPLATE_DATA["barres"][barre_code]
+                }
+        except Exception as e:
+            print(f"❌ Ошибка получения баре элемента {barre_code}: {e}")
+
+        return None
+
+    @classmethod
+    def _get_open_notes(cls, chord_record: Dict) -> List[Dict]:
+        """Получение элементов открытых струн"""
+        open_notes = []
+
+        # Обрабатываем FNL (ноты на ладах)
+        fnl_value = chord_record.get("FNL")
+        if fnl_value is not None and fnl_value != "None":
+            fnl_element = cls._find_note_element_by_value("FNL", fnl_value)
+            if fnl_element:
+                open_notes.append(fnl_element)
+
+        # Обрабатываем FPXL (крестики)
+        fpxl_value = chord_record.get("FPXL")
+        if fpxl_value is not None and fpxl_value != "None":
+            fpxl_element = cls._find_note_element_by_value("FPXL", fpxl_value)
+            if fpxl_element:
+                open_notes.append(fpxl_element)
+
+        return open_notes
+
+    @classmethod
+    def _find_note_element_by_value(cls, field: str, value) -> Optional[Dict]:
+        """Поиск элемента ноты по значению поля"""
+        try:
+            for note_record in NOTE_DATA:
+                if note_record.get(field) == value:
+                    element_id = note_record.get(f"{field}_ELEM")
+                    if element_id:
+                        if field == "FPXL" and element_id in TEMPLATE_DATA.get("open_notes", {}):
+                            return {
+                                'type': 'open_note',
+                                'element_id': element_id,
+                                'data': TEMPLATE_DATA["open_notes"][element_id]
+                            }
+                        elif element_id in TEMPLATE_DATA.get("notes", {}):
+                            return {
+                                'type': 'note',
+                                'element_id': element_id,
+                                'data': TEMPLATE_DATA["notes"][element_id]
+                            }
+        except Exception as e:
+            print(f"❌ Ошибка поиска элемента по полю {field}: {e}")
+
+        return None
+
+    @classmethod
+    def _get_crop_rect(cls, ram_code: str) -> Optional[Dict]:
+        """Получение области обрезки по RAM коду"""
+        if not ram_code or ram_code == "None":
+            return None
+
+        if ram_code in TEMPLATE_DATA.get("crop_rects", {}):
+            return TEMPLATE_DATA["crop_rects"][ram_code]
+        return None
+
+    @classmethod
+    def _get_sound_files(cls, chord_name: str, variant: int) -> List[str]:
+        """Получение путей к звуковым файлам аккорда"""
+        sound_files = []
+
+        try:
+            normalized_names = cls._normalize_chord_name(chord_name)
+
+            for name in normalized_names:
+                if name in SOUNDS_DATA:
+                    chord_sounds = SOUNDS_DATA[name]
+                    # Ищем звук для конкретного варианта
+                    variant_key = f"{name}_{variant}"
+                    if variant_key in chord_sounds:
+                        sound_path = cls._get_sound_file_path(variant_key, chord_sounds[variant_key])
+                        if sound_path:
+                            sound_files.append(sound_path)
+
+                    # Также добавляем общие звуки аккорда
+                    for sound_key, sound_data in chord_sounds.items():
+                        if sound_key != variant_key:  # Чтобы не дублировать
+                            sound_path = cls._get_sound_file_path(sound_key, sound_data)
+                            if sound_path and sound_path not in sound_files:
+                                sound_files.append(sound_path)
+        except Exception as e:
+            print(f"❌ Ошибка получения звуковых файлов для {chord_name}: {e}")
+
+        return sound_files
+
+    @classmethod
+    def _create_temp_resources(cls):
+        """Создание временных файлов для ресурсов"""
+        try:
+            # Создаем временную директорию для звуков
+            cls._temp_sounds_dir = tempfile.mkdtemp(prefix="guitar_chords_sounds_")
+            print(f"✅ Создана временная директория для звуков: {cls._temp_sounds_dir}")
+
+            # Создаем временный файл для изображения грифа
+            cls._create_template_image_file()
+        except Exception as e:
+            print(f"❌ Ошибка создания временных ресурсов: {e}")
+
+    @classmethod
+    def _create_template_image_file(cls):
+        """Создание временного файла для изображения грифа"""
+        try:
+            if GUITAR_IMAGE_DATA and GUITAR_IMAGE_DATA.strip():
+                image_data = base64.b64decode(GUITAR_IMAGE_DATA.strip())
+                temp_dir = tempfile.gettempdir()
+                cls._template_image_path = os.path.join(temp_dir, "guitar_template.png")
+
+                with open(cls._template_image_path, 'wb') as f:
+                    f.write(image_data)
+
+                print(f"✅ Создан временный файл изображения: {cls._template_image_path}")
+            else:
+                print("⚠️ Нет данных для создания изображения грифа")
+        except Exception as e:
+            print(f"❌ Ошибка создания временного файла изображения: {e}")
+
+    @classmethod
+    def _get_sound_file_path(cls, sound_key: str, sound_data: str) -> Optional[str]:
+        """Получение пути к звуковому файлу (создает временный файл если нужно)"""
+        try:
+            if not sound_data or not isinstance(sound_data, str):
                 return None
 
-            clean_base64 = base64_data.replace('\n', '').replace('\\', '')
-            file_data = base64.b64decode(clean_base64)
-            temp_file = tempfile.NamedTemporaryFile(
-                delete=False,
-                suffix=extension,
-                dir=self.temp_dir
-            )
-            temp_file.write(file_data)
-            temp_file.close()
-            self.temp_files.append(temp_file.name)
-            return temp_file.name
+            sound_path = os.path.join(cls._temp_sounds_dir, f"{sound_key}.mp3")
+
+            if not os.path.exists(sound_path):
+                # Декодируем base64 и создаем файл
+                sound_bytes = base64.b64decode(sound_data)
+                with open(sound_path, 'wb') as f:
+                    f.write(sound_bytes)
+
+            return sound_path
         except Exception as e:
-            print(f"❌ Ошибка создания временного файла: {e}")
+            print(f"❌ Ошибка создания звукового файла {sound_key}: {e}")
             return None
 
-    def get_chord_image(self, chord_name, variant_index=0, display_type="fingers"):
-        """Возвращает изображение аккорда как QPixmap"""
-        print(f"🎸 Получение изображения: {chord_name}, вариант: {variant_index}, тип: {display_type}")
+    # Публичные методы API
+    @classmethod
+    def is_initialized(cls) -> bool:
+        return cls._initialized
 
-        variants = self.get_chord_variants(chord_name)
-        if not variants or variant_index >= len(variants):
-            print(f"❌ Вариант {variant_index} не найден для аккорда {chord_name}")
-            return QPixmap()
+    @classmethod
+    def get_all_chords(cls) -> List[str]:
+        return list(cls._chords_cache.keys())
 
-        variant = variants[variant_index]
-        json_parameters = variant.get('json_parameters', {})
+    @classmethod
+    def get_chord_data(cls, chord_name: str) -> Optional[Dict]:
+        # Пробуем разные варианты написания
+        names_to_try = [
+            chord_name,
+            chord_name.upper(),
+            chord_name.upper().replace('M', 'm'),
+            chord_name.upper().replace('М', 'm'),  # Кириллическая 'М'
+            chord_name.strip()
+        ]
 
-        # Генерируем изображение из JSON параметров
-        image_data = self.generate_chord_image(json_parameters, display_type)
-        if not image_data:
-            return QPixmap()
+        for name in names_to_try:
+            if name in cls._chords_cache:
+                return cls._chords_cache[name]
 
-        # Конвертируем в QPixmap
-        pixmap = self.base64_to_pixmap(base64.b64encode(image_data).decode())
+        print(f"❌ Аккорд '{chord_name}' не найден. Доступные: {list(cls._chords_cache.keys())}")
+        return None
 
-        if not pixmap.isNull():
-            print(f"✅ Изображение аккорда '{chord_name}' успешно сгенерировано")
-        else:
-            print(f"❌ Не удалось создать QPixmap для аккорда '{chord_name}'")
+    @classmethod
+    def get_chord_variants(cls, chord_name: str) -> List[Dict]:
+        chord_data = cls.get_chord_data(chord_name)
+        return chord_data.get('variants', []) if chord_data else []
 
-        return pixmap
+    @classmethod
+    def get_template_image_path(cls) -> Optional[str]:
+        return cls._template_image_path
 
-    def get_chord_sound_path(self, chord_name, variant_index=0):
-        """Возвращает путь к временному звуковому файлу"""
-        variants = self.get_chord_variants(chord_name)
-        if not variants or variant_index >= len(variants):
-            return None
+    @classmethod
+    def search_chords(cls, query: str) -> List[str]:
+        query_lower = query.lower()
+        return [
+            chord_name for chord_name in cls._chords_cache.keys()
+            if query_lower in chord_name.lower()
+        ]
 
-        sound_data = variants[variant_index].get('sound_data')
-        if not sound_data:
-            print(f"⚠️ Нет звуковых данных для варианта {variant_index} аккорда {chord_name}")
-            return None
+    @classmethod
+    def get_chord_config(cls, chord_name: str, variant: int = 1) -> Optional[Dict]:
+        """Получение конфигурации конкретного варианта аккорда"""
+        variants = cls.get_chord_variants(chord_name)
+        for var in variants:
+            if var.get('variant_number') == variant:
+                return var
+        return None
 
-        return self.base64_to_temp_file(sound_data, '.mp3')
+    @classmethod
+    def cleanup(cls):
+        """Очистка временных ресурсов"""
+        try:
+            if cls._temp_sounds_dir and os.path.exists(cls._temp_sounds_dir):
+                import shutil
+                shutil.rmtree(cls._temp_sounds_dir)
+                print(f"✅ Удалена временная директория звуков: {cls._temp_sounds_dir}")
 
-    def get_chord_variant_data(self, chord_name, variant_index=0, display_type="fingers"):
-        """Возвращает полные данные варианта аккорда"""
-        variants = self.get_chord_variants(chord_name)
-        if not variants or variant_index >= len(variants):
-            print(f"❌ Вариант {variant_index} не найден для аккорда {chord_name}")
-            return None
+            if cls._template_image_path and os.path.exists(cls._template_image_path):
+                os.remove(cls._template_image_path)
+                print(f"✅ Удален временный файл изображения: {cls._template_image_path}")
 
-        variant = variants[variant_index]
+        except Exception as e:
+            print(f"❌ Ошибка очистки временных ресурсов: {e}")
 
-        # Генерируем изображение
-        json_parameters = variant.get('json_parameters', {})
-        image_data = self.generate_chord_image(json_parameters, display_type)
 
-        if not image_data:
-            print(f"❌ Не удалось сгенерировать изображение для варианта {variant_index}")
-            return None
-
-        # Создаем временный файл для изображения
-        image_path = self.base64_to_temp_file(base64.b64encode(image_data).decode(), '.png')
-        sound_path = self.base64_to_temp_file(variant.get('sound_data'), '.mp3')
-
-        result = {
-            'image_path': image_path,
-            'sound_path': sound_path,
-            'description': variant.get('description', ''),
-            'position': variant.get('position', 0),
-            'display_type': display_type
-        }
-
-        print(f"✅ Данные варианта {variant_index}: image={bool(image_path)}, sound={bool(sound_path)}")
-        return result
-
-    def get_chord_variant_data_with_pixmap(self, chord_name, variant_index=0, display_type="fingers"):
-        """Возвращает данные варианта аккорда с готовым QPixmap"""
-        print(f"🎯 Получение варианта {variant_index} для аккорда {chord_name}, тип: {display_type}")
-
-        variants = self.get_chord_variants(chord_name)
-        if not variants or variant_index >= len(variants):
-            print(f"❌ Вариант {variant_index} не найден для аккорда {chord_name}")
-            return None
-
-        variant = variants[variant_index]
-        print(f"🔍 Вариант данных: position={variant.get('position')}, description={variant.get('description')}")
-
-        # ПРОВЕРЯЕМ РАЗЛИЧИЯ В JSON ПАРАМЕТРАХ
-        json_params = variant.get('json_parameters', {})
-        print(f"📋 JSON параметры варианта {variant_index}:")
-        print(f"   - crop_rect: {json_params.get('crop_rect')}")
-        print(f"   - elements_fingers: {len(json_params.get('elements_fingers', []))} элементов")
-        print(f"   - elements_notes: {len(json_params.get('elements_notes', []))} элементов")
-
-        # Генерируем изображение и создаем QPixmap
-        image_data = self.generate_chord_image(json_params, display_type)
-
-        if not image_data:
-            print(f"❌ Не удалось сгенерировать изображение для варианта {variant_index}")
-            return None
-
-        pixmap = self.base64_to_pixmap(base64.b64encode(image_data).decode())
-        if pixmap.isNull():
-            print(f"❌ Не удалось создать QPixmap для варианта {variant_index}")
-            return None
-
-        # Создаем временный файл для звука
-        sound_path = self.base64_to_temp_file(variant.get('sound_data'), '.mp3')
-
-        result = {
-            'pixmap': pixmap,
-            'sound_path': sound_path,
-            'description': variant.get('description', ''),
-            'position': variant.get('position', variant_index + 1),
-            'display_type': display_type
-        }
-
-        print(f"✅ Вариант {variant_index} загружен: {pixmap.size().width()}x{pixmap.size().height()}")
-        return result
-
-    # ⬅️ СОВМЕСТИМОСТЬ СО СТАРЫМ КОДОМ
-    def get_chord_image_direct(self, chord_name, variant_index=0):
-        """Совместимость со старым кодом - использует fingers по умолчанию"""
-        return self.get_chord_image(chord_name, variant_index, "fingers")
-
-    def check_chord_transparency(self, chord_name, variant_index=0):
-        """Проверяет прозрачность (совместимость)"""
-        pixmap = self.get_chord_image(chord_name, variant_index)
-        if pixmap.isNull():
-            return False
-
-        temp_image = pixmap.toImage()
-        has_transparency = temp_image.hasAlphaChannel()
-        print(f"🔍 Аккорд '{chord_name}': {'с прозрачностью' if has_transparency else 'без прозрачности'}")
-        return has_transparency
-
-    # ⬅️ НОВЫЕ МЕТОДЫ
-    def get_display_types(self):
-        """Получить доступные типы отображения"""
-        return ChordData.get_display_types()
-
-    def get_stats(self):
-        """Получить статистику данных"""
-        return ChordData.get_stats()
-
-    def get_original_json_config(self):
-        """Получить оригинальную JSON конфигурацию"""
-        return ChordData.get_original_json_config()
-
-    def get_available_chords(self):
-        """Возвращает список доступных аккордов"""
-        return ChordData.get_all_chords()
-
-    def get_chords_by_folder(self, folder_num):
-        """Возвращает аккорды из указанной папки"""
-        return ChordData.get_chords_by_folder(folder_num)
-
-    def is_data_loaded(self):
-        """Проверяет, загружены ли данные аккордов"""
-        return ChordData.is_data_available()
-
-    def cleanup(self):
-        """Очищает временные файлы"""
-        for temp_file in self.temp_files:
-            try:
-                if os.path.exists(temp_file):
-                    os.unlink(temp_file)
-            except Exception as e:
-                print(f"⚠️ Ошибка удаления временного файла {temp_file}: {e}")
-
-        self.temp_files.clear()
-
-    def __del__(self):
-        """Деструктор - очищает ресурсы"""
-        self.cleanup()
-
+# Автоматическая инициализация при импорте
+ChordManager.initialize()
