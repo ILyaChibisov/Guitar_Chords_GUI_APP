@@ -969,46 +969,61 @@ class SongsPage(BasePage):
                 print(f"❌ Не удалось загрузить базовое изображение: {base_image_path}")
                 return QPixmap()
 
-            # Получаем область обрезки
+            # Получаем область обрезки - ИСПРАВЛЕННАЯ ЧАСТЬ
             crop_rect = chord_config.get('crop_rect')
             if not crop_rect:
                 print(f"❌ Нет области обрезки для аккорда {variant_key}")
                 return QPixmap()
 
-            crop_x, crop_y, crop_width, crop_height = crop_rect
+            try:
+                # Проверяем тип crop_rect и преобразуем в кортеж
+                if isinstance(crop_rect, dict):
+                    crop_x = crop_rect.get('x', 0)
+                    crop_y = crop_rect.get('y', 0)
+                    crop_width = crop_rect.get('width', 0)
+                    crop_height = crop_rect.get('height', 0)
+                elif isinstance(crop_rect, (list, tuple)) and len(crop_rect) == 4:
+                    crop_x, crop_y, crop_width, crop_height = crop_rect
+                else:
+                    print(f"❌ Неверный формат crop_rect: {type(crop_rect)}")
+                    return QPixmap()
 
-            # Проверяем границы
-            crop_x = max(0, min(crop_x, original_pixmap.width() - 1))
-            crop_y = max(0, min(crop_y, original_pixmap.height() - 1))
-            crop_width = max(1, min(crop_width, original_pixmap.width() - crop_x))
-            crop_height = max(1, min(crop_height, original_pixmap.height() - crop_y))
+                # Проверяем границы
+                crop_x = max(0, min(crop_x, original_pixmap.width() - 1))
+                crop_y = max(0, min(crop_y, original_pixmap.height() - 1))
+                crop_width = max(1, min(crop_width, original_pixmap.width() - crop_x))
+                crop_height = max(1, min(crop_height, original_pixmap.height() - crop_y))
 
-            # Создаем новое изображение размером с область обрезки с прозрачным фоном
-            result_pixmap = QPixmap(crop_width, crop_height)
-            result_pixmap.fill(Qt.transparent)  # Прозрачный фон
+                # Создаем новое изображение размером с область обрезки с прозрачным фоном
+                result_pixmap = QPixmap(crop_width, crop_height)
+                result_pixmap.fill(Qt.transparent)  # Прозрачный фон
 
-            painter = QPainter(result_pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setRenderHint(QPainter.SmoothPixmapTransform)
+                painter = QPainter(result_pixmap)
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
-            # Копируем область из оригинального изображения
-            painter.drawPixmap(0, 0, original_pixmap, crop_x, crop_y, crop_width, crop_height)
+                # Копируем область из оригинального изображения
+                painter.drawPixmap(0, 0, original_pixmap, crop_x, crop_y, crop_width, crop_height)
 
-            # Рисуем элементы
-            self.draw_elements_on_canvas(painter, elements, (crop_x, crop_y, crop_width, crop_height))
-            painter.end()
+                # Рисуем элементы
+                self.draw_elements_on_canvas(painter, elements, (crop_x, crop_y, crop_width, crop_height))
+                painter.end()
 
-            # Применяем масштаб "Маленький 1" как в оригинальном приложении
-            display_width = min(400, crop_width)  # Авто-масштаб как в оригинале
-            scale_factor = display_width / crop_width
-            display_height = int(crop_height * scale_factor)
+                # Применяем масштаб "Маленький 1" как в оригинальном приложении
+                display_width = min(400, crop_width)  # Авто-масштаб как в оригинале
+                scale_factor = display_width / crop_width
+                display_height = int(crop_height * scale_factor)
 
-            scaled_pixmap = result_pixmap.scaled(
-                display_width, display_height,
-                Qt.KeepAspectRatio, Qt.SmoothTransformation
-            )
+                scaled_pixmap = result_pixmap.scaled(
+                    display_width, display_height,
+                    Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
 
-            return scaled_pixmap
+                return scaled_pixmap
+
+            except Exception as crop_error:
+                print(f"❌ Ошибка обработки crop_rect для {chord_name} вариант {variant}: {crop_error}")
+                return QPixmap()
 
         except Exception as e:
             print(f"❌ Ошибка генерации изображения для {chord_name} вариант {variant}: {e}")
@@ -1153,21 +1168,22 @@ class SongsPage(BasePage):
             self.refresh_chord_display(self.current_chord_name)
 
     def play_chord_sound(self):
-        """Воспроизведение звука аккорда"""
+        """Воспроизведение звука аккорда через ChordSoundPlayer"""
         if not self.current_chord_name:
             return
 
         try:
-            print(
-                f"🔊 Попытка воспроизведения звука для аккорда: {self.current_chord_name}, вариант: {self.current_variant}")
-            success = self.sound_player.play_chord_sound(self.current_chord_name, str(self.current_variant))
+            from core.chord_manager import ChordSoundPlayer
+
+            # Используем ChordSoundPlayer для воспроизведения
+            success = ChordSoundPlayer.play_chord_sound(
+                self.player,
+                self.current_chord_name,
+                self.current_variant
+            )
 
             if not success:
-                # Если не нашли с вариантом, пробуем без варианта
-                success = self.sound_player.play_chord_sound(self.current_chord_name)
-
-            if not success:
-                print(f"❌ Не удалось найти звуковой файл для аккорда {self.current_chord_name}")
+                print(f"🔇 Звук для аккорда {self.current_chord_name} вариант {self.current_variant} не найден")
 
         except Exception as e:
             print(f"❌ Ошибка при воспроизведении звука: {e}")

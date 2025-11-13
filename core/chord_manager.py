@@ -4,6 +4,8 @@ import base64
 import tempfile
 from typing import Dict, List, Optional, Any
 from pathlib import Path
+from PyQt5.QtCore import QByteArray, QBuffer, QIODevice, Qt
+from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 
 # Импортируем конвертированные данные
 try:
@@ -24,13 +26,182 @@ except ImportError as e:
     SOUNDS_DATA = {}
 
 
+# core/chord_manager.py (только класс ChordSoundPlayer)
+
+class ChordSoundPlayer:
+    """Класс для воспроизведения звуков аккордов с кэшированием временных файлов"""
+
+    # Словарь для кэширования путей к временным файлам
+    _sound_cache = {}
+    _temp_dir = None
+
+    @staticmethod
+    def initialize():
+        """Инициализация звукового плеера"""
+        try:
+            # Создаем временную директорию для звуков
+            ChordSoundPlayer._temp_dir = tempfile.mkdtemp(prefix="guitar_chords_sounds_")
+            print(f"✅ Создана временная директория для звуков: {ChordSoundPlayer._temp_dir}")
+        except Exception as e:
+            print(f"❌ Ошибка инициализации звукового плеера: {e}")
+
+    @staticmethod
+    def play_chord_sound(player: QMediaPlayer, chord_name: str, variant: int = 1) -> bool:
+        """Воспроизведение звука аккорда"""
+        try:
+            print(f"🔊 Попытка воспроизведения звука для аккорда: {chord_name}, вариант: {variant}")
+
+            normalized_names = ChordManager._normalize_chord_name(chord_name)
+
+            for name in normalized_names:
+                if name in SOUNDS_DATA:
+                    chord_sounds = SOUNDS_DATA[name]
+
+                    # Ищем звук для конкретного варианта
+                    variant_key = f"{name}_{variant}"
+                    if variant_key in chord_sounds:
+                        sound_data = chord_sounds[variant_key]
+                        if ChordManager._is_valid_sound_data(sound_data):
+                            return ChordSoundPlayer._play_cached_sound(player, sound_data, variant_key)
+
+                    # Также ищем общие звуки аккорда
+                    for sound_key, sound_data in chord_sounds.items():
+                        if ChordManager._is_valid_sound_data(sound_data):
+                            return ChordSoundPlayer._play_cached_sound(player, sound_data, sound_key)
+
+            print(f"🔇 Звук для аккорда {chord_name} вариант {variant} не найден")
+            return False
+
+        except Exception as e:
+            print(f"❌ Ошибка воспроизведения звука для {chord_name}: {e}")
+            return False
+
+    @staticmethod
+    def _play_cached_sound(player: QMediaPlayer, base64_data: str, sound_key: str) -> bool:
+        """Воспроизведение звука с кэшированием временного файла"""
+        try:
+            # Проверяем кэш
+            if sound_key in ChordSoundPlayer._sound_cache:
+                sound_path = ChordSoundPlayer._sound_cache[sound_key]
+                if os.path.exists(sound_path):
+                    print(f"🔊 Используем кэшированный файл для: {sound_key}")
+                    return ChordSoundPlayer._play_from_file(player, sound_path, sound_key)
+                else:
+                    # Файл был удален, удаляем из кэша
+                    del ChordSoundPlayer._sound_cache[sound_key]
+
+            # Создаем временный файл
+            sound_path = ChordSoundPlayer._create_temp_sound_file(base64_data, sound_key)
+            if not sound_path:
+                return False
+
+            # Сохраняем в кэш
+            ChordSoundPlayer._sound_cache[sound_key] = sound_path
+
+            # Воспроизводим
+            return ChordSoundPlayer._play_from_file(player, sound_path, sound_key)
+
+        except Exception as e:
+            print(f"❌ Ошибка воспроизведения кэшированного звука {sound_key}: {e}")
+            return False
+
+    @staticmethod
+    def _create_temp_sound_file(base64_data: str, sound_key: str) -> Optional[str]:
+        """Создание временного звукового файла"""
+        try:
+            if not ChordSoundPlayer._temp_dir:
+                ChordSoundPlayer.initialize()
+
+            # Декодируем base64
+            sound_bytes = base64.b64decode(base64_data.strip())
+            if len(sound_bytes) == 0:
+                print(f"⚠️ Пустой звук после декодирования для {sound_key}")
+                return None
+
+            # Создаем путь к файлу
+            sound_path = os.path.join(ChordSoundPlayer._temp_dir, f"{sound_key}.mp3")
+
+            # Записываем данные в файл
+            with open(sound_path, 'wb') as f:
+                f.write(sound_bytes)
+
+            print(f"✅ Создан временный файл: {sound_key} ({len(sound_bytes)} байт)")
+            return sound_path
+
+        except Exception as e:
+            print(f"❌ Ошибка создания временного файла для {sound_key}: {e}")
+            return None
+
+    @staticmethod
+    def _play_from_file(player: QMediaPlayer, sound_path: str, sound_key: str) -> bool:
+        """Воспроизведение звука из файла"""
+        try:
+            # Создаем медиа-контент из файла
+            from PyQt5.QtCore import QUrl
+            media_content = QMediaContent(QUrl.fromLocalFile(sound_path))
+
+            # Устанавливаем медиа и воспроизводим
+            player.setMedia(media_content)
+            player.play()
+
+            print(f"🔊 Воспроизведение: {sound_key}")
+            return True
+
+        except Exception as e:
+            print(f"❌ Ошибка воспроизведения файла {sound_key}: {e}")
+            return False
+
+    @staticmethod
+    def has_sound(chord_name: str, variant: int = 1) -> bool:
+        """Проверка наличия звука для аккорда"""
+        try:
+            normalized_names = ChordManager._normalize_chord_name(chord_name)
+
+            for name in normalized_names:
+                if name in SOUNDS_DATA:
+                    chord_sounds = SOUNDS_DATA[name]
+
+                    # Ищем звук для конкретного варианта
+                    variant_key = f"{name}_{variant}"
+                    if variant_key in chord_sounds:
+                        if ChordManager._is_valid_sound_data(chord_sounds[variant_key]):
+                            return True
+
+                    # Также ищем общие звуки аккорда
+                    for sound_data in chord_sounds.values():
+                        if ChordManager._is_valid_sound_data(sound_data):
+                            return True
+
+            return False
+
+        except Exception as e:
+            print(f"❌ Ошибка проверки звука для {chord_name}: {e}")
+            return False
+
+    @staticmethod
+    def cleanup():
+        """Очистка временных файлов"""
+        try:
+            # Удаляем временные файлы
+            if ChordSoundPlayer._temp_dir and os.path.exists(ChordSoundPlayer._temp_dir):
+                import shutil
+                shutil.rmtree(ChordSoundPlayer._temp_dir)
+                print(f"✅ Удалена временная директория звуков: {ChordSoundPlayer._temp_dir}")
+
+            # Очищаем кэш
+            ChordSoundPlayer._sound_cache.clear()
+            ChordSoundPlayer._temp_dir = None
+
+        except Exception as e:
+            print(f"❌ Ошибка очистки временных звуковых файлов: {e}")
+
+
 class ChordManager:
     """Менеджер для работы с данными аккордов из конвертированных модулей"""
 
     _initialized = False
     _chords_cache = {}
     _template_image_path = None
-    _temp_sounds_dir = None
 
     @classmethod
     def initialize(cls):
@@ -100,17 +271,13 @@ class ChordManager:
             # Получаем область обрезки на основе RAM
             crop_rect = cls._get_crop_rect(chord_record.get("RAM"))
 
-            # Получаем звуковые файлы (может быть пустым списком)
-            sound_files = cls._get_sound_files(chord_record["CHORD"], chord_record["VARIANT"])
-
             return {
                 'variant_number': chord_record["VARIANT"],
                 'description': f"Вариант {chord_record['VARIANT']}",
                 'ram': chord_record.get("RAM"),
                 'barre': chord_record.get("BAR"),
                 'crop_rect': crop_rect,
-                'drawing_elements': drawing_elements,
-                'sound_files': sound_files
+                'drawing_elements': drawing_elements
             }
 
         except Exception as e:
@@ -268,42 +435,9 @@ class ChordManager:
         return None
 
     @classmethod
-    def _get_sound_files(cls, chord_name: str, variant: int) -> List[str]:
-        """Получение путей к звуковым файлам аккорда"""
-        sound_files = []
-
-        try:
-            normalized_names = cls._normalize_chord_name(chord_name)
-
-            for name in normalized_names:
-                if name in SOUNDS_DATA:
-                    chord_sounds = SOUNDS_DATA[name]
-                    # Ищем звук для конкретного варианта
-                    variant_key = f"{name}_{variant}"
-                    if variant_key in chord_sounds:
-                        sound_path = cls._get_sound_file_path(variant_key, chord_sounds[variant_key])
-                        if sound_path:
-                            sound_files.append(sound_path)
-
-                    # Также добавляем общие звуки аккорда
-                    for sound_key, sound_data in chord_sounds.items():
-                        if sound_key != variant_key:  # Чтобы не дублировать
-                            sound_path = cls._get_sound_file_path(sound_key, sound_data)
-                            if sound_path and sound_path not in sound_files:
-                                sound_files.append(sound_path)
-        except Exception as e:
-            print(f"❌ Ошибка получения звуковых файлов для {chord_name}: {e}")
-
-        return sound_files
-
-    @classmethod
     def _create_temp_resources(cls):
         """Создание временных файлов для ресурсов"""
         try:
-            # Создаем временную директорию для звуков
-            cls._temp_sounds_dir = tempfile.mkdtemp(prefix="guitar_chords_sounds_")
-            print(f"✅ Создана временная директория для звуков: {cls._temp_sounds_dir}")
-
             # Создаем временный файл для изображения грифа
             cls._create_template_image_file()
         except Exception as e:
@@ -328,24 +462,21 @@ class ChordManager:
             print(f"❌ Ошибка создания временного файла изображения: {e}")
 
     @classmethod
-    def _get_sound_file_path(cls, sound_key: str, sound_data: str) -> Optional[str]:
-        """Получение пути к звуковому файлу (создает временный файл если нужно)"""
-        try:
-            if not sound_data or not isinstance(sound_data, str):
-                return None
+    def _is_valid_sound_data(cls, sound_data) -> bool:
+        """Проверка валидности звуковых данных"""
+        if not sound_data:
+            return False
 
-            sound_path = os.path.join(cls._temp_sounds_dir, f"{sound_key}.mp3")
+        if not isinstance(sound_data, str):
+            return False
 
-            if not os.path.exists(sound_path):
-                # Декодируем base64 и создаем файл
-                sound_bytes = base64.b64decode(sound_data)
-                with open(sound_path, 'wb') as f:
-                    f.write(sound_bytes)
+        if not sound_data.strip():
+            return False
 
-            return sound_path
-        except Exception as e:
-            print(f"❌ Ошибка создания звукового файла {sound_key}: {e}")
-            return None
+        # Проверяем, что это похоже на base64
+        import re
+        base64_pattern = re.compile(r'^[A-Za-z0-9+/]*={0,2}$')
+        return base64_pattern.match(sound_data) is not None
 
     # Публичные методы API
     @classmethod
@@ -401,17 +532,43 @@ class ChordManager:
         return None
 
     @classmethod
+    def get_crop_rect(cls, chord_name: str, variant: int = 1) -> Optional[tuple]:
+        """Получение области обрезки в виде кортежа (x, y, width, height)"""
+        chord_config = cls.get_chord_config(chord_name, variant)
+        if not chord_config:
+            return None
+
+        crop_rect = chord_config.get('crop_rect')
+        if not crop_rect:
+            return None
+
+        try:
+            # Преобразуем словарь в кортеж
+            x = crop_rect.get('x', 0)
+            y = crop_rect.get('y', 0)
+            width = crop_rect.get('width', 0)
+            height = crop_rect.get('height', 0)
+
+            return (x, y, width, height)
+        except Exception as e:
+            print(f"❌ Ошибка преобразования crop_rect для {chord_name}: {e}")
+            return None
+
+    @classmethod
+    def has_sound(cls, chord_name: str, variant: int = 1) -> bool:
+        """Проверка наличия звука для аккорда (прокси метод)"""
+        return ChordSoundPlayer.has_sound(chord_name, variant)
+
+    @classmethod
     def cleanup(cls):
         """Очистка временных ресурсов"""
         try:
-            if cls._temp_sounds_dir and os.path.exists(cls._temp_sounds_dir):
-                import shutil
-                shutil.rmtree(cls._temp_sounds_dir)
-                print(f"✅ Удалена временная директория звуков: {cls._temp_sounds_dir}")
-
             if cls._template_image_path and os.path.exists(cls._template_image_path):
                 os.remove(cls._template_image_path)
                 print(f"✅ Удален временный файл изображения: {cls._template_image_path}")
+
+            # Очищаем звуковые файлы
+            ChordSoundPlayer.cleanup()
 
         except Exception as e:
             print(f"❌ Ошибка очистки временных ресурсов: {e}")
