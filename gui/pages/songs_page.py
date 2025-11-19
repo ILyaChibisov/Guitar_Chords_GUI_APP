@@ -133,8 +133,9 @@ class ChordConfigManager:
                         variant_num = variant.get('variant_number', 1)
                         variant_key = f"{chord_name}v{variant_num}" if variant_num > 1 else chord_name
 
-                        # Используем данные из нового формата
-                        drawing_elements = variant.get('drawing_elements', {})
+                        # Используем данные из нового формата с разделением на пальцы/ноты
+                        drawing_elements_fingers = variant.get('drawing_elements_fingers', {})
+                        drawing_elements_notes = variant.get('drawing_elements_notes', {})
 
                         self.chord_configs_cache[variant_key] = {
                             'base_info': {
@@ -143,14 +144,9 @@ class ChordConfigManager:
                                 'caption': variant.get('description', ''),
                                 'type': chord_data.get('type', '')
                             },
-                            'json_parameters': {
-                                'crop_rect': variant.get('crop_rect'),
-                                'elements_fingers': drawing_elements.get('notes', []),
-                                'elements_notes': drawing_elements.get('notes', [])
-                            },
                             'crop_rect': variant.get('crop_rect'),
-                            'elements_fingers': drawing_elements.get('notes', []),
-                            'elements_notes': drawing_elements.get('notes', []),
+                            'drawing_elements_fingers': drawing_elements_fingers,
+                            'drawing_elements_notes': drawing_elements_notes,
                             'sound_files': variant.get('sound_files', [])
                         }
 
@@ -214,7 +210,7 @@ class SongsPage(BasePage):
         self.current_variant = 1
 
         # Настройки отображения аккордов
-        self.current_display_type = "fingers"
+        self.current_display_type = "fingers"  # По умолчанию пальцы
 
         # Менеджер конфигураций аккордов
         self.config_manager = ChordConfigManager()
@@ -804,13 +800,16 @@ class SongsPage(BasePage):
         self.chord_clicked(chord_url)
 
     def chord_clicked(self, url):
-        """Обработчик клика по аккорду в тексте песни"""
+        """Обработчик клика по аккорду в тексте песни с отладкой"""
         try:
             chord_name = url.toString()
             self.current_chord_name = chord_name
             self.current_variant = 1  # Сбрасываем на первый вариант
 
-            print(f"🎯 Клик по аккорду: {chord_name}")
+            print(f"\n🎯 КЛИК ПО АККОРДУ: {chord_name}")
+
+            # ВКЛЮЧАЕМ ОТЛАДКУ
+            self.debug_chord_elements(chord_name, self.current_variant)
 
             # Получаем описание аккорда
             chord_description = self.get_chord_description(chord_name)
@@ -843,6 +842,74 @@ class SongsPage(BasePage):
 
         except Exception as e:
             print(f"❌ Ошибка загрузки аккорда: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def debug_chord_elements(self, chord_name, variant=1):
+        """Расширенная отладка элементов аккорда"""
+        print(f"\n{'=' * 80}")
+        print(f"🔍 ДЕТАЛЬНАЯ ОТЛАДКА АККОРДА: {chord_name} (вариант {variant})")
+        print(f"{'=' * 80}")
+
+        try:
+            from core.chord_manager import ChordManager
+
+            # Получаем данные аккорда
+            chord_data = ChordManager.get_chord_data(chord_name)
+            if not chord_data:
+                print(f"❌ Аккорд {chord_name} не найден в ChordManager")
+                return
+
+            print(f"📊 Основные данные аккорда:")
+            print(f"   Название: {chord_data.get('name')}")
+            print(f"   Заголовок: {chord_data.get('caption')}")
+            print(f"   Тип: {chord_data.get('type')}")
+            print(f"   Вариантов: {len(chord_data.get('variants', []))}")
+
+            # Получаем конкретный вариант
+            variant_config = ChordManager.get_chord_config(chord_name, variant)
+            if not variant_config:
+                print(f"❌ Вариант {variant} не найден для аккорда {chord_name}")
+                return
+
+            print(f"\n🎯 Конфигурация варианта {variant}:")
+            print(f"   Номер варианта: {variant_config.get('variant_number')}")
+            print(f"   Описание: {variant_config.get('description')}")
+            print(f"   RAM: {variant_config.get('ram')}")
+            print(f"   Barre: {variant_config.get('barre')}")
+
+            # Элементы отрисовки для пальцев
+            drawing_elements_fingers = variant_config.get('drawing_elements_fingers', {})
+            print(f"\n👆 ЭЛЕМЕНТЫ ОТРИСОВКИ ДЛЯ ПАЛЬЦЕВ:")
+            print(f"   Ноты: {len(drawing_elements_fingers.get('notes', []))}")
+            print(f"   Баре: {len(drawing_elements_fingers.get('barres', []))}")
+            print(f"   Лады: {len(drawing_elements_fingers.get('frets', []))}")
+            print(f"   Открытые струны: {len(drawing_elements_fingers.get('open_notes', []))}")
+
+            # Элементы отрисовки для нот
+            drawing_elements_notes = variant_config.get('drawing_elements_notes', {})
+            print(f"\n🎵 ЭЛЕМЕНТЫ ОТРИСОВКИ ДЛЯ НОТ:")
+            print(f"   Ноты: {len(drawing_elements_notes.get('notes', []))}")
+            print(f"   Баре: {len(drawing_elements_notes.get('barres', []))}")
+            print(f"   Лады: {len(drawing_elements_notes.get('frets', []))}")
+            print(f"   Открытые струны: {len(drawing_elements_notes.get('open_notes', []))}")
+
+            # Детали по каждому типу элементов для пальцев
+            print(f"\n📋 ДЕТАЛИ ДЛЯ ПАЛЬЦЕВ:")
+            for element_type, elements_list in drawing_elements_fingers.items():
+                print(f"\n   {element_type.upper()} ({len(elements_list)} элементов):")
+                for i, element in enumerate(elements_list):
+                    print(f"      {i + 1}. {json.dumps(element, indent=6, ensure_ascii=False)}")
+
+            # Детали по каждому типу элементов для нот
+            print(f"\n📋 ДЕТАЛИ ДЛЯ НОТ:")
+            for element_type, elements_list in drawing_elements_notes.items():
+                print(f"\n   {element_type.upper()} ({len(elements_list)} элементов):")
+                for i, element in enumerate(elements_list):
+                    print(f"      {i + 1}. {json.dumps(element, indent=6, ensure_ascii=False)}")
+
+        except Exception as e:
+            print(f"❌ Ошибка отладки: {e}")
             import traceback
             traceback.print_exc()
 
@@ -933,7 +1000,7 @@ class SongsPage(BasePage):
         self.chord_image_label.setChordPixmap(pixmap)
 
     def generate_chord_from_config(self, chord_name, variant=1):
-        """Генерация изображения аккорда из конфигурации"""
+        """Генерация изображения аккорда из конфигурации с учетом типа отображения"""
         try:
             # Получаем конфигурацию для конкретного варианта
             variant_key = f"{chord_name}v{variant}" if variant > 1 else chord_name
@@ -945,18 +1012,24 @@ class SongsPage(BasePage):
 
             # Получаем элементы для текущего типа отображения
             if self.current_display_type == "fingers":
-                elements = chord_config.get('elements_fingers', [])
-                print(f"👆 Используем элементы пальцев: {len(elements)}")
+                elements_data = chord_config.get('drawing_elements_fingers', {})
+                print(f"👆 Используем элементы ПАЛЬЦЕВ:")
             else:
-                elements = chord_config.get('elements_notes', [])
-                print(f"🎵 Используем элементы нот: {len(elements)}")
+                elements_data = chord_config.get('drawing_elements_notes', {})
+                print(f"🎵 Используем элементы НОТ:")
 
-            if not elements:
-                print(f"❌ Нет элементов для аккорда {variant_key}")
+            # Объединяем все элементы в один список для отрисовки
+            all_elements = []
+            for element_type, elements_list in elements_data.items():
+                all_elements.extend(elements_list)
+                print(f"   {element_type}: {len(elements_list)} элементов")
+
+            if not all_elements:
+                print(f"❌ Нет элементов для аккорда {variant_key} в режиме {self.current_display_type}")
                 return QPixmap()
 
             # Применяем обводку
-            elements = self.apply_outline_settings(elements)
+            elements = self.apply_outline_settings(all_elements)
 
             # Загружаем базовое изображение
             base_image_path = self.config_manager.get_base_image_path()
@@ -969,7 +1042,7 @@ class SongsPage(BasePage):
                 print(f"❌ Не удалось загрузить базовое изображение: {base_image_path}")
                 return QPixmap()
 
-            # Получаем область обрезки - ИСПРАВЛЕННАЯ ЧАСТЬ
+            # Получаем область обрезки
             crop_rect = chord_config.get('crop_rect')
             if not crop_rect:
                 print(f"❌ Нет области обрезки для аккорда {variant_key}")
@@ -996,7 +1069,7 @@ class SongsPage(BasePage):
 
                 # Создаем новое изображение размером с область обрезки с прозрачным фоном
                 result_pixmap = QPixmap(crop_width, crop_height)
-                result_pixmap.fill(Qt.transparent)  # Прозрачный фон
+                result_pixmap.fill(Qt.transparent)
 
                 painter = QPainter(result_pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
@@ -1009,8 +1082,8 @@ class SongsPage(BasePage):
                 self.draw_elements_on_canvas(painter, elements, (crop_x, crop_y, crop_width, crop_height))
                 painter.end()
 
-                # Применяем масштаб "Маленький 1" как в оригинальном приложении
-                display_width = min(400, crop_width)  # Авто-масштаб как в оригинале
+                # Применяем масштаб
+                display_width = min(400, crop_width)
                 scale_factor = display_width / crop_width
                 display_height = int(crop_height * scale_factor)
 
@@ -1029,6 +1102,111 @@ class SongsPage(BasePage):
             print(f"❌ Ошибка генерации изображения для {chord_name} вариант {variant}: {e}")
             return QPixmap()
 
+    def apply_outline_settings(self, elements):
+        """ИСПРАВЛЕННОЕ применение настроек обводки с расширенной отладкой"""
+        print(f"🎯 НАЧАЛО ОБРАБОТКИ ЭЛЕМЕНТОВ: {len(elements)} элементов")
+
+        modified_elements = []
+
+        for index, element in enumerate(elements):
+            if not isinstance(element, dict):
+                print(f"❌ Элемент {index} - не словарь: {element}")
+                continue
+
+            element_type = element.get('type', 'unknown')
+            original_data = element.get('data', {})
+            element_data = original_data.copy()
+
+            print(f"\n🔍 ЭЛЕМЕНТ {index}: {element_type}")
+            print(f"📋 Оригинальные данные: {json.dumps(original_data, indent=2, ensure_ascii=False)}")
+
+            if element_type == 'barre':
+                print("🎸 Обработка БАРЕ:")
+                # Сохраняем оригинальный стиль или используем оранжевый по умолчанию
+                original_style = element_data.get('style')
+                if not original_style or original_style == 'default':
+                    element_data['style'] = 'orange_gradient'
+                    print(f"  🎨 Стиль: установлен 'orange_gradient' (был: {original_style})")
+                else:
+                    print(f"  🎨 Стиль: сохранен оригинальный '{original_style}'")
+
+                element_data['outline_width'] = 2
+                element_data['outline_color'] = [0, 0, 0]
+                print(f"  📏 Обводка: ширина 2px, цвет черный")
+
+            elif element_type == 'note':
+                print("🎵 Обработка НОТЫ:")
+
+                # СОХРАНЯЕМ оригинальные данные!
+                original_style = element_data.get('style', 'default')
+                original_finger = element_data.get('finger')
+                original_note_name = element_data.get('note_name')
+                original_display_text = element_data.get('display_text', 'finger')
+
+                print(f"  🎨 Оригинальный стиль: {original_style}")
+                print(f"  👆 Оригинальный палец: {original_finger}")
+                print(f"  🎵 Оригинальное имя ноты: {original_note_name}")
+                print(f"  📝 Оригинальный текст отображения: {original_display_text}")
+
+                # Только добавляем обводку, не меняем стиль!
+                element_data['outline_width'] = 2
+                element_data['outline_color'] = [0, 0, 0]
+
+                # Определяем что отображать
+                if original_display_text == 'note_name' and original_note_name:
+                    display_symbol = original_note_name
+                    print(f"  ✅ Отображаем имя ноты: {display_symbol}")
+                elif original_display_text == 'symbol' and element_data.get('symbol'):
+                    display_symbol = element_data.get('symbol')
+                    print(f"  ✅ Отображаем символ: {display_symbol}")
+                elif original_finger:
+                    display_symbol = original_finger
+                    print(f"  ✅ Отображаем палец: {display_symbol}")
+                else:
+                    # Если ничего нет, пробуем получить из других полей
+                    display_symbol = original_note_name or original_finger or '?'
+                    print(f"  ⚠️  Не найдены данные, используем: {display_symbol}")
+
+                # Убедимся что есть данные для отображения
+                if not element_data.get('finger') and not element_data.get('note_name'):
+                    element_data['finger'] = display_symbol
+                    print(f"  🔧 Установлен finger: {display_symbol}")
+
+                element_data['display_text'] = original_display_text
+                print(f"  📝 Финальный текст отображения: {original_display_text} -> {display_symbol}")
+
+            elif element_type == 'fret':
+                print("🎻 Обработка ЛАДА:")
+                original_color = element_data.get('color', [0, 0, 0])
+                original_style = element_data.get('style', 'default')
+                print(f"  🎨 Оригинальный цвет: {original_color}")
+                print(f"  🎨 Оригинальный стиль: {original_style}")
+                # Для ладов просто сохраняем оригинальные настройки
+                element_data['color'] = original_color
+                element_data['style'] = original_style
+
+            elif element_type == 'open_note':
+                print("🔘 Обработка ОТКРЫТОЙ СТРУНЫ:")
+                original_style = element_data.get('style', 'default')
+                original_symbol = element_data.get('symbol', 'O')
+                print(f"  🎨 Стиль: {original_style}")
+                print(f"  🔤 Символ: {original_symbol}")
+                # Сохраняем оригинальные настройки
+
+            else:
+                print(f"❓ Неизвестный тип элемента: {element_type}")
+
+            print(f"✅ Финальные данные элемента {element_type}:")
+            print(f"   {json.dumps(element_data, indent=2, ensure_ascii=False)}")
+
+            modified_elements.append({
+                'type': element_type,
+                'data': element_data
+            })
+
+        print(f"\n🎉 ОБРАБОТКА ЗАВЕРШЕНА: {len(modified_elements)} элементов модифицировано")
+        return modified_elements
+
     def draw_elements_on_canvas(self, painter, elements, crop_rect):
         """Рисование элементов на canvas"""
         try:
@@ -1043,6 +1221,8 @@ class SongsPage(BasePage):
                     self.draw_note_on_canvas(painter, element['data'], crop_rect)
                 elif element['type'] == 'barre':
                     self.draw_barre_on_canvas(painter, element['data'], crop_rect)
+                elif element['type'] == 'open_note':
+                    self.draw_open_note_on_canvas(painter, element['data'], crop_rect)
 
         except Exception as e:
             print(f"❌ Ошибка рисования элементов: {e}")
@@ -1056,9 +1236,11 @@ class SongsPage(BasePage):
             print(f"❌ Ошибка рисования лада: {e}")
 
     def draw_note_on_canvas(self, painter, note_data, crop_rect):
-        """Рисование ноты на canvas"""
+        """Рисование ноты на canvas с отладкой"""
         try:
+            print(f"🎵 Данные ноты ДО адаптации: {note_data}")
             adapted_data = self.adapt_coordinates(note_data, crop_rect)
+            print(f"🎵 Данные ноты ПОСЛЕ адаптации: {adapted_data}")
             DrawingElements.draw_note(painter, adapted_data)
         except Exception as e:
             print(f"❌ Ошибка рисования ноты: {e}")
@@ -1070,6 +1252,15 @@ class SongsPage(BasePage):
             DrawingElements.draw_barre(painter, adapted_data)
         except Exception as e:
             print(f"❌ Ошибка рисования баре: {e}")
+
+    def draw_open_note_on_canvas(self, painter, open_note_data, crop_rect):
+        """Рисование открытой ноты на canvas"""
+        try:
+            adapted_data = self.adapt_coordinates(open_note_data, crop_rect)
+            # Для открытых нот используем специальный метод или draw_note
+            DrawingElements.draw_note(painter, adapted_data)
+        except Exception as e:
+            print(f"❌ Ошибка рисования открытой ноты: {e}")
 
     def adapt_coordinates(self, element_data, crop_rect):
         """ИСПРАВЛЕННАЯ адаптация координат элементов - как в старом приложении"""
@@ -1105,59 +1296,16 @@ class SongsPage(BasePage):
 
         return adapted_data
 
-    def apply_outline_settings(self, elements):
-        """ИСПРАВЛЕННОЕ применение настроек обводки - как в старом приложении"""
-        modified_elements = []
-        for element in elements:
-            if not isinstance(element, dict):
-                continue
-
-            element_type = element.get('type')
-            element_data = element.get('data', {}).copy()
-
-            if element_type == 'barre':
-                # Для баре - оранжевый градиент с черной обводкой
-                element_data['style'] = 'orange_gradient'
-                element_data['outline_width'] = 2
-                element_data['outline_color'] = [0, 0, 0]
-
-            elif element_type == 'note':
-                # Для нот - красный 3D с черной обводкой
-                element_data['style'] = 'red_3d'
-                element_data['outline_width'] = 2
-                element_data['outline_color'] = [0, 0, 0]
-                element_data['text_color'] = [255, 255, 255]  # Белый текст
-
-                # Убедимся, что есть текст для отображения
-                if 'finger' not in element_data:
-                    # Пытаемся получить номер пальца из других полей
-                    if 'note_name' in element_data:
-                        element_data['finger'] = element_data['note_name']
-                    else:
-                        element_data['finger'] = '1'  # Значение по умолчанию
-
-                element_data['display_text'] = 'finger'
-
-            elif element_type == 'fret':
-                # Для ладов - черный текст
-                element_data['color'] = [0, 0, 0]
-                element_data['style'] = 'default'
-
-            modified_elements.append({
-                'type': element_type,
-                'data': element_data
-            })
-
-        return modified_elements
-
     def toggle_display_type(self):
         """Переключение между нотами и пальцами"""
         if self.display_toggle_btn.isChecked():
             self.current_display_type = "notes"
             self.display_toggle_btn.setText("👆 Пальцы")
+            print("🔄 Переключение на режим НОТ")
         else:
             self.current_display_type = "fingers"
             self.display_toggle_btn.setText("🎵 Ноты")
+            print("🔄 Переключение на режим ПАЛЬЦЕВ")
 
         self.refresh_current_chord()
 

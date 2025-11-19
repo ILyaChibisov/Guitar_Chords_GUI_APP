@@ -27,10 +27,10 @@ class ResourceConverter:
             ram_df = pd.read_excel(excel_path, sheet_name='RAM')
             note_df = pd.read_excel(excel_path, sheet_name='NOTE')
 
-            # Конвертируем в словари и заменяем NaN на None
-            chords_data = self.replace_nan_with_none(chords_df.to_dict('records'))
-            ram_data = self.replace_nan_with_none(ram_df.to_dict('records'))
-            note_data = self.replace_nan_with_none(note_df.to_dict('records'))
+            # Обрабатываем числовые колонки
+            chords_data = self.process_chords_data(chords_df.to_dict('records'))
+            ram_data = self.process_ram_data(ram_df.to_dict('records'))
+            note_data = self.process_note_data(note_df.to_dict('records'))
 
             # Создаем Python файл
             output_file = self.data_dir / "chords_config.py"
@@ -65,6 +65,110 @@ class ResourceConverter:
             print(f"❌ Ошибка конвертации Excel: {e}")
             return False
 
+    def process_chords_data(self, chords_records):
+        """Обрабатывает числовые данные в записях аккордов"""
+        processed_data = []
+
+        for record in chords_records:
+            processed_record = {}
+
+            for key, value in record.items():
+                # Обрабатываем только колонки с числовыми данными
+                if key in ['FNL', 'FN', 'FPOL', 'FPXL', 'FP1', 'FP2', 'FP3', 'FP4']:
+                    processed_record[key] = self.process_number_field(value)
+                else:
+                    processed_record[key] = self.replace_nan_with_none(value)
+
+            processed_data.append(processed_record)
+
+        return processed_data
+
+    def process_ram_data(self, ram_records):
+        """Обрабатывает числовые данные в записях RAM"""
+        processed_data = []
+
+        for record in ram_records:
+            processed_record = {}
+
+            for key, value in record.items():
+                # Обрабатываем колонку LAD
+                if key == 'LAD':
+                    processed_record[key] = self.process_number_field(value)
+                else:
+                    processed_record[key] = self.replace_nan_with_none(value)
+
+            processed_data.append(processed_record)
+
+        return processed_data
+
+    def process_note_data(self, note_records):
+        """Обрабатывает числовые данные в записях NOTE"""
+        processed_data = []
+
+        for record in note_records:
+            processed_record = {}
+
+            for key, value in record.items():
+                # Обрабатываем только числовые колонки (кроме *_ELEM)
+                if key in ['FNL', 'FN', 'FPXL', 'FPOL', 'FP1', 'FP2', 'FP3', 'FP4']:
+                    processed_record[key] = self.process_single_number_field(value)
+                else:
+                    processed_record[key] = self.replace_nan_with_none(value)
+
+            processed_data.append(processed_record)
+
+        return processed_data
+
+    def process_number_field(self, value):
+        """Обрабатывает числовое поле: может быть None, одним числом или списком чисел"""
+        if pd.isna(value):
+            return None
+
+        # Если значение - число (int или float)
+        if isinstance(value, (int, float)):
+            return int(value)  # Конвертируем в целое число
+
+        # Если значение - строка
+        if isinstance(value, str):
+            # Удаляем пробелы и разбиваем по запятым
+            parts = [part.strip() for part in value.split(',')]
+
+            # Фильтруем пустые строки и конвертируем в числа
+            numbers = []
+            for part in parts:
+                if part:  # Не пустая строка
+                    try:
+                        # Пробуем конвертировать в число
+                        num = float(part)
+                        numbers.append(int(num))  # Конвертируем в целое
+                    except ValueError:
+                        # Если не число, оставляем как есть
+                        numbers.append(part)
+
+            # Если только одно число, возвращаем его, иначе возвращаем список
+            return numbers[0] if len(numbers) == 1 else numbers
+
+        # Для любых других типов возвращаем как есть
+        return value
+
+    def process_single_number_field(self, value):
+        """Обрабатывает одиночное числовое поле - конвертирует в целое число"""
+        if pd.isna(value):
+            return None
+
+        # Если значение - число (int или float)
+        if isinstance(value, (int, float)):
+            return int(value)  # Конвертируем в целое число
+
+        # Если значение - строка, пробуем преобразовать в число
+        if isinstance(value, str) and value.strip():
+            try:
+                return int(float(value.strip()))
+            except ValueError:
+                return value  # Если не число, оставляем как есть
+
+        return value
+
     def replace_nan_with_none(self, obj):
         """Рекурсивно заменяет NaN на None в структуре данных"""
         if isinstance(obj, dict):
@@ -72,6 +176,8 @@ class ResourceConverter:
         elif isinstance(obj, list):
             return [self.replace_nan_with_none(item) for item in obj]
         elif isinstance(obj, float) and pd.isna(obj):
+            return None
+        elif isinstance(obj, str) and obj.strip() == '':
             return None
         else:
             return obj

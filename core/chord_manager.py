@@ -2,6 +2,7 @@
 import os
 import base64
 import tempfile
+import json
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 from PyQt5.QtCore import QByteArray, QBuffer, QIODevice, Qt
@@ -25,8 +26,6 @@ except ImportError as e:
     GUITAR_IMAGE_DATA = ""
     SOUNDS_DATA = {}
 
-
-# core/chord_manager.py (только класс ChordSoundPlayer)
 
 class ChordSoundPlayer:
     """Класс для воспроизведения звуков аккордов с кэшированием временных файлов"""
@@ -265,20 +264,32 @@ class ChordManager:
     def _create_variant_data(cls, chord_record: Dict) -> Optional[Dict]:
         """Создание данных варианта аккорда из записи Excel"""
         try:
-            # Получаем элементы для отрисовки на основе FN кодов
-            drawing_elements = cls._get_drawing_elements(chord_record)
+            print(f"\n🎸 СОЗДАНИЕ ВАРИАНТА ДЛЯ {chord_record['CHORD']} вариант {chord_record['VARIANT']}")
+
+            # Получаем элементы для ОБОИХ типов отображения
+            drawing_elements_fingers = cls._get_drawing_elements(chord_record, "fingers")
+            drawing_elements_notes = cls._get_drawing_elements(chord_record, "notes")
 
             # Получаем область обрезки на основе RAM
             crop_rect = cls._get_crop_rect(chord_record.get("RAM"))
 
-            return {
+            variant_data = {
                 'variant_number': chord_record["VARIANT"],
                 'description': f"Вариант {chord_record['VARIANT']}",
                 'ram': chord_record.get("RAM"),
                 'barre': chord_record.get("BAR"),
                 'crop_rect': crop_rect,
-                'drawing_elements': drawing_elements
+                'drawing_elements_fingers': drawing_elements_fingers,
+                'drawing_elements_notes': drawing_elements_notes
             }
+
+            print(f"✅ Вариант {chord_record['VARIANT']} создан:")
+            print(f"   👆 Пальцы: {len(drawing_elements_fingers.get('notes', []))} нот, "
+                  f"{len(drawing_elements_fingers.get('open_notes', []))} открытых")
+            print(f"   🎵 Ноты: {len(drawing_elements_notes.get('notes', []))} нот, "
+                  f"{len(drawing_elements_notes.get('open_notes', []))} открытых")
+
+            return variant_data
 
         except Exception as e:
             print(f"❌ Ошибка создания варианта для {chord_record['CHORD']} v{chord_record['VARIANT']}: {e}")
@@ -287,8 +298,8 @@ class ChordManager:
             return None
 
     @classmethod
-    def _get_drawing_elements(cls, chord_record: Dict) -> Dict[str, List]:
-        """Получение элементов для отрисовки на основе FN кодов"""
+    def _get_drawing_elements(cls, chord_record: Dict, display_type: str = "fingers") -> Dict[str, List]:
+        """Получение элементов для отрисовки на основе типа отображения (пальцы/ноты)"""
         elements = {
             'frets': [],
             'notes': [],
@@ -296,40 +307,150 @@ class ChordManager:
             'barres': []
         }
 
-        # Обрабатываем FN коды (ноты/пальцы)
-        fn_codes = cls._parse_fn_codes(chord_record.get("FN"))
-        for fn_code in fn_codes:
-            element_data = cls._get_element_by_fn_code(fn_code)
-            if element_data:
-                elements['notes'].append(element_data)
+        print(f"\n🎸 СБОРКА ЭЛЕМЕНТОВ ДЛЯ {chord_record['CHORD']} вариант {chord_record['VARIANT']} ({display_type})")
 
-        # Обрабатываем баре
+        # Добавляем лады на основе RAM
+        ram_code = chord_record.get("RAM")
+        if ram_code and ram_code != "None":
+            frets = cls._get_frets_for_ram(ram_code)
+            elements['frets'] = frets
+            print(f"🎻 Добавлены лады для {ram_code}: {[f['data'].get('symbol') for f in frets]}")
+
+        # Добавляем баре (одинаково для обоих режимов)
         barre_data = cls._get_barre_element(chord_record.get("BAR"))
         if barre_data:
             elements['barres'].append(barre_data)
+            print(f"🎸 Добавлено баре: {chord_record.get('BAR')}")
 
-        # Обрабатываем открытые струны (FNL, FPXL, FPOL)
-        open_notes = cls._get_open_notes(chord_record)
-        elements['open_notes'].extend(open_notes)
+        if display_type == "fingers":
+            # РЕЖИМ ПАЛЬЦЕВ
+            print("👆 РЕЖИМ ПАЛЬЦЕВ:")
+
+            # Обрабатываем FPOL (открытые струны - кружки)
+            fnl_value = chord_record.get("FPOL")
+            if fnl_value is not None and fnl_value != "None":
+                print(f"  🎯 FPOL: {fnl_value}")
+                fnl_elements = cls._parse_fp_fields(fnl_value, "FPOL")
+                elements['open_notes'].extend(fnl_elements)
+
+            # Обрабатываем FPXL (крестики - заглушенные струны)
+            fpxl_value = chord_record.get("FPXL")
+            if fpxl_value is not None and fpxl_value != "None":
+                print(f"  🎯 FPXL: {fpxl_value}")
+                fpxl_elements = cls._parse_fp_fields(fpxl_value, "FPXL")
+                elements['open_notes'].extend(fpxl_elements)
+
+            # Обрабатываем FP1-FP4 (пальцы)
+            finger_notes = []
+            for fp_field in ["FP1", "FP2", "FP3", "FP4"]:
+                fp_value = chord_record.get(fp_field)
+                if fp_value is not None and fp_value != "None":
+                    print(f"  🎯 {fp_field}: {fp_value}")
+                    fp_elements = cls._parse_fp_fields(fp_value, fp_field)
+                    for element in fp_elements:
+                        # Для пальцев устанавливаем отображение пальца
+                        if element['type'] == 'note':
+                            element['data']['display_text'] = 'finger'
+                            # Устанавливаем номер пальца из названия поля
+                            finger_number = fp_field.replace("FP", "")
+                            element['data']['finger'] = finger_number
+                            finger_notes.append(element)
+
+            elements['notes'].extend(finger_notes)
+            print(f"  👆 Добавлено пальцев: {len(finger_notes)}")
+
+        else:
+            # РЕЖИМ НОТ
+            print("🎵 РЕЖИМ НОТ:")
+
+            # Обрабатываем FNL (ноты на ладах - открытые струны)
+            fnl_value = chord_record.get("FNL")
+            if fnl_value is not None and fnl_value != "None":
+                print(f"  🎯 FNL: {fnl_value}")
+                fnl_elements = cls._parse_fp_fields(fnl_value, "FNL")
+                for element in fnl_elements:
+                    if element['type'] == 'note':
+                        # Для нот устанавливаем отображение имени ноты
+                        element['data']['display_text'] = 'note_name'
+                        elements['notes'].append(element)
+
+            # Обрабатываем FN коды (основные ноты)
+            fn_codes = cls._parse_fn_codes(chord_record.get("FN"))
+            print(f"  📋 FN коды: {fn_codes}")
+
+            for fn_code in fn_codes:
+                element_data = cls._get_element_by_fn_code(fn_code)
+                if element_data:
+                    # Для нот устанавливаем отображение имени ноты
+                    element_data['data']['display_text'] = 'note_name'
+                    elements['notes'].append(element_data)
+                    print(f"  ✅ Добавлена нота из FN{fn_code}")
+
+        print(f"🎉 ИТОГО элементов для {display_type}:")
+        print(f"   🎵 Ноты: {len(elements['notes'])}")
+        print(f"   🔘 Открытые: {len(elements['open_notes'])}")
+        print(f"   🎸 Баре: {len(elements['barres'])}")
+        print(f"   🎻 Лады: {len(elements['frets'])}")
 
         return elements
 
     @classmethod
+    def _get_frets_for_ram(cls, ram_code: str) -> List[Dict]:
+        """Получение ладов для указанного RAM кода"""
+        frets = []
+
+        try:
+            # Ищем RAM в данных
+            for ram_record in RAM_DATA:
+                if ram_record["RAM"] == ram_code:
+                    lad_numbers = ram_record.get("LAD", [])
+                    print(f"  🎻 Найдены лады для {ram_code}: {lad_numbers}")
+
+                    for lad_num in lad_numbers:
+                        # Ищем элемент лада в шаблонах
+                        lad_id = f"{lad_num}LAD"
+                        if lad_id in TEMPLATE_DATA.get("frets", {}):
+                            fret_data = TEMPLATE_DATA["frets"][lad_id].copy()
+                            frets.append({
+                                'type': 'fret',
+                                'element_id': lad_id,
+                                'data': fret_data
+                            })
+                            print(f"    ✅ Добавлен лад {lad_num}")
+                        else:
+                            print(f"    ⚠️  Лад {lad_id} не найден в шаблонах")
+                    break
+            else:
+                print(f"    ❌ RAM код {ram_code} не найден в RAM_DATA")
+
+        except Exception as e:
+            print(f"❌ Ошибка получения ладов для {ram_code}: {e}")
+
+        return frets
+
+    @classmethod
     def _parse_fn_codes(cls, fn_value) -> List[str]:
-        """Парсинг FN кодов из строки или числа"""
+        """Парсинг FN кодов из строки, числа или списка"""
         if fn_value is None:
             return []
 
+        # Если это список
+        if isinstance(fn_value, list):
+            return [str(int(item)) for item in fn_value if item is not None]
+
+        # Если это число
         if isinstance(fn_value, (int, float)):
             return [str(int(fn_value))]
 
+        # Если это строка
         if isinstance(fn_value, str):
+            if fn_value == "None" or not fn_value.strip():
+                return []
             # Обрабатываем строки типа "22,23,24" или "51,22,23,24"
             codes = []
             for part in fn_value.split(','):
                 part = part.strip()
                 if part and (part.isdigit() or ('.' in part and part.replace('.', '').isdigit())):
-                    # Преобразуем в целое число, если это float
                     try:
                         codes.append(str(int(float(part))))
                     except ValueError:
@@ -349,11 +470,14 @@ class ChordManager:
                     if record_fn == fn_code:
                         element_id = note_record.get("FN_ELEM")
                         if element_id and element_id in TEMPLATE_DATA.get("notes", {}):
+                            element_data = TEMPLATE_DATA["notes"][element_id].copy()
+                            # Сохраняем оригинальные настройки отображения
                             return {
                                 'type': 'note',
                                 'element_id': element_id,
-                                'data': TEMPLATE_DATA["notes"][element_id]
+                                'data': element_data
                             }
+            print(f"    ⚠️  Элемент не найден для FN кода: {fn_code}")
         except Exception as e:
             print(f"❌ Ошибка получения элемента по FN коду {fn_code}: {e}")
 
@@ -373,6 +497,8 @@ class ChordManager:
                     'element_id': barre_code,
                     'data': TEMPLATE_DATA["barres"][barre_code]
                 }
+            else:
+                print(f"    ⚠️  Баре элемент не найден: {barre_code}")
         except Exception as e:
             print(f"❌ Ошибка получения баре элемента {barre_code}: {e}")
 
@@ -380,49 +506,154 @@ class ChordManager:
 
     @classmethod
     def _get_open_notes(cls, chord_record: Dict) -> List[Dict]:
-        """Получение элементов открытых струн"""
+        """Получение элементов открытых струн с новыми полями FPOL, FPXL, FP1-FP4"""
         open_notes = []
 
-        # Обрабатываем FNL (ноты на ладах)
-        fnl_value = chord_record.get("FNL")
-        if fnl_value is not None and fnl_value != "None":
-            fnl_element = cls._find_note_element_by_value("FNL", fnl_value)
-            if fnl_element:
-                open_notes.append(fnl_element)
+        print(f"🔍 Анализ открытых струн для аккорда {chord_record['CHORD']} вариант {chord_record['VARIANT']}")
 
-        # Обрабатываем FPXL (крестики)
+        # Обрабатываем FPOL (открытые струны - кружки)
+        fnl_value = chord_record.get("FPOL")
+        if fnl_value is not None and fnl_value != "None":
+            print(f"  🎯 FPOL: {fnl_value}")
+            fnl_elements = cls._parse_fp_fields(fnl_value, "FPOL")
+            open_notes.extend(fnl_elements)
+
+        # Обрабатываем FPXL (крестики - заглушенные струны)
         fpxl_value = chord_record.get("FPXL")
         if fpxl_value is not None and fpxl_value != "None":
-            fpxl_element = cls._find_note_element_by_value("FPXL", fpxl_value)
-            if fpxl_element:
-                open_notes.append(fpxl_element)
+            print(f"  🎯 FPXL: {fpxl_value}")
+            fpxl_elements = cls._parse_fp_fields(fpxl_value, "FPXL")
+            open_notes.extend(fpxl_elements)
 
+        # Обрабатываем FP1-FP4 (пальцы)
+        for fp_field in ["FP1", "FP2", "FP3", "FP4"]:
+            fp_value = chord_record.get(fp_field)
+            if fp_value is not None and fp_value != "None":
+                print(f"  🎯 {fp_field}: {fp_value}")
+                fp_elements = cls._parse_fp_fields(fp_value, fp_field)
+                open_notes.extend(fp_elements)
+
+        print(f"  ✅ Найдено открытых струн: {len(open_notes)}")
         return open_notes
 
     @classmethod
-    def _find_note_element_by_value(cls, field: str, value) -> Optional[Dict]:
-        """Поиск элемента ноты по значению поля"""
-        try:
-            for note_record in NOTE_DATA:
-                if note_record.get(field) == value:
-                    element_id = note_record.get(f"{field}_ELEM")
-                    if element_id:
-                        if field == "FPXL" and element_id in TEMPLATE_DATA.get("open_notes", {}):
-                            return {
-                                'type': 'open_note',
-                                'element_id': element_id,
-                                'data': TEMPLATE_DATA["open_notes"][element_id]
-                            }
-                        elif element_id in TEMPLATE_DATA.get("notes", {}):
-                            return {
-                                'type': 'note',
-                                'element_id': element_id,
-                                'data': TEMPLATE_DATA["notes"][element_id]
-                            }
-        except Exception as e:
-            print(f"❌ Ошибка поиска элемента по полю {field}: {e}")
+    def _parse_fp_fields(cls, fp_value, field_name: str) -> List[Dict]:
+        """Парсинг полей FP* (FPOL, FPXL, FP1-FP4)"""
+        elements = []
 
-        return None
+        # Парсим значения (может быть число, список или строка)
+        fp_codes = cls._parse_fn_codes(fp_value)
+
+        print(f"    📊 Парсинг {field_name}: {fp_value} -> коды: {fp_codes}")
+
+        for fp_code in fp_codes:
+            element_data = cls._find_note_element_by_value(field_name, fp_code)
+            if element_data:
+                print(f"    ✅ Найден элемент для {field_name}_{fp_code}")
+                elements.append(element_data)
+            else:
+                print(f"    ❌ Элемент не найден для {field_name}_{fp_code}")
+
+        return elements
+
+    @classmethod
+    def _find_note_element_by_value(cls, field: str, value) -> Optional[Dict]:
+        """Поиск элемента ноты по значению поля с улучшенной логикой"""
+        try:
+            print(f"    🔎 Поиск элемента: поле={field}, значение={value}")
+
+            for note_record in NOTE_DATA:
+                record_value = note_record.get(field)
+
+                # Обрабатываем разные типы данных
+                if record_value is None:
+                    continue
+
+                # Если в записи список - проверяем вхождение
+                if isinstance(record_value, list):
+                    if value in [str(item) for item in record_value if item is not None]:
+                        element_id = note_record.get(f"{field}_ELEM")
+                        return cls._create_element_from_template(field, element_id, value)
+
+                # Если в записи число или строка
+                elif str(record_value) == str(value):
+                    element_id = note_record.get(f"{field}_ELEM")
+                    return cls._create_element_from_template(field, element_id, value)
+
+            print(f"    ⚠️  Элемент не найден в NOTE_DATA для {field}={value}")
+            return None
+
+        except Exception as e:
+            print(f"    ❌ Ошибка поиска элемента по полю {field}: {e}")
+            return None
+
+    @classmethod
+    def _create_element_from_template(cls, field: str, element_id: str, value: str) -> Optional[Dict]:
+        """Создание элемента из шаблона на основе поля и ID"""
+        if not element_id:
+            return None
+
+        try:
+            print(f"      🎨 Создание элемента: {element_id} для {field}")
+
+            # Определяем тип элемента на основе поля
+            if field == "FPXL":
+                # Крестики - открытые ноты с символом X
+                if element_id in TEMPLATE_DATA.get("open_notes", {}):
+                    element_data = TEMPLATE_DATA["open_notes"][element_id].copy()
+                    # Убедимся, что отображается символ X
+                    element_data['display_text'] = 'symbol'
+                    element_data['symbol'] = 'X'
+                    return {
+                        'type': 'open_note',
+                        'element_id': element_id,
+                        'data': element_data
+                    }
+
+            elif field == "FPOL":
+                # Открытые струны - кружки
+                if element_id in TEMPLATE_DATA.get("open_notes", {}):
+                    element_data = TEMPLATE_DATA["open_notes"][element_id].copy()
+                    # Для открытых струн может быть символ O или пусто
+                    element_data['display_text'] = 'symbol'
+                    element_data['symbol'] = element_data.get('symbol', 'O')
+                    return {
+                        'type': 'open_note',
+                        'element_id': element_id,
+                        'data': element_data
+                    }
+
+            elif field in ["FP1", "FP2", "FP3", "FP4"]:
+                # Пальцы - обычные ноты
+                if element_id in TEMPLATE_DATA.get("notes", {}):
+                    element_data = TEMPLATE_DATA["notes"][element_id].copy()
+                    # Устанавливаем номер пальца из названия поля
+                    finger_number = field.replace("FP", "")
+                    element_data['finger'] = finger_number
+                    element_data['display_text'] = 'finger'
+                    return {
+                        'type': 'note',
+                        'element_id': element_id,
+                        'data': element_data
+                    }
+
+            elif field == "FNL":
+                # Ноты на ладах
+                if element_id in TEMPLATE_DATA.get("notes", {}):
+                    element_data = TEMPLATE_DATA["notes"][element_id].copy()
+                    # Используем оригинальные настройки отображения
+                    return {
+                        'type': 'note',
+                        'element_id': element_id,
+                        'data': element_data
+                    }
+
+            print(f"      ⚠️  Элемент {element_id} не найден в шаблонах для поля {field}")
+            return None
+
+        except Exception as e:
+            print(f"      ❌ Ошибка создания элемента {element_id}: {e}")
+            return None
 
     @classmethod
     def _get_crop_rect(cls, ram_code: str) -> Optional[Dict]:
@@ -432,6 +663,8 @@ class ChordManager:
 
         if ram_code in TEMPLATE_DATA.get("crop_rects", {}):
             return TEMPLATE_DATA["crop_rects"][ram_code]
+
+        print(f"    ⚠️  Область обрезки не найдена: {ram_code}")
         return None
 
     @classmethod
@@ -558,6 +791,46 @@ class ChordManager:
     def has_sound(cls, chord_name: str, variant: int = 1) -> bool:
         """Проверка наличия звука для аккорда (прокси метод)"""
         return ChordSoundPlayer.has_sound(chord_name, variant)
+
+    @classmethod
+    def debug_chord_structure(cls, chord_name: str, variant: int = 1):
+        """Отладка структуры аккорда"""
+        print(f"\n{'=' * 80}")
+        print(f"🔍 ДЕТАЛЬНЫЙ АНАЛИЗ АККОРДА: {chord_name} вариант {variant}")
+        print(f"{'=' * 80}")
+
+        # Находим запись аккорда
+        chord_record = None
+        for record in CHORDS_DATA:
+            if record["CHORD"] == chord_name and record["VARIANT"] == variant:
+                chord_record = record
+                break
+
+        if not chord_record:
+            print(f"❌ Аккорд {chord_name} вариант {variant} не найден")
+            return
+
+        print(f"📊 СЫРЫЕ ДАННЫЕ ИЗ CHORDS_DATA:")
+        for key, value in chord_record.items():
+            print(f"   {key}: {value} ({type(value).__name__})")
+
+        # Анализируем элементы для пальцев
+        print(f"\n👆 ЭЛЕМЕНТЫ ДЛЯ ПАЛЬЦЕВ:")
+        drawing_elements_fingers = cls._get_drawing_elements(chord_record, "fingers")
+        for element_type, elements_list in drawing_elements_fingers.items():
+            print(f"\n📋 {element_type.upper()} ({len(elements_list)}):")
+            for i, element in enumerate(elements_list):
+                print(f"   {i + 1}. ID: {element.get('element_id')}")
+                print(f"      Данные: {json.dumps(element.get('data'), indent=6, ensure_ascii=False)}")
+
+        # Анализируем элементы для нот
+        print(f"\n🎵 ЭЛЕМЕНТЫ ДЛЯ НОТ:")
+        drawing_elements_notes = cls._get_drawing_elements(chord_record, "notes")
+        for element_type, elements_list in drawing_elements_notes.items():
+            print(f"\n📋 {element_type.upper()} ({len(elements_list)}):")
+            for i, element in enumerate(elements_list):
+                print(f"   {i + 1}. ID: {element.get('element_id')}")
+                print(f"      Данные: {json.dumps(element.get('data'), indent=6, ensure_ascii=False)}")
 
     @classmethod
     def cleanup(cls):
