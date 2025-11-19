@@ -608,7 +608,7 @@ class DrawingElements:
 
     @staticmethod
     def draw_barre(painter, barre_data):
-        """Рисование баре с поддержкой обводки"""
+        """Рисование баре с правильным позиционированием"""
         try:
             x = barre_data.get('x', 0)
             y = barre_data.get('y', 0)
@@ -617,6 +617,11 @@ class DrawingElements:
             radius = barre_data.get('radius', 7)
             style = barre_data.get('style', 'orange_gradient')
             decoration = barre_data.get('decoration', 'none')
+
+            print(f"🎸 ОТРИСОВКА БАРЕ:")
+            print(f"   Позиция: ({x}, {y})")
+            print(f"   Размер: {width}x{height}")
+            print(f"   Стиль: {style}")
 
             # Параметры обводки
             outline_width = barre_data.get('outline_width', 2)
@@ -658,6 +663,8 @@ class DrawingElements:
                 for i in range(1, 4):
                     stripe_y = y + i * stripe_spacing
                     painter.drawLine(x + 2, stripe_y, x + width - 2, stripe_y)
+
+            print(f"✅ Баре отрисовано успешно")
 
         except Exception as e:
             print(f"❌ Ошибка рисования баре: {e}")

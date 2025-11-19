@@ -309,18 +309,21 @@ class ChordManager:
 
         print(f"\n🎸 СБОРКА ЭЛЕМЕНТОВ ДЛЯ {chord_record['CHORD']} вариант {chord_record['VARIANT']} ({display_type})")
 
-        # Добавляем лады на основе RAM
+        # Добавляем лады на основе RAM (одинаково для обоих режимов)
         ram_code = chord_record.get("RAM")
         if ram_code and ram_code != "None":
             frets = cls._get_frets_for_ram(ram_code)
             elements['frets'] = frets
             print(f"🎻 Добавлены лады для {ram_code}: {[f['data'].get('symbol') for f in frets]}")
 
-        # Добавляем баре (одинаково для обоих режимов)
-        barre_data = cls._get_barre_element(chord_record.get("BAR"))
-        if barre_data:
-            elements['barres'].append(barre_data)
-            print(f"🎸 Добавлено баре: {chord_record.get('BAR')}")
+        # БАРЕ ТОЛЬКО ДЛЯ РЕЖИМА ПАЛЬЦЕВ!
+        if display_type == "fingers":
+            barre_data = cls._get_barre_element(chord_record.get("BAR"))
+            if barre_data:
+                elements['barres'].append(barre_data)
+                print(f"🎸 Добавлено баре: {chord_record.get('BAR')}")
+        else:
+            print("🎸 Баре отключено для режима нот")
 
         if display_type == "fingers":
             # РЕЖИМ ПАЛЬЦЕВ
@@ -485,17 +488,23 @@ class ChordManager:
 
     @classmethod
     def _get_barre_element(cls, barre_code: str) -> Optional[Dict]:
-        """Получение элемента баре по коду"""
+        """Получение элемента баре по коду с проверкой координат"""
         if not barre_code or barre_code == "None":
             return None
 
         try:
             # Пример: "2BAR2-4" -> ищем "2BAR2-4" в шаблонах
             if barre_code in TEMPLATE_DATA.get("barres", {}):
+                barre_data = TEMPLATE_DATA["barres"][barre_code].copy()
+
+                print(f"🎸 ЗАГРУЗКА БАРЕ {barre_code}:")
+                print(f"   Координаты в шаблоне: x={barre_data.get('x')}, y={barre_data.get('y')}")
+                print(f"   Размеры: {barre_data.get('width')}x{barre_data.get('height')}")
+
                 return {
                     'type': 'barre',
                     'element_id': barre_code,
-                    'data': TEMPLATE_DATA["barres"][barre_code]
+                    'data': barre_data
                 }
             else:
                 print(f"    ⚠️  Баре элемент не найден: {barre_code}")

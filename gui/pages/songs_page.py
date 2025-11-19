@@ -1246,10 +1246,21 @@ class SongsPage(BasePage):
             print(f"❌ Ошибка рисования ноты: {e}")
 
     def draw_barre_on_canvas(self, painter, barre_data, crop_rect):
-        """Рисование баре на canvas с правильными координатами"""
+        """Рисование баре на canvas с правильными координатами и отладкой"""
         try:
+            print(f"🎸 РИСОВАНИЕ БАРЕ:")
+            print(f"   Данные баре ДО адаптации: {barre_data}")
             adapted_data = self.adapt_coordinates(barre_data, crop_rect)
+            print(f"   Данные баре ПОСЛЕ адаптации: {adapted_data}")
+            print(f"   Crop rect: {crop_rect}")
+            # Проверяем, попадают ли координаты в область видимости
+            x = adapted_data.get('x', 0)
+            y = adapted_data.get('y', 0)
+            width = adapted_data.get('width', 0)
+            height = adapted_data.get('height', 0)
+            print(f"   Позиция на canvas: x={x}, y={y}, width={width}, height={height}")
             DrawingElements.draw_barre(painter, adapted_data)
+
         except Exception as e:
             print(f"❌ Ошибка рисования баре: {e}")
 
@@ -1283,16 +1294,21 @@ class SongsPage(BasePage):
         adapted_data['x'] = int(round(adapted_data.get('x', 0)))
         adapted_data['y'] = int(round(adapted_data.get('y', 0)))
 
-        # ОСОБАЯ КОРРЕКЦИЯ ТОЛЬКО ДЛЯ БАРЕ - как в старом приложении
+        # ОСОБАЯ КОРРЕКЦИЯ ДЛЯ БАРЕ - ИСПРАВЛЕННАЯ ЛОГИКА
         if adapted_data.get('type') == 'barre':
             barre_width = adapted_data.get('width', 100)
             barre_height = adapted_data.get('height', 20)
 
-            # Для баре - координаты указывают на центр, нужно сместить в левый верхний угол
-            if 'x' in adapted_data:
-                adapted_data['x'] = adapted_data['x'] - (barre_width // 2)
-            if 'y' in adapted_data:
-                adapted_data['y'] = adapted_data['y'] - (barre_height // 2)
+            print(f"🎸 АДАПТАЦИЯ БАРЕ:")
+            print(f"   Исходные координаты: ({original_x}, {original_y})")
+            print(f"   После вычитания crop: ({adapted_data['x']}, {adapted_data['y']})")
+            print(f"   Размеры баре: {barre_width}x{barre_height}")
+
+            # Для баре - координаты в шаблоне указывают на ЛЕВЫЙ ВЕРХНИЙ УГОЛ
+            # НЕ нужно дополнительно смещать!
+            # Просто используем координаты после вычитания crop_rect
+
+            print(f"   Финальные координаты баре: ({adapted_data['x']}, {adapted_data['y']})")
 
         return adapted_data
 
