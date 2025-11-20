@@ -1406,37 +1406,11 @@ class SongsPage(BasePage):
         try:
             from gui.windows.chord_viewer import ChordViewerWindow
 
-            # Создаем временное изображение для просмотра
-            pixmap = self.generate_chord_from_config(self.current_chord_name, self.current_variant)
-            if not pixmap.isNull():
-                # Сохраняем временное изображение
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
-                temp_path = temp_file.name
-                pixmap.save(temp_path, 'PNG')
-                temp_file.close()
-
-                # Получаем путь к звуку
-                sound_path = self.get_chord_sound_path(self.current_chord_name, self.current_variant)
-
-                viewer = ChordViewerWindow(
-                    self.current_chord_name,
-                    temp_path,
-                    sound_path or "",
-                    self
-                )
-                viewer.exec_()
-
-                # Удаляем временный файл после закрытия окна
-                try:
-                    if os.path.exists(temp_path):
-                        os.unlink(temp_path)
-                except Exception as e:
-                    print(f"⚠️ Ошибка удаления временного файла: {e}")
+            viewer = ChordViewerWindow(self.current_chord_name, self)
+            viewer.exec_()
 
         except Exception as e:
             print(f"Ошибка открытия окна аккорда: {e}")
-            import traceback
-            traceback.print_exc()
 
     def get_chord_sound_path(self, chord_name, variant_index=0):
         """Получение пути к звуковому файлу аккорда"""
