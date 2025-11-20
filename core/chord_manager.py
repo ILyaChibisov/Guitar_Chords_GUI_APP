@@ -488,18 +488,20 @@ class ChordManager:
 
     @classmethod
     def _get_barre_element(cls, barre_code: str) -> Optional[Dict]:
-        """Получение элемента баре по коду с проверкой координат"""
+        """Получение элемента баре по коду с ПОДРОБНОЙ ОТЛАДКОЙ"""
         if not barre_code or barre_code == "None":
             return None
 
         try:
-            # Пример: "2BAR2-4" -> ищем "2BAR2-4" в шаблонах
             if barre_code in TEMPLATE_DATA.get("barres", {}):
                 barre_data = TEMPLATE_DATA["barres"][barre_code].copy()
 
-                print(f"🎸 ЗАГРУЗКА БАРЕ {barre_code}:")
-                print(f"   Координаты в шаблоне: x={barre_data.get('x')}, y={barre_data.get('y')}")
+                print(f"🎸 ДИАГНОСТИКА БАРЕ В chord_manager:")
+                print(f"   Код баре: {barre_code}")
+                print(f"   Координаты ИЗ TEMPLATE_DATA: x={barre_data.get('x')}, y={barre_data.get('y')}")
                 print(f"   Размеры: {barre_data.get('width')}x{barre_data.get('height')}")
+                print(f"   Стиль: {barre_data.get('style')}")
+                print(f"   Полные данные: {barre_data}")
 
                 return {
                     'type': 'barre',
@@ -508,10 +510,11 @@ class ChordManager:
                 }
             else:
                 print(f"    ⚠️  Баре элемент не найден: {barre_code}")
+                return None
+
         except Exception as e:
             print(f"❌ Ошибка получения баре элемента {barre_code}: {e}")
-
-        return None
+            return None
 
     @classmethod
     def _get_open_notes(cls, chord_record: Dict) -> List[Dict]:

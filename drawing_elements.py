@@ -628,33 +628,42 @@ class DrawingElements:
             outline_color_data = barre_data.get('outline_color', [0, 0, 0])
             outline_color = DrawingElements.get_color_from_data(outline_color_data)
 
-            # РИСУЕМ ОБВОДКУ
+            # 🔥 ИСПРАВЛЕНИЕ 1: ОБВОДКА БЕЗ СМЕЩЕНИЯ!
+            # РИСУЕМ ОБВОДКУ (только контур) - ТЕ ЖЕ КООРДИНАТЫ!
             if outline_width > 0:
                 painter.setPen(QPen(outline_color, outline_width))
-                painter.setBrush(QBrush(outline_color))
-                outline_rect = (x - outline_width // 2, y - outline_width // 2,
-                                width + outline_width, height + outline_width)
-                painter.drawRoundedRect(*outline_rect, radius, radius)
+                painter.setBrush(Qt.NoBrush)  # Важно: без заливки для обводки!
+                painter.drawRoundedRect(x, y, width, height, radius, radius)
+                print(f"   🖌️ Обводка: ширина {outline_width}px")
 
-            # Рисуем основную фигуру
+            # 🔥 ИСПРАВЛЕНИЕ 2: ОСНОВНАЯ ФИГУРА - ТЕ ЖЕ КООРДИНАТЫ!
+            # Рисуем основную фигуру (заливку)
             brush = DrawingElements.get_brush_from_style(style, x, y, 0, width, height)
             painter.setPen(Qt.NoPen)
             painter.setBrush(brush)
             painter.drawRoundedRect(x, y, width, height, radius, radius)
+            print(f"   🎨 Основная фигура")
 
-            # Применяем декорации
+            # 🔥 ИСПРАВЛЕНИЕ 3: ДЕКОРАЦИИ - МИНИМАЛЬНЫЕ СМЕЩЕНИЯ
+            # Применяем декорации (с небольшими корректировками)
             if decoration == 'shadow':
-                painter.setPen(QPen(QColor(0, 0, 0, 80), 2))
+                shadow_color = QColor(0, 0, 0, 80)
+                painter.setPen(QPen(shadow_color, 2))
                 painter.setBrush(Qt.NoBrush)
-                painter.drawRoundedRect(x + 2, y + 2, width, height, radius, radius)
+                painter.drawRoundedRect(x + 1, y + 1, width, height, radius, radius)
+                print(f"   🌑 Тень")
             elif decoration == 'glow':
-                painter.setPen(QPen(QColor(255, 255, 255, 60), 3))
+                glow_color = QColor(255, 255, 255, 60)
+                painter.setPen(QPen(glow_color, 3))
                 painter.setBrush(Qt.NoBrush)
-                painter.drawRoundedRect(x - 1, y - 1, width + 2, height + 2, radius, radius)
+                painter.drawRoundedRect(x, y, width, height, radius, radius)
+                print(f"   ✨ Свечение")
             elif decoration == 'double_border':
-                painter.setPen(QPen(QColor(255, 255, 255), 1))
+                border_color = QColor(255, 255, 255)
+                painter.setPen(QPen(border_color, 1))
                 painter.setBrush(Qt.NoBrush)
                 painter.drawRoundedRect(x + 1, y + 1, width - 2, height - 2, radius, radius)
+                print(f"   🎭 Двойная обводка")
             elif decoration == 'stripes' and style == 'striped':
                 stripe_color = QColor(189, 183, 107).darker(120)
                 stripe_color.setAlpha(180)
@@ -663,11 +672,14 @@ class DrawingElements:
                 for i in range(1, 4):
                     stripe_y = y + i * stripe_spacing
                     painter.drawLine(x + 2, stripe_y, x + width - 2, stripe_y)
+                print(f"   📏 Полосы")
 
-            print(f"✅ Баре отрисовано успешно")
+            print(f"✅ Баре отрисовано успешно в позиции ({x}, {y})")
 
         except Exception as e:
             print(f"❌ Ошибка рисования баре: {e}")
+            import traceback
+            traceback.print_exc()
 
     @staticmethod
     def draw_open_string(painter, open_string_data):

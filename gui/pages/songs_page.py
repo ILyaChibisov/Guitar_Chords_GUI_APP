@@ -1108,6 +1108,8 @@ class SongsPage(BasePage):
 
         modified_elements = []
 
+
+
         for index, element in enumerate(elements):
             if not isinstance(element, dict):
                 print(f"❌ Элемент {index} - не словарь: {element}")
@@ -1118,7 +1120,14 @@ class SongsPage(BasePage):
             element_data = original_data.copy()
 
             print(f"\n🔍 ЭЛЕМЕНТ {index}: {element_type}")
-            print(f"📋 Оригинальные данные: {json.dumps(original_data, indent=2, ensure_ascii=False)}")
+            print(f"   Полные данные: {element}")  # ← ДОБАВИТЬ ЭТУ СТРОКУ!
+
+            # ОСОБАЯ ОТЛАДКА ДЛЯ БАРЕ
+            if element_type == 'barre':
+                print(f"🎸 БАРЕ ДО apply_outline_settings:")
+                print(f"   Координаты: x={element_data.get('x')}, y={element_data.get('y')}")
+                print(f"   Размеры: {element_data.get('width')}x{element_data.get('height')}")
+                print(f"   Полные данные: {element_data}")
 
             if element_type == 'barre':
                 print("🎸 Обработка БАРЕ:")
@@ -1133,6 +1142,10 @@ class SongsPage(BasePage):
                 element_data['outline_width'] = 2
                 element_data['outline_color'] = [0, 0, 0]
                 print(f"  📏 Обводка: ширина 2px, цвет черный")
+
+                print(f"🎸 БАРЕ ПОСЛЕ apply_outline_settings:")
+                print(f"   Координаты: x={element_data.get('x')}, y={element_data.get('y')}")
+                print(f"   Размеры: {element_data.get('width')}x{element_data.get('height')}")
 
             elif element_type == 'note':
                 print("🎵 Обработка НОТЫ:")
@@ -1208,24 +1221,39 @@ class SongsPage(BasePage):
         return modified_elements
 
     def draw_elements_on_canvas(self, painter, elements, crop_rect):
-        """Рисование элементов на canvas"""
+        """Рисование элементов на canvas с ПРАВИЛЬНЫМ ПОРЯДКОМ"""
         try:
             if not DrawingElements:
                 print("❌ DrawingElements не доступен")
                 return
 
+            # 🔥 ИСПРАВЛЕНИЕ: ПРАВИЛЬНЫЙ ПОРЯДОК ОТРИСОВКИ
+            # 1. Сначала рисуем лады (самый нижний слой)
             for element in elements:
                 if element['type'] == 'fret':
                     self.draw_fret_on_canvas(painter, element['data'], crop_rect)
-                elif element['type'] == 'note':
-                    self.draw_note_on_canvas(painter, element['data'], crop_rect)
-                elif element['type'] == 'barre':
+
+            # 2. Затем рисуем баре (под нотами)
+            for element in elements:
+                if element['type'] == 'barre':
                     self.draw_barre_on_canvas(painter, element['data'], crop_rect)
-                elif element['type'] == 'open_note':
+
+            # 3. Затем рисуем ноты (поверх баре)
+            for element in elements:
+                if element['type'] == 'note':
+                    self.draw_note_on_canvas(painter, element['data'], crop_rect)
+
+            # 4. Наконец рисуем открытые ноты (самый верхний слой)
+            for element in elements:
+                if element['type'] == 'open_note':
                     self.draw_open_note_on_canvas(painter, element['data'], crop_rect)
+
+            print(f"✅ Все элементы отрисованы в правильном порядке")
 
         except Exception as e:
             print(f"❌ Ошибка рисования элементов: {e}")
+            import traceback
+            traceback.print_exc()
 
     def draw_fret_on_canvas(self, painter, fret_data, crop_rect):
         """Рисование лада на canvas"""
@@ -1274,41 +1302,59 @@ class SongsPage(BasePage):
             print(f"❌ Ошибка рисования открытой ноты: {e}")
 
     def adapt_coordinates(self, element_data, crop_rect):
-        """ИСПРАВЛЕННАЯ адаптация координат элементов - как в старом приложении"""
         if not crop_rect:
             return element_data.copy()
 
+        # Копируем данные элемента
         adapted_data = element_data.copy()
+
+        # 🔥 ДИАГНОСТИКА: какой тип элемента?
+        element_type = element_data.get('type', 'unknown')
+        print(f"🎯 Адаптация {element_type}:")
+        print(f"   Полные данные: {element_data}")
+
+        # Получаем координаты обрезки
         crop_x, crop_y, crop_width, crop_height = crop_rect
 
         original_x = element_data.get('x', 0)
         original_y = element_data.get('y', 0)
 
-        # Простое вычитание координат обрезки для ВСЕХ элементов
+        print(f"   Оригинальные координаты: ({original_x}, {original_y})")
+        print(f"   Область обрезки: ({crop_x}, {crop_y}, {crop_width}, {crop_height})")
+
+        # Для ВСЕХ элементов просто вычитаем координаты обрезки
         if 'x' in adapted_data:
             adapted_data['x'] = original_x - crop_x
+            print(f"   x после вычитания crop: {original_x} - {crop_x} = {adapted_data['x']}")
+
         if 'y' in adapted_data:
             adapted_data['y'] = original_y - crop_y
+            print(f"   y после вычитания crop: {original_y} - {crop_y} = {adapted_data['y']}")
+
+        # 🔥 ИСПРАВЛЕНИЕ: определяем тип по данным
+        # Если есть width и height - вероятно это баре
+        if (adapted_data.get('width') and adapted_data.get('height') and
+                adapted_data.get('width') > 50 and adapted_data.get('height') > 50):
+            print(f"🎸 ОПРЕДЕЛЕН БАРЕ ПО ДАННЫМ: width={adapted_data.get('width')}, height={adapted_data.get('height')}")
+
+            barre_width = adapted_data.get('width', 100)
+            barre_height = adapted_data.get('height', 20)
+
+            print(f"🎸 ПРЕОБРАЗОВАНИЕ БАРЕ:")
+            print(f"   До преобразования: x={adapted_data['x']}, y={adapted_data['y']}")
+            print(f"   Размеры баре: {barre_width}x{barre_height}")
+
+            # Преобразуем ЦЕНТР в ЛЕВЫЙ ВЕРХНИЙ УГОЛ
+            adapted_data['x'] = adapted_data['x'] - (barre_width // 2)
+            adapted_data['y'] = adapted_data['y'] - (barre_height // 2)
+
+            print(f"   После преобразования: x={adapted_data['x']}, y={adapted_data['y']}")
 
         # Преобразуем в целые числа для Qt
         adapted_data['x'] = int(round(adapted_data.get('x', 0)))
         adapted_data['y'] = int(round(adapted_data.get('y', 0)))
 
-        # ОСОБАЯ КОРРЕКЦИЯ ДЛЯ БАРЕ - ИСПРАВЛЕННАЯ ЛОГИКА
-        if adapted_data.get('type') == 'barre':
-            barre_width = adapted_data.get('width', 100)
-            barre_height = adapted_data.get('height', 20)
-
-            print(f"🎸 АДАПТАЦИЯ БАРЕ:")
-            print(f"   Исходные координаты: ({original_x}, {original_y})")
-            print(f"   После вычитания crop: ({adapted_data['x']}, {adapted_data['y']})")
-            print(f"   Размеры баре: {barre_width}x{barre_height}")
-
-            # Для баре - координаты в шаблоне указывают на ЛЕВЫЙ ВЕРХНИЙ УГОЛ
-            # НЕ нужно дополнительно смещать!
-            # Просто используем координаты после вычитания crop_rect
-
-            print(f"   Финальные координаты баре: ({adapted_data['x']}, {adapted_data['y']})")
+        print(f"   📍 Финальные координаты: ({adapted_data.get('x', 0)}, {adapted_data.get('y', 0)})")
 
         return adapted_data
 
