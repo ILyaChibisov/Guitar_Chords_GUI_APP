@@ -7,13 +7,14 @@ import tempfile
 
 from gui.widgets.buttons import ModernButton, ChordVariantButton
 from drawing_elements import DrawingElements
+from config.settings_chord_viewer import ChordViewerSettings
 
 
 class ChordViewerWindow(QDialog):
     def __init__(self, chord_name, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"Аккорд {chord_name}")
-        self.setMinimumSize(500, 600)  # Оптимальный размер для уменьшенных аккордов
+        self.setMinimumSize(*ChordViewerSettings.WINDOW_MIN_SIZE)
         self.setModal(True)
 
         self.chord_name = chord_name
@@ -40,17 +41,17 @@ class ChordViewerWindow(QDialog):
         layout.addWidget(chord_title)
 
         # Описание аккорда
-        chord_description = QLabel(self.get_chord_description())
-        chord_description.setObjectName("chord_description")
-        chord_description.setAlignment(Qt.AlignCenter)
-        chord_description.setWordWrap(True)
-        layout.addWidget(chord_description)
+        self.chord_description = QLabel(self.get_chord_description())
+        self.chord_description.setObjectName("chord_description")
+        self.chord_description.setAlignment(Qt.AlignCenter)
+        self.chord_description.setWordWrap(True)
+        layout.addWidget(self.chord_description)
 
         # Область изображения аккорда
         self.image_label = QLabel()
         self.image_label.setObjectName("image_label")
         self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_label.setMinimumSize(400, 300)  # Уменьшил минимальный размер
+        self.image_label.setMinimumSize(*ChordViewerSettings.IMAGE_LABEL_MIN_SIZE)
         layout.addWidget(self.image_label, 1)
 
         # Панель управления отображением
@@ -93,94 +94,8 @@ class ChordViewerWindow(QDialog):
         layout.addWidget(close_btn)
 
     def apply_styles(self):
-        """Применение стилей"""
-        self.setStyleSheet("""
-            QDialog {
-                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1,
-                    stop: 0 #2c3e50, stop: 1 #34495e);
-                color: #ecf0f1;
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }
-
-            #chord_title {
-                color: white;
-                font-size: 24px;
-                font-weight: bold;
-                text-align: center;
-                padding: 10px 0px;
-                background: transparent;
-                border: none;
-                margin: 0px;
-            }
-
-            #chord_description {
-                color: #E0E0E0;
-                font-size: 14px;
-                text-align: center;
-                padding: 5px 0px;
-                background: transparent;
-                border: none;
-                margin: 0px;
-            }
-
-            #image_label {
-                background: transparent;
-                border: none;
-                padding: 0px;
-                margin: 0px;
-            }
-
-            #control_widget {
-                background: transparent;
-                border: none;
-                padding: 0px;
-                margin: 0px;
-            }
-
-            #variants_container {
-                background: transparent;
-                border: none;
-                padding: 0px;
-                margin: 0px;
-            }
-
-            #display_toggle_btn {
-                background: rgba(52, 152, 219, 0.7);
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-radius: 15px;
-                color: white;
-                font-size: 12px;
-                font-weight: bold;
-                padding: 5px;
-            }
-            #display_toggle_btn:checked {
-                background: rgba(231, 76, 60, 0.7);
-                border: 2px solid rgba(255, 255, 255, 0.5);
-            }
-            #display_toggle_btn:hover {
-                background: rgba(52, 152, 219, 0.9);
-            }
-            #display_toggle_btn:checked:hover {
-                background: rgba(231, 76, 60, 0.9);
-            }
-
-            #sound_btn {
-                background: rgba(46, 204, 113, 0.7);
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-radius: 15px;
-                color: white;
-                font-size: 12px;
-                font-weight: bold;
-                padding: 5px;
-            }
-            #sound_btn:hover {
-                background: rgba(46, 204, 113, 0.9);
-            }
-            #sound_btn:disabled {
-                background: rgba(149, 165, 166, 0.7);
-                color: rgba(127, 140, 141, 0.7);
-            }
-        """)
+        """Применение стилей из настроек"""
+        self.setStyleSheet(ChordViewerSettings.WINDOW_STYLES)
 
     def get_chord_description(self):
         """Получение описания аккорда"""
@@ -202,34 +117,49 @@ class ChordViewerWindow(QDialog):
             self.show_error_image("Ошибка загрузки")
 
     def load_chord_image(self):
-        """Загрузка изображения аккорда с уменьшением размера в 2 раза"""
+        """Загрузка изображения аккорда"""
         try:
-            print(f"🎯 Генерация аккорда с уменьшением в 2 раза: {self.chord_name}, вариант {self.current_variant}")
-            self.generate_chord_half_size()
+            print(f"🎯 Генерация аккорда: {self.chord_name}, вариант {self.current_variant}")
+            self.generate_chord_with_settings()
         except Exception as e:
             print(f"❌ Ошибка загрузки изображения: {e}")
             self.show_error_image("Ошибка отображения")
 
-    def generate_chord_half_size(self):
-        """Генерация аккорда с уменьшением размера в 2 раза"""
+    def generate_chord_with_settings(self):
+        """Генерация аккорда с настройками из ChordViewerSettings"""
         try:
             from core.chord_manager import ChordManager
 
-            # Получаем конфигурацию для конкретного варианта
-            variant_key = f"{self.chord_name}v{self.current_variant}" if self.current_variant > 1 else self.chord_name
-            chord_config = ChordManager.get_chord_config(variant_key)
-
-            if not chord_config:
-                print(f"❌ Конфигурация не найдена для: {variant_key}")
+            # Получаем данные аккорда и находим нужный вариант
+            chord_data = ChordManager.get_chord_data(self.chord_name)
+            if not chord_data:
+                print(f"❌ Аккорд {self.chord_name} не найден")
                 self.show_error_image("Аккорд не найден")
                 return
 
+            # Получаем все варианты аккорда
+            variants = chord_data.get('variants', [])
+            if not variants:
+                print(f"❌ Нет вариантов для аккорда {self.chord_name}")
+                self.show_error_image("Нет вариантов")
+                return
+
+            # Проверяем что запрошенный вариант существует
+            if self.current_variant > len(variants):
+                print(f"❌ Вариант {self.current_variant} не существует для аккорда {self.chord_name}")
+                self.current_variant = 1  # Возвращаемся к первому варианту
+
+            # Получаем конкретный вариант
+            variant_config = variants[self.current_variant - 1]
+
+            print(f"✅ Загружен вариант {self.current_variant} для аккорда {self.chord_name}")
+
             # Получаем элементы для текущего типа отображения
             if self.current_display_type == "fingers":
-                elements_data = chord_config.get('drawing_elements_fingers', {})
+                elements_data = variant_config.get('drawing_elements_fingers', {})
                 print(f"👆 Используем элементы ПАЛЬЦЕВ")
             else:
-                elements_data = chord_config.get('drawing_elements_notes', {})
+                elements_data = variant_config.get('drawing_elements_notes', {})
                 print(f"🎵 Используем элементы НОТ")
 
             # Объединяем все элементы в один список для отрисовки
@@ -239,12 +169,12 @@ class ChordViewerWindow(QDialog):
                 print(f"   {element_type}: {len(elements_list)} элементов")
 
             if not all_elements:
-                print(f"❌ Нет элементов для аккорда {variant_key}")
+                print(f"❌ Нет элементов для аккорда {self.chord_name} вариант {self.current_variant}")
                 self.show_error_image("Нет данных аккорда")
                 return
 
-            # Применяем обводку
-            elements = self.apply_outline_settings(all_elements)
+            # Применяем обводку с настройками из ChordViewerSettings
+            elements = self.apply_outline_with_settings(all_elements)
 
             # Загружаем базовое изображение
             base_image_path = ChordManager.get_template_image_path()
@@ -260,9 +190,9 @@ class ChordViewerWindow(QDialog):
                 return
 
             # Получаем область обрезки
-            crop_rect = chord_config.get('crop_rect')
+            crop_rect = variant_config.get('crop_rect')
             if not crop_rect:
-                print(f"❌ Нет области обрезки для аккорда {variant_key}")
+                print(f"❌ Нет области обрезки для аккорда {self.chord_name} вариант {self.current_variant}")
                 self.show_error_image("Нет области обрезки")
                 return
 
@@ -289,14 +219,16 @@ class ChordViewerWindow(QDialog):
             print(f"   Базовое изображение: {original_pixmap.width()}x{original_pixmap.height()}")
             print(f"   Область обрезки: ({crop_x}, {crop_y}, {crop_width}, {crop_height})")
 
-            # УМЕНЬШАЕМ РАЗМЕР В 2 РАЗА
-            half_width = crop_width // 2
-            half_height = crop_height // 2
+            # 🔥 ИСПОЛЬЗУЕМ НАСТРОЙКИ МАСШТАБА ИЗ ChordViewerSettings
+            scale_factor = ChordViewerSettings.SCALE_FACTOR
+            scaled_width = int(crop_width * scale_factor)
+            scaled_height = int(crop_height * scale_factor)
 
-            print(f"📏 Уменьшение в 2 раза: {crop_width}x{crop_height} -> {half_width}x{half_height}")
+            print(
+                f"📏 Масштабирование: {crop_width}x{crop_height} -> {scaled_width}x{scaled_height} (коэф: {scale_factor})")
 
-            # Создаем новое изображение размером с УМЕНЬШЕННУЮ область обрезки
-            result_pixmap = QPixmap(half_width, half_height)
+            # Создаем новое изображение размером с масштабированную область обрезки
+            result_pixmap = QPixmap(scaled_width, scaled_height)
             result_pixmap.fill(Qt.transparent)
 
             painter = QPainter(result_pixmap)
@@ -308,22 +240,23 @@ class ChordViewerWindow(QDialog):
             scaled_pixmap = original_pixmap.copy(
                 int(crop_x), int(crop_y), int(crop_width), int(crop_height)
             ).scaled(
-                half_width, half_height,
+                scaled_width, scaled_height,
                 Qt.IgnoreAspectRatio, Qt.SmoothTransformation
             )
 
             painter.drawPixmap(0, 0, scaled_pixmap)
 
-            # Рисуем элементы в ПРАВИЛЬНОМ ПОРЯДКЕ (с учетом уменьшения размера)
-            self.draw_elements_on_canvas_scaled(painter, elements, (crop_x, crop_y, crop_width, crop_height), 0.5)
+            # Рисуем элементы в правильном порядке с учетом масштабирования
+            self.draw_elements_on_canvas_scaled(painter, elements, (crop_x, crop_y, crop_width, crop_height),
+                                                scale_factor)
             painter.end()
 
-            print(f"✅ Сгенерирован аккорд с уменьшением в 2 раза: {result_pixmap.width()}x{result_pixmap.height()}")
+            print(f"✅ Сгенерирован аккорд: {result_pixmap.width()}x{result_pixmap.height()}")
 
-            # Устанавливаем уменьшенное изображение
+            # Устанавливаем изображение
             self.image_label.setPixmap(result_pixmap)
 
-            # Подгоняем размер окна под уменьшенное изображение
+            # Подгоняем размер окна под изображение
             self.adjustSize()
 
             # Проверяем доступность звука
@@ -335,32 +268,53 @@ class ChordViewerWindow(QDialog):
             traceback.print_exc()
             self.show_error_image("Ошибка генерации")
 
-    def apply_outline_settings(self, elements):
-        """Применение настроек обводки к элементам с учетом масштабирования"""
+    def apply_outline_with_settings(self, elements):
+        """Применение настроек обводки из ChordViewerSettings"""
         modified_elements = []
         for element in elements:
             modified_element = element.copy()
             modified_element['data'] = element['data'].copy()
 
-            # 🔥 УЛУЧШЕННЫЕ НАСТРОЙКИ ОБВОДКИ ДЛЯ МАСШТАБИРОВАНИЯ
-            base_outline_width = 1  # Базовая толщина обводки
+            element_type = element['type']
 
-            if element['type'] == 'barre':
-                modified_element['data']['outline_width'] = base_outline_width
-                modified_element['data']['outline_color'] = [0, 0, 0]
-            elif element['type'] == 'note':
-                modified_element['data']['outline_width'] = base_outline_width
-                modified_element['data']['outline_color'] = [0, 0, 0]
-            elif element['type'] == 'fret':
-                modified_element['data']['outline_width'] = base_outline_width
-                modified_element['data']['outline_color'] = [0, 0, 0]
+            if element_type == 'barre':
+                # 🔥 ИСПОЛЬЗУЕМ НАСТРОЙКИ ДЛЯ БАРЕ
+                modified_element['data']['outline_width'] = ChordViewerSettings.OUTLINE_BARRE_WIDTH
+                modified_element['data']['outline_color'] = ChordViewerSettings.OUTLINE_COLOR
+
+            elif element_type == 'note':
+                # 🔥 ИСПОЛЬЗУЕМ НАСТРОЙКИ ДЛЯ НОТ
+                modified_element['data']['outline_width'] = ChordViewerSettings.OUTLINE_NOTE_WIDTH
+                modified_element['data']['outline_color'] = ChordViewerSettings.OUTLINE_COLOR
+
+                # 🔥 АДАПТИВНЫЙ ТЕКСТ ИЗ НАСТРОЕК
+                if ChordViewerSettings.ADAPTIVE_TEXT_ENABLED:
+                    symbol = modified_element['data'].get('finger') or modified_element['data'].get('note_name', '')
+                    if symbol and len(symbol) > 1:
+                        current_radius = modified_element['data'].get('radius', 12)
+                        new_radius = max(ChordViewerSettings.MIN_NOTE_RADIUS,
+                                         current_radius - ChordViewerSettings.LONG_SYMBOL_RADIUS_REDUCTION)
+                        modified_element['data']['radius'] = new_radius
+                        print(f"  🔧 Уменьшен радиус для '{symbol}': {current_radius} -> {new_radius}")
+
+            elif element_type == 'fret':
+                # 🔥 ИСПОЛЬЗУЕМ НАСТРОЙКИ ДЛЯ ЛАДОВ
+                modified_element['data']['outline_width'] = ChordViewerSettings.OUTLINE_FRET_WIDTH
+                modified_element['data']['outline_color'] = ChordViewerSettings.OUTLINE_COLOR
+                # Устанавливаем цвет текста ладов из настроек
+                modified_element['data']['color'] = ChordViewerSettings.FRET_TEXT_COLOR
+
+            elif element_type == 'open_note':
+                # 🔥 ИСПОЛЬЗУЕМ НАСТРОЙКИ ДЛЯ ОТКРЫТЫХ СТРУН
+                modified_element['data']['outline_width'] = ChordViewerSettings.OUTLINE_OPEN_NOTE_WIDTH
+                modified_element['data']['outline_color'] = ChordViewerSettings.OUTLINE_COLOR
 
             modified_elements.append(modified_element)
 
         return modified_elements
 
     def draw_elements_on_canvas_scaled(self, painter, elements, crop_rect, scale_factor):
-        """Рисование элементов с правильными приоритетами"""
+        """Рисование элементов с учетом масштабирования"""
         try:
             # Группируем элементы по типам для правильного порядка отрисовки
             frets = [e for e in elements if e['type'] == 'fret']
@@ -405,7 +359,7 @@ class ChordViewerWindow(QDialog):
             print(f"❌ Ошибка рисования элемента {element['type']}: {e}")
 
     def adapt_coordinates_scaled(self, element_data, crop_rect, scale_factor):
-        """Адаптация координат с учетом масштабирования - улучшенная версия"""
+        """Адаптация координат с учетом масштабирования"""
         if not crop_rect:
             return element_data.copy()
 
@@ -415,29 +369,30 @@ class ChordViewerWindow(QDialog):
         original_x = element_data.get('x', 0)
         original_y = element_data.get('y', 0)
 
-        # Более точная адаптация координат
+        # Адаптируем координаты с учетом crop и масштабирования
         if 'x' in adapted_data:
             adapted_data['x'] = (original_x - crop_x) * scale_factor
         if 'y' in adapted_data:
             adapted_data['y'] = (original_y - crop_y) * scale_factor
 
-        # Округление до целых пикселей для четкости
         adapted_data['x'] = int(round(adapted_data.get('x', 0)))
         adapted_data['y'] = int(round(adapted_data.get('y', 0)))
 
-        # 🔥 УЛУЧШЕННОЕ МАСШТАБИРОВАНИЕ РАЗМЕРОВ
+        # Масштабируем размеры элементов
         if 'width' in adapted_data:
-            adapted_data['width'] = max(1, int(adapted_data['width'] * scale_factor))
+            adapted_data['width'] = int(adapted_data['width'] * scale_factor)
         if 'height' in adapted_data:
-            adapted_data['height'] = max(1, int(adapted_data['height'] * scale_factor))
+            adapted_data['height'] = int(adapted_data['height'] * scale_factor)
         if 'radius' in adapted_data:
-            # Минимальный радиус для читаемости текста
-            adapted_data['radius'] = max(8, int(adapted_data['radius'] * scale_factor))
+            # 🔥 ИСПОЛЬЗУЕМ МИНИМАЛЬНЫЙ РАДИУС ИЗ НАСТРОЕК
+            adapted_data['radius'] = max(ChordViewerSettings.MIN_NOTE_RADIUS,
+                                         int(adapted_data['radius'] * scale_factor))
         if 'size' in adapted_data:
-            adapted_data['size'] = max(1, int(adapted_data['size'] * scale_factor))
+            adapted_data['size'] = int(adapted_data['size'] * scale_factor)
 
-        # Для баре - корректируем позицию
-        if element_data.get('type') == 'barre':
+        # Для баре - преобразуем центр в левый верхний угол
+        if (adapted_data.get('width') and adapted_data.get('height') and
+                adapted_data.get('width') > 25 and adapted_data.get('height') > 10):
             barre_width = adapted_data.get('width', 50)
             barre_height = adapted_data.get('height', 10)
             adapted_data['x'] = adapted_data['x'] - (barre_width // 2)
@@ -466,8 +421,13 @@ class ChordViewerWindow(QDialog):
         try:
             from core.chord_manager import ChordManager
 
-            variants = ChordManager.get_chord_variants(self.chord_name)
-            variants_count = len(variants) if variants else 1
+            chord_data = ChordManager.get_chord_data(self.chord_name)
+            if not chord_data:
+                print(f"❌ Аккорд {self.chord_name} не найден")
+                return
+
+            variants = chord_data.get('variants', [])
+            variants_count = len(variants)
 
             print(f"🎯 Для аккорда {self.chord_name} найдено {variants_count} вариантов")
 
@@ -478,9 +438,10 @@ class ChordViewerWindow(QDialog):
                 def make_handler(v_num):
                     def handler():
                         self.current_variant = v_num
-                        print(f"🔄 Переключение на вариант {v_num}")
+                        print(f"🔄 Переключение на вариант {v_num} для аккорда {self.chord_name}")
                         self.refresh_chord_display()
 
+                        # Снимаем выделение с других кнопок
                         for i in range(self.variants_layout.count()):
                             other_btn = self.variants_layout.itemAt(i).widget()
                             if other_btn and other_btn.property('variant_num') != v_num:
@@ -493,40 +454,19 @@ class ChordViewerWindow(QDialog):
                 btn.clicked.connect(handler)
                 self.variants_layout.addWidget(btn)
 
+            # Активируем первый вариант
             if self.variants_layout.count() > 0:
                 first_btn = self.variants_layout.itemAt(0).widget()
                 if first_btn:
                     first_btn.setChecked(True)
                     first_btn.update_style()
                     self.current_variant = 1
+                    print(f"✅ Активирован вариант 1 для аккорда {self.chord_name}")
 
         except Exception as e:
             print(f"❌ Ошибка загрузки вариантов: {e}")
-            for variant_num in range(1, 4):
-                btn = ChordVariantButton(str(variant_num))
-                btn.setProperty('variant_num', variant_num)
-
-                def make_handler(v_num):
-                    def handler():
-                        self.current_variant = v_num
-                        self.refresh_chord_display()
-                        for i in range(self.variants_layout.count()):
-                            other_btn = self.variants_layout.itemAt(i).widget()
-                            if other_btn and other_btn.property('variant_num') != v_num:
-                                other_btn.setChecked(False)
-                                other_btn.update_style()
-
-                    return handler
-
-                handler = make_handler(variant_num)
-                btn.clicked.connect(handler)
-                self.variants_layout.addWidget(btn)
-
-            if self.variants_layout.count() > 0:
-                first_btn = self.variants_layout.itemAt(0).widget()
-                if first_btn:
-                    first_btn.setChecked(True)
-                    first_btn.update_style()
+            import traceback
+            traceback.print_exc()
 
     def toggle_display_type(self):
         """Переключение между нотами и пальцами"""
@@ -580,13 +520,13 @@ class ChordViewerWindow(QDialog):
                 self.sound_btn.setText("❌ Ошибка")
 
             from PyQt5.QtCore import QTimer
-            QTimer.singleShot(2000, self.restore_sound_button)
+            QTimer.singleShot(ChordViewerSettings.SOUND_BUTTON_RESTORE_DELAY, self.restore_sound_button)
 
         except Exception as e:
             print(f"❌ Ошибка воспроизведения звука: {e}")
             self.sound_btn.setText("❌ Ошибка")
             from PyQt5.QtCore import QTimer
-            QTimer.singleShot(2000, self.restore_sound_button)
+            QTimer.singleShot(ChordViewerSettings.SOUND_BUTTON_RESTORE_DELAY, self.restore_sound_button)
 
     def restore_sound_button(self):
         """Восстановление кнопки звука"""
