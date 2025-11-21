@@ -1000,7 +1000,7 @@ class SongsPage(BasePage):
         self.chord_image_label.setChordPixmap(pixmap)
 
     def generate_chord_from_config(self, chord_name, variant=1):
-        """Генерация изображения аккорда из конфигурации с учетом типа отображения"""
+        """Генерация изображения аккорда из конфигурации с УЛУЧШЕННЫМ КАЧЕСТВОМ"""
         try:
             # Получаем конфигурацию для конкретного варианта
             variant_key = f"{chord_name}v{variant}" if variant > 1 else chord_name
@@ -1067,13 +1067,15 @@ class SongsPage(BasePage):
                 crop_width = max(1, min(crop_width, original_pixmap.width() - crop_x))
                 crop_height = max(1, min(crop_height, original_pixmap.height() - crop_y))
 
-                # Создаем новое изображение размером с область обрезки с прозрачным фоном
+                # 🔥 ИСПРАВЛЕНИЕ: СОЗДАЕМ ИЗОБРАЖЕНИЕ В ОРИГИНАЛЬНОМ РАЗМЕРЕ
+                # Используем оригинальные размеры области обрезки для максимального качества
                 result_pixmap = QPixmap(crop_width, crop_height)
                 result_pixmap.fill(Qt.transparent)
 
                 painter = QPainter(result_pixmap)
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.setRenderHint(QPainter.SmoothPixmapTransform)
+                painter.setRenderHint(QPainter.TextAntialiasing)
 
                 # Копируем область из оригинального изображения
                 painter.drawPixmap(0, 0, original_pixmap, crop_x, crop_y, crop_width, crop_height)
@@ -1082,17 +1084,11 @@ class SongsPage(BasePage):
                 self.draw_elements_on_canvas(painter, elements, (crop_x, crop_y, crop_width, crop_height))
                 painter.end()
 
-                # Применяем масштаб
-                display_width = min(400, crop_width)
-                scale_factor = display_width / crop_width
-                display_height = int(crop_height * scale_factor)
+                # 🔥 ИСПРАВЛЕНИЕ: НЕ МАСШТАБИРУЕМ ИЗОБРАЖЕНИЕ - сохраняем оригинальный размер
+                # Возвращаем изображение в оригинальном размере для максимального качества
+                print(f"✅ Сгенерирован аккорд в оригинальном размере: {crop_width}x{crop_height}")
 
-                scaled_pixmap = result_pixmap.scaled(
-                    display_width, display_height,
-                    Qt.KeepAspectRatio, Qt.SmoothTransformation
-                )
-
-                return scaled_pixmap
+                return result_pixmap
 
             except Exception as crop_error:
                 print(f"❌ Ошибка обработки crop_rect для {chord_name} вариант {variant}: {crop_error}")
@@ -1132,6 +1128,7 @@ class SongsPage(BasePage):
             if element_type == 'barre':
                 print("🎸 Обработка БАРЕ:")
                 # Сохраняем оригинальный стиль или используем оранжевый по умолчанию
+
                 original_style = element_data.get('style')
                 if not original_style or original_style == 'default':
                     element_data['style'] = 'orange_gradient'
