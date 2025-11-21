@@ -13,7 +13,7 @@ class ChordViewerWindow(QDialog):
     def __init__(self, chord_name, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f"Аккорд {chord_name}")
-        self.setMinimumSize(600, 700)  # Увеличил для больших аккордов
+        self.setMinimumSize(500, 600)  # Оптимальный размер для уменьшенных аккордов
         self.setModal(True)
 
         self.chord_name = chord_name
@@ -50,7 +50,7 @@ class ChordViewerWindow(QDialog):
         self.image_label = QLabel()
         self.image_label.setObjectName("image_label")
         self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_label.setMinimumSize(500, 400)  # Увеличил для больших аккордов
+        self.image_label.setMinimumSize(400, 300)  # Уменьшил минимальный размер
         layout.addWidget(self.image_label, 1)
 
         # Панель управления отображением
@@ -202,16 +202,16 @@ class ChordViewerWindow(QDialog):
             self.show_error_image("Ошибка загрузки")
 
     def load_chord_image(self):
-        """Загрузка изображения аккорда в ОРИГИНАЛЬНОМ РАЗМЕРЕ"""
+        """Загрузка изображения аккорда с уменьшением размера в 2 раза"""
         try:
-            print(f"🎯 Генерация аккорда в оригинальном размере: {self.chord_name}, вариант {self.current_variant}")
-            self.generate_chord_original_size()
+            print(f"🎯 Генерация аккорда с уменьшением в 2 раза: {self.chord_name}, вариант {self.current_variant}")
+            self.generate_chord_half_size()
         except Exception as e:
             print(f"❌ Ошибка загрузки изображения: {e}")
             self.show_error_image("Ошибка отображения")
 
-    def generate_chord_original_size(self):
-        """Генерация аккорда в ОРИГИНАЛЬНОМ РАЗМЕРЕ без масштабирования"""
+    def generate_chord_half_size(self):
+        """Генерация аккорда с уменьшением размера в 2 раза"""
         try:
             from core.chord_manager import ChordManager
 
@@ -289,8 +289,14 @@ class ChordViewerWindow(QDialog):
             print(f"   Базовое изображение: {original_pixmap.width()}x{original_pixmap.height()}")
             print(f"   Область обрезки: ({crop_x}, {crop_y}, {crop_width}, {crop_height})")
 
-            # Создаем новое изображение размером с область обрезки
-            result_pixmap = QPixmap(crop_width, crop_height)
+            # УМЕНЬШАЕМ РАЗМЕР В 2 РАЗА
+            half_width = crop_width // 2
+            half_height = crop_height // 2
+
+            print(f"📏 Уменьшение в 2 раза: {crop_width}x{crop_height} -> {half_width}x{half_height}")
+
+            # Создаем новое изображение размером с УМЕНЬШЕННУЮ область обрезки
+            result_pixmap = QPixmap(half_width, half_height)
             result_pixmap.fill(Qt.transparent)
 
             painter = QPainter(result_pixmap)
@@ -298,60 +304,67 @@ class ChordViewerWindow(QDialog):
             painter.setRenderHint(QPainter.SmoothPixmapTransform)
             painter.setRenderHint(QPainter.TextAntialiasing)
 
-            # Копируем область из оригинального изображения
-            painter.drawPixmap(0, 0, original_pixmap, crop_x, crop_y, crop_width, crop_height)
+            # Масштабируем и копируем область из оригинального изображения
+            scaled_pixmap = original_pixmap.copy(
+                int(crop_x), int(crop_y), int(crop_width), int(crop_height)
+            ).scaled(
+                half_width, half_height,
+                Qt.IgnoreAspectRatio, Qt.SmoothTransformation
+            )
 
-            # Рисуем элементы в ПРАВИЛЬНОМ ПОРЯДКЕ
-            self.draw_elements_on_canvas_ordered(painter, elements, (crop_x, crop_y, crop_width, crop_height))
+            painter.drawPixmap(0, 0, scaled_pixmap)
+
+            # Рисуем элементы в ПРАВИЛЬНОМ ПОРЯДКЕ (с учетом уменьшения размера)
+            self.draw_elements_on_canvas_scaled(painter, elements, (crop_x, crop_y, crop_width, crop_height), 0.5)
             painter.end()
 
-            print(f"✅ Сгенерирован аккорд в ОРИГИНАЛЬНОМ РАЗМЕРЕ: {result_pixmap.width()}x{result_pixmap.height()}")
+            print(f"✅ Сгенерирован аккорд с уменьшением в 2 раза: {result_pixmap.width()}x{result_pixmap.height()}")
 
-            # Устанавливаем изображение БЕЗ масштабирования
+            # Устанавливаем уменьшенное изображение
             self.image_label.setPixmap(result_pixmap)
 
-            # Подгоняем размер окна под оригинальное изображение
+            # Подгоняем размер окна под уменьшенное изображение
             self.adjustSize()
 
             # Проверяем доступность звука
             self.check_sound_availability()
 
         except Exception as e:
-            print(f"❌ Ошибка генерации аккорда в оригинальном размере: {e}")
+            print(f"❌ Ошибка генерации аккорда: {e}")
             import traceback
             traceback.print_exc()
             self.show_error_image("Ошибка генерации")
 
-    def draw_elements_on_canvas_ordered(self, painter, elements, crop_rect):
-        """Рисование элементов в ПРАВИЛЬНОМ ПОРЯДКЕ (баре под нотами)"""
+    def draw_elements_on_canvas_scaled(self, painter, elements, crop_rect, scale_factor):
+        """Рисование элементов с учетом масштабирования"""
         try:
             # 1. Сначала рисуем лады
             for element in elements:
                 if element['type'] == 'fret':
-                    self.draw_element_on_canvas(painter, element, crop_rect)
+                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
 
             # 2. Затем рисуем баре
             for element in elements:
                 if element['type'] == 'barre':
-                    self.draw_element_on_canvas(painter, element, crop_rect)
+                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
 
             # 3. Затем рисуем ноты (поверх баре)
             for element in elements:
                 if element['type'] == 'note':
-                    self.draw_element_on_canvas(painter, element, crop_rect)
+                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
 
             # 4. Наконец рисуем открытые ноты
             for element in elements:
                 if element['type'] == 'open_note':
-                    self.draw_element_on_canvas(painter, element, crop_rect)
+                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
 
         except Exception as e:
             print(f"❌ Ошибка рисования элементов: {e}")
 
-    def draw_element_on_canvas(self, painter, element, crop_rect):
-        """Рисование одного элемента на canvas"""
+    def draw_element_on_canvas_scaled(self, painter, element, crop_rect, scale_factor):
+        """Рисование одного элемента с учетом масштабирования"""
         try:
-            adapted_data = self.adapt_coordinates(element['data'], crop_rect)
+            adapted_data = self.adapt_coordinates_scaled(element['data'], crop_rect, scale_factor)
 
             if element['type'] == 'fret':
                 DrawingElements.draw_fret(painter, adapted_data)
@@ -365,8 +378,8 @@ class ChordViewerWindow(QDialog):
         except Exception as e:
             print(f"❌ Ошибка рисования элемента {element['type']}: {e}")
 
-    def adapt_coordinates(self, element_data, crop_rect):
-        """Адаптация координат для canvas"""
+    def adapt_coordinates_scaled(self, element_data, crop_rect, scale_factor):
+        """Адаптация координат с учетом масштабирования"""
         if not crop_rect:
             return element_data.copy()
 
@@ -376,19 +389,31 @@ class ChordViewerWindow(QDialog):
         original_x = element_data.get('x', 0)
         original_y = element_data.get('y', 0)
 
+        # Адаптируем координаты с учетом crop и масштабирования
         if 'x' in adapted_data:
-            adapted_data['x'] = original_x - crop_x
+            adapted_data['x'] = (original_x - crop_x) * scale_factor
         if 'y' in adapted_data:
-            adapted_data['y'] = original_y - crop_y
+            adapted_data['y'] = (original_y - crop_y) * scale_factor
 
         adapted_data['x'] = int(round(adapted_data.get('x', 0)))
         adapted_data['y'] = int(round(adapted_data.get('y', 0)))
 
+        # Масштабируем размеры элементов
+        if 'width' in adapted_data:
+            adapted_data['width'] = int(adapted_data['width'] * scale_factor)
+        if 'height' in adapted_data:
+            adapted_data['height'] = int(adapted_data['height'] * scale_factor)
+        if 'radius' in adapted_data:
+            adapted_data['radius'] = int(adapted_data['radius'] * scale_factor)
+        if 'size' in adapted_data:
+            adapted_data['size'] = int(adapted_data['size'] * scale_factor)
+
         # Для баре - преобразуем центр в левый верхний угол
         if (adapted_data.get('width') and adapted_data.get('height') and
-                adapted_data.get('width') > 50 and adapted_data.get('height') > 50):
-            barre_width = adapted_data.get('width', 100)
-            barre_height = adapted_data.get('height', 20)
+                adapted_data.get('width') > 25 and adapted_data.get(
+                    'height') > 10):  # Уменьшил порог для масштабирования
+            barre_width = adapted_data.get('width', 50)  # Уже масштабированная ширина
+            barre_height = adapted_data.get('height', 10)  # Уже масштабированная высота
             adapted_data['x'] = adapted_data['x'] - (barre_width // 2)
             adapted_data['y'] = adapted_data['y'] - (barre_height // 2)
 
@@ -423,6 +448,7 @@ class ChordViewerWindow(QDialog):
         painter.end()
         self.image_label.setPixmap(pixmap)
 
+    # Остальные методы остаются без изменений...
     def add_variant_buttons(self):
         """Добавление кнопок вариантов аккорда"""
         for i in reversed(range(self.variants_layout.count())):
