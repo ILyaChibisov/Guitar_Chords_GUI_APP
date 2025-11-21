@@ -104,7 +104,7 @@ class DrawingElements:
             gradient.setColorAt(1, QColor(255, 170, 120))
             return QBrush(gradient)
 
-        # СТИЛИ ДЛЯ НОТ (50+ вариантов)
+        # СТИЛИ ДЛЯ НОТ (оригинальные цвета)
         elif style_name == "default":
             return QBrush(QColor(255, 0, 0))
         elif style_name == "blue_gradient":
@@ -502,7 +502,7 @@ class DrawingElements:
 
     @staticmethod
     def draw_note(painter, note_data):
-        """Рисование ноты/пальца с поддержкой обводки"""
+        """Рисование ноты/пальца с УЛУЧШЕННОЙ обводкой и центрированием"""
         try:
             x = note_data.get('x', 0)
             y = note_data.get('y', 0)
@@ -513,7 +513,7 @@ class DrawingElements:
             decoration = note_data.get('decoration', 'none')
 
             # Параметры обводки
-            outline_width = note_data.get('outline_width', 2)
+            outline_width = note_data.get('outline_width', 1)  # Уменьшили толщину обводки
             outline_color_data = note_data.get('outline_color', [0, 0, 0])
             outline_color = DrawingElements.get_color_from_data(outline_color_data)
 
@@ -526,60 +526,33 @@ class DrawingElements:
             else:  # finger
                 symbol = note_data.get('finger', '1')
 
-            # РИСУЕМ ОБВОДКУ
+            # 🔥 УЛУЧШЕННАЯ ОБВОДКА: рисуем сначала обводку, затем основную фигуру
             if outline_width > 0:
                 painter.setPen(QPen(outline_color, outline_width))
                 painter.setBrush(QBrush(outline_color))
-                painter.drawEllipse(x - radius - outline_width // 2, y - radius - outline_width // 2,
-                                    (radius + outline_width) * 2, (radius + outline_width) * 2)
+                painter.drawEllipse(x - radius, y - radius, radius * 2, radius * 2)
 
-            # Рисуем основную фигуру
+            # Рисуем основную фигуру поверх обводки
             brush = DrawingElements.get_brush_from_style(style, x, y, radius)
             painter.setPen(Qt.NoPen)
             painter.setBrush(brush)
-            painter.drawEllipse(x - radius, y - radius, radius * 2, radius * 2)
 
-            # Применяем дополнительное оформление
-            if decoration == 'double_border':
-                painter.setPen(QPen(QColor(255, 255, 255), 2))
-                painter.setBrush(Qt.NoBrush)
-                painter.drawEllipse(x - radius + 2, y - radius + 2, (radius - 2) * 2, (radius - 2) * 2)
-            elif decoration == 'glow':
-                painter.setPen(QPen(QColor(255, 255, 255, 100), 4))
-                painter.setBrush(Qt.NoBrush)
-                painter.drawEllipse(x - radius - 2, y - radius - 2, (radius + 2) * 2, (radius + 2) * 2)
-            elif decoration == 'shadow':
-                painter.setPen(QPen(QColor(0, 0, 0, 80), 3))
-                painter.setBrush(Qt.NoBrush)
-                painter.drawEllipse(x - radius + 2, y - radius + 2, (radius - 2) * 2, (radius - 2) * 2)
-            elif decoration == 'sparkle':
-                sparkle_color = QColor(255, 255, 255, 200)
-                painter.setBrush(sparkle_color)
-                painter.setPen(Qt.NoPen)
-                sparkle_radius = max(2, radius // 8)
-                positions = [
-                    (x - radius + sparkle_radius, y - radius + sparkle_radius),
-                    (x + radius - sparkle_radius, y - radius + sparkle_radius),
-                    (x - radius + sparkle_radius, y + radius - sparkle_radius),
-                    (x + radius - sparkle_radius, y + radius - sparkle_radius)
-                ]
-                for pos_x, pos_y in positions:
-                    painter.drawEllipse(pos_x, pos_y, sparkle_radius * 2, sparkle_radius * 2)
-            elif decoration == 'dotted_border':
-                painter.setPen(QPen(QColor(255, 255, 255), 2))
-                pen = painter.pen()
-                pen.setStyle(Qt.DashLine)
-                painter.setPen(pen)
-                painter.setBrush(Qt.NoBrush)
-                painter.drawEllipse(x - radius + 1, y - radius + 1, (radius - 1) * 2, (radius - 1) * 2)
+            # Уменьшаем внутренний круг чтобы обводка была видна
+            inner_radius = max(1, radius - outline_width)
+            painter.drawEllipse(x - inner_radius, y - inner_radius, inner_radius * 2, inner_radius * 2)
 
             # Рисуем текст внутри круга
             if symbol:
                 painter.setPen(QPen(text_color))
 
-                # Настраиваем шрифт
-                font_size = max(8, radius - 2)
+                # 🔥 УЛУЧШЕННОЕ ЦЕНТРИРОВАНИЕ ТЕКСТА
+                font_size = max(6, inner_radius - 2)  # Автоподбор размера шрифта
                 font = QFont("Arial", font_size)
+
+                # Настройка шрифта для специальных символов
+                if '#' in symbol or 'b' in symbol:
+                    font_size = max(5, inner_radius - 4)  # Уменьшаем для диезов/бемолей
+                    font = QFont("Arial", font_size)
 
                 if font_style == 'bold':
                     font.setWeight(QFont.Bold)
@@ -593,13 +566,13 @@ class DrawingElements:
 
                 painter.setFont(font)
 
-                # Идеальное центрирование текста
+                # ТОЧНОЕ ЦЕНТРИРОВАНИЕ ТЕКСТА
                 font_metrics = QFontMetrics(font)
                 text_width = font_metrics.horizontalAdvance(symbol)
                 text_height = font_metrics.height()
 
                 text_x = x - text_width // 2
-                text_y = y + text_height // 4
+                text_y = y + text_height // 4  # Корректировка вертикального выравнивания
 
                 painter.drawText(text_x, text_y, symbol)
 
@@ -608,7 +581,7 @@ class DrawingElements:
 
     @staticmethod
     def draw_barre(painter, barre_data):
-        """Рисование баре с правильным позиционированием"""
+        """Рисование баре с УЛУЧШЕННОЙ обводкой"""
         try:
             x = barre_data.get('x', 0)
             y = barre_data.get('y', 0)
@@ -618,68 +591,34 @@ class DrawingElements:
             style = barre_data.get('style', 'orange_gradient')
             decoration = barre_data.get('decoration', 'none')
 
-            print(f"🎸 ОТРИСОВКА БАРЕ:")
-            print(f"   Позиция: ({x}, {y})")
-            print(f"   Размер: {width}x{height}")
-            print(f"   Стиль: {style}")
-
             # Параметры обводки
-            outline_width = barre_data.get('outline_width', 2)
+            outline_width = barre_data.get('outline_width', 1)  # Уменьшили толщину
             outline_color_data = barre_data.get('outline_color', [0, 0, 0])
             outline_color = DrawingElements.get_color_from_data(outline_color_data)
 
-            # 🔥 ИСПРАВЛЕНИЕ 1: ОБВОДКА БЕЗ СМЕЩЕНИЯ!
-            # РИСУЕМ ОБВОДКУ (только контур) - ТЕ ЖЕ КООРДИНАТЫ!
+            # 🔥 УЛУЧШЕННАЯ ОБВОДКА: рисуем обводку как отдельный контур
             if outline_width > 0:
                 painter.setPen(QPen(outline_color, outline_width))
-                painter.setBrush(Qt.NoBrush)  # Важно: без заливки для обводки!
+                painter.setBrush(Qt.NoBrush)
                 painter.drawRoundedRect(x, y, width, height, radius, radius)
-                print(f"   🖌️ Обводка: ширина {outline_width}px")
 
-            # 🔥 ИСПРАВЛЕНИЕ 2: ОСНОВНАЯ ФИГУРА - ТЕ ЖЕ КООРДИНАТЫ!
-            # Рисуем основную фигуру (заливку)
+            # Рисуем основную фигуру
             brush = DrawingElements.get_brush_from_style(style, x, y, 0, width, height)
             painter.setPen(Qt.NoPen)
             painter.setBrush(brush)
-            painter.drawRoundedRect(x, y, width, height, radius, radius)
-            print(f"   🎨 Основная фигура")
 
-            # 🔥 ИСПРАВЛЕНИЕ 3: ДЕКОРАЦИИ - МИНИМАЛЬНЫЕ СМЕЩЕНИЯ
-            # Применяем декорации (с небольшими корректировками)
-            if decoration == 'shadow':
-                shadow_color = QColor(0, 0, 0, 80)
-                painter.setPen(QPen(shadow_color, 2))
-                painter.setBrush(Qt.NoBrush)
-                painter.drawRoundedRect(x + 1, y + 1, width, height, radius, radius)
-                print(f"   🌑 Тень")
-            elif decoration == 'glow':
-                glow_color = QColor(255, 255, 255, 60)
-                painter.setPen(QPen(glow_color, 3))
-                painter.setBrush(Qt.NoBrush)
-                painter.drawRoundedRect(x, y, width, height, radius, radius)
-                print(f"   ✨ Свечение")
-            elif decoration == 'double_border':
-                border_color = QColor(255, 255, 255)
-                painter.setPen(QPen(border_color, 1))
-                painter.setBrush(Qt.NoBrush)
-                painter.drawRoundedRect(x + 1, y + 1, width - 2, height - 2, radius, radius)
-                print(f"   🎭 Двойная обводка")
-            elif decoration == 'stripes' and style == 'striped':
-                stripe_color = QColor(189, 183, 107).darker(120)
-                stripe_color.setAlpha(180)
-                painter.setPen(QPen(stripe_color, 1))
-                stripe_spacing = height // 4
-                for i in range(1, 4):
-                    stripe_y = y + i * stripe_spacing
-                    painter.drawLine(x + 2, stripe_y, x + width - 2, stripe_y)
-                print(f"   📏 Полосы")
+            # Уменьшаем внутренний прямоугольник чтобы обводка была видна
+            inner_margin = outline_width
+            inner_x = x + inner_margin
+            inner_y = y + inner_margin
+            inner_width = max(1, width - 2 * inner_margin)
+            inner_height = max(1, height - 2 * inner_margin)
+            inner_radius = max(0, radius - inner_margin)
 
-            print(f"✅ Баре отрисовано успешно в позиции ({x}, {y})")
+            painter.drawRoundedRect(inner_x, inner_y, inner_width, inner_height, inner_radius, inner_radius)
 
         except Exception as e:
             print(f"❌ Ошибка рисования баре: {e}")
-            import traceback
-            traceback.print_exc()
 
     @staticmethod
     def draw_open_string(painter, open_string_data):
@@ -690,7 +629,7 @@ class DrawingElements:
             radius = open_string_data.get('radius', 8)
 
             # Для открытых струн используем прозрачную заливку и обводку
-            painter.setPen(QPen(QColor(0, 0, 0), 2))
+            painter.setPen(QPen(QColor(0, 0, 0), 1))  # Уменьшили толщину
             painter.setBrush(Qt.NoBrush)
             painter.drawEllipse(x - radius, y - radius, radius * 2, radius * 2)
 
@@ -705,7 +644,7 @@ class DrawingElements:
             y = muted_string_data.get('y', 0)
             size = muted_string_data.get('size', 10)
 
-            painter.setPen(QPen(QColor(0, 0, 0), 3))
+            painter.setPen(QPen(QColor(0, 0, 0), 2))  # Уменьшили толщину
             # Рисуем крестик
             painter.drawLine(x - size, y - size, x + size, y + size)
             painter.drawLine(x + size, y - size, x - size, y + size)

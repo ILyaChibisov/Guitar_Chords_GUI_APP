@@ -335,28 +335,54 @@ class ChordViewerWindow(QDialog):
             traceback.print_exc()
             self.show_error_image("Ошибка генерации")
 
+    def apply_outline_settings(self, elements):
+        """Применение настроек обводки к элементам с учетом масштабирования"""
+        modified_elements = []
+        for element in elements:
+            modified_element = element.copy()
+            modified_element['data'] = element['data'].copy()
+
+            # 🔥 УЛУЧШЕННЫЕ НАСТРОЙКИ ОБВОДКИ ДЛЯ МАСШТАБИРОВАНИЯ
+            base_outline_width = 1  # Базовая толщина обводки
+
+            if element['type'] == 'barre':
+                modified_element['data']['outline_width'] = base_outline_width
+                modified_element['data']['outline_color'] = [0, 0, 0]
+            elif element['type'] == 'note':
+                modified_element['data']['outline_width'] = base_outline_width
+                modified_element['data']['outline_color'] = [0, 0, 0]
+            elif element['type'] == 'fret':
+                modified_element['data']['outline_width'] = base_outline_width
+                modified_element['data']['outline_color'] = [0, 0, 0]
+
+            modified_elements.append(modified_element)
+
+        return modified_elements
+
     def draw_elements_on_canvas_scaled(self, painter, elements, crop_rect, scale_factor):
-        """Рисование элементов с учетом масштабирования"""
+        """Рисование элементов с правильными приоритетами"""
         try:
-            # 1. Сначала рисуем лады
-            for element in elements:
-                if element['type'] == 'fret':
-                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
+            # Группируем элементы по типам для правильного порядка отрисовки
+            frets = [e for e in elements if e['type'] == 'fret']
+            barres = [e for e in elements if e['type'] == 'barre']
+            notes = [e for e in elements if e['type'] == 'note']
+            open_notes = [e for e in elements if e['type'] == 'open_note']
 
-            # 2. Затем рисуем баре
-            for element in elements:
-                if element['type'] == 'barre':
-                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
+            # 1. Лады (фон)
+            for element in frets:
+                self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
 
-            # 3. Затем рисуем ноты (поверх баре)
-            for element in elements:
-                if element['type'] == 'note':
-                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
+            # 2. Баре
+            for element in barres:
+                self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
 
-            # 4. Наконец рисуем открытые ноты
-            for element in elements:
-                if element['type'] == 'open_note':
-                    self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
+            # 3. Зажатые ноты
+            for element in notes:
+                self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
+
+            # 4. Открытые ноты (поверх всего)
+            for element in open_notes:
+                self.draw_element_on_canvas_scaled(painter, element, crop_rect, scale_factor)
 
         except Exception as e:
             print(f"❌ Ошибка рисования элементов: {e}")
@@ -379,7 +405,7 @@ class ChordViewerWindow(QDialog):
             print(f"❌ Ошибка рисования элемента {element['type']}: {e}")
 
     def adapt_coordinates_scaled(self, element_data, crop_rect, scale_factor):
-        """Адаптация координат с учетом масштабирования"""
+        """Адаптация координат с учетом масштабирования - улучшенная версия"""
         if not crop_rect:
             return element_data.copy()
 
@@ -389,53 +415,35 @@ class ChordViewerWindow(QDialog):
         original_x = element_data.get('x', 0)
         original_y = element_data.get('y', 0)
 
-        # Адаптируем координаты с учетом crop и масштабирования
+        # Более точная адаптация координат
         if 'x' in adapted_data:
             adapted_data['x'] = (original_x - crop_x) * scale_factor
         if 'y' in adapted_data:
             adapted_data['y'] = (original_y - crop_y) * scale_factor
 
+        # Округление до целых пикселей для четкости
         adapted_data['x'] = int(round(adapted_data.get('x', 0)))
         adapted_data['y'] = int(round(adapted_data.get('y', 0)))
 
-        # Масштабируем размеры элементов
+        # 🔥 УЛУЧШЕННОЕ МАСШТАБИРОВАНИЕ РАЗМЕРОВ
         if 'width' in adapted_data:
-            adapted_data['width'] = int(adapted_data['width'] * scale_factor)
+            adapted_data['width'] = max(1, int(adapted_data['width'] * scale_factor))
         if 'height' in adapted_data:
-            adapted_data['height'] = int(adapted_data['height'] * scale_factor)
+            adapted_data['height'] = max(1, int(adapted_data['height'] * scale_factor))
         if 'radius' in adapted_data:
-            adapted_data['radius'] = int(adapted_data['radius'] * scale_factor)
+            # Минимальный радиус для читаемости текста
+            adapted_data['radius'] = max(8, int(adapted_data['radius'] * scale_factor))
         if 'size' in adapted_data:
-            adapted_data['size'] = int(adapted_data['size'] * scale_factor)
+            adapted_data['size'] = max(1, int(adapted_data['size'] * scale_factor))
 
-        # Для баре - преобразуем центр в левый верхний угол
-        if (adapted_data.get('width') and adapted_data.get('height') and
-                adapted_data.get('width') > 25 and adapted_data.get(
-                    'height') > 10):  # Уменьшил порог для масштабирования
-            barre_width = adapted_data.get('width', 50)  # Уже масштабированная ширина
-            barre_height = adapted_data.get('height', 10)  # Уже масштабированная высота
+        # Для баре - корректируем позицию
+        if element_data.get('type') == 'barre':
+            barre_width = adapted_data.get('width', 50)
+            barre_height = adapted_data.get('height', 10)
             adapted_data['x'] = adapted_data['x'] - (barre_width // 2)
             adapted_data['y'] = adapted_data['y'] - (barre_height // 2)
 
         return adapted_data
-
-    def apply_outline_settings(self, elements):
-        """Применение настроек обводки к элементам"""
-        modified_elements = []
-        for element in elements:
-            modified_element = element.copy()
-            modified_element['data'] = element['data'].copy()
-
-            if element['type'] == 'barre':
-                modified_element['data']['outline_width'] = 2
-                modified_element['data']['outline_color'] = [0, 0, 0]
-            elif element['type'] == 'note':
-                modified_element['data']['outline_width'] = 2
-                modified_element['data']['outline_color'] = [0, 0, 0]
-
-            modified_elements.append(modified_element)
-
-        return modified_elements
 
     def show_error_image(self, message):
         """Показ сообщения об ошибке"""
@@ -448,7 +456,6 @@ class ChordViewerWindow(QDialog):
         painter.end()
         self.image_label.setPixmap(pixmap)
 
-    # Остальные методы остаются без изменений...
     def add_variant_buttons(self):
         """Добавление кнопок вариантов аккорда"""
         for i in reversed(range(self.variants_layout.count())):
