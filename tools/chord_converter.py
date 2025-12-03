@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 class ResourceConverter:
-    def __init__(self, source_dir="source"):
+    def __init__(self, source_dir="chords_config"):
         self.source_dir = Path(source_dir)
         self.data_dir = Path("data")
         self.data_dir.mkdir(exist_ok=True)
@@ -320,7 +320,7 @@ def main():
     converter = ResourceConverter()
 
     # Проверяем существование папки source
-    if not Path("source").exists():
+    if not Path("chords_config").exists():
         print("❌ Папка 'source' не найдена!")
         print("💡 Создайте папку 'source' и поместите в неё:")
         print("   - chord_config.xlsx")
